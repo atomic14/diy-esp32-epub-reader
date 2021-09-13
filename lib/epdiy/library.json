@@ -1,0 +1,6 @@
+{
+  "build": {
+    "includeDir": "epdiy/src",
+    "srcDir": "epdiy/src"
+  }
+}

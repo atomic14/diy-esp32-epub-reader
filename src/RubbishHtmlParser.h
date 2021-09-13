@@ -5,6 +5,7 @@
 #include <list>
 #include <vector>
 #include <exception>
+#include "htmlEntities.h"
 
 // represents a single word in the html document
 class Word
@@ -282,6 +283,10 @@ public:
     // keep track of inline tag depth
     while (index < length)
     {
+      if (index % 1000 == 0)
+      {
+        vTaskDelay(1);
+      }
       // skip past any whitespace
       index = skipWhiteSpace(html, index, length);
       // TODO
@@ -324,8 +329,10 @@ public:
         // add the word to the current block
         int wordStart = index;
         index = skipAlphaNum(html, index, length);
-        // TODO - ignore blank words
-        blocks.back()->words.push_back(new Word(wordStart, index));
+        if (index > wordStart)
+        {
+          blocks.back()->words.push_back(new Word(wordStart, index));
+        }
       }
     }
   }
