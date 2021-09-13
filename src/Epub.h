@@ -12,8 +12,9 @@
 class Epub
 {
 private:
-  const char *m_path;
-  std::vector<std::string> m_spine;
+  const char *m_path = nullptr;
+  int m_current_section = 0;
+  std::vector<std::string> m_sections;
 
 public:
   Epub(const char *path)
@@ -44,7 +45,7 @@ public:
     std::map<std::string, std::string> items;
     while (item)
     {
-      items[item->Attribute("id")] = item->Attribute("href");
+      items[item->Attribute("id")] = std::string("OEBPS/") + item->Attribute("href");
       item = item->NextSiblingElement("item");
     }
     // find the spine
@@ -60,15 +61,49 @@ public:
       auto id = itemref->Attribute("idref");
       if (items.find(id) != items.end())
       {
-        m_spine.push_back(items[id]);
+        m_sections.push_back(items[id]);
       }
       itemref = itemref->NextSiblingElement("itemref");
     }
     // dump out the spint
-    for (auto &s : m_spine)
+    for (auto &s : m_sections)
     {
       ESP_LOGI(TAG, "Spine: %s", s.c_str());
     }
+  }
+  int get_current_section()
+  {
+    return m_current_section;
+  }
+  void set_current_section(int section)
+  {
+    m_current_section = section;
+  }
+  const char *get_section_contents(int section)
+  {
+    if (section < 0 || section >= m_sections.size())
+    {
+      ESP_LOGI(TAG, "Invalid section %d", section);
+      return nullptr;
+    }
+    ZipFile zip(m_path);
+    ESP_LOGI(TAG, "Loading Section: %s", m_sections[section].c_str());
+    auto content = zip.read_file_to_memory(m_sections[section].c_str());
+    if (!content)
+    {
+      ESP_LOGE(TAG, "Failed to read section");
+      return nullptr;
+    }
+    return content;
+  }
+  bool next_section()
+  {
+    if (m_current_section + 1 >= m_sections.size())
+    {
+      return false;
+    }
+    m_current_section++;
+    return true;
   }
   ~Epub()
   {

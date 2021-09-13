@@ -70,6 +70,7 @@ public:
         return file_data;
       }
     }
+    ESP_LOGE(TAG, "Could not find file %s", filename);
     mz_zip_reader_end(&zip_archive);
     return nullptr;
   }
