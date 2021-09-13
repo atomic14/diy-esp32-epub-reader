@@ -5,121 +5,11 @@
 #include <list>
 #include <vector>
 #include <exception>
+#include "Renderer/Renderer.h"
 #include "htmlEntities.h"
-
-// represents a single word in the html document
-class Word
-{
-public:
-  bool bold;
-  bool italic;
-  int start;
-  int end;
-  Word(int start, int end, bool bold = false, bool italic = false)
-  {
-    this->start = start;
-    this->end = end;
-    this->bold = bold;
-    this->italic = italic;
-  }
-  int width()
-  {
-    // TODO - calculate the width in pixels
-    return end - start;
-  }
-};
-
-// represents a block of text in the html document
-class Block
-{
-public:
-  // the words in the block
-  std::vector<Word *> words;
-  // where do we want to break the words into lines
-  std::vector<int> lineBreaks;
-  // given the width of a page, work out the linebreaks
-  void layout(int pageWidth)
-  {
-    int n = words.size();
-
-    // DP table in which dp[i] represents cost of line starting with word words[i]
-    int dp[n];
-
-    // Array in which ans[i] store index of last word in line starting with word word[i]
-    size_t ans[n];
-
-    // If only one word is present then only one line is required. Cost of last line is zero. Hence cost
-    // of this line is zero. Ending point is also n-1 as single word is present
-    dp[n - 1] = 0;
-    ans[n - 1] = n - 1;
-
-    // Make each word first word of line by iterating over each index in arr.
-    for (int i = n - 2; i >= 0; i--)
-    {
-      int currlen = -1;
-      dp[i] = INT_MAX;
-
-      // Variable to store possible minimum cost of line.
-      int cost;
-
-      // Keep on adding words in current line by iterating from starting word upto last word in arr.
-      for (int j = i; j < n; j++)
-      {
-
-        // Update the width of the words in current line + the space between two words.
-        currlen += (words[j]->width() + 1);
-
-        // If we're bigger than the current pagewidth then we can't add more words
-        if (currlen > pageWidth)
-          break;
-
-        // if we've run out of words then this is last line and the cost should be 0
-        // Otherwise the cost is the sqaure of the left over space + the costs of all the previous lines
-        if (j == n - 1)
-          cost = 0;
-        else
-          cost = (pageWidth - currlen) * (pageWidth - currlen) + dp[j + 1];
-
-        // Check if this arrangement gives minimum cost for line starting with word words[i].
-        if (cost < dp[i])
-        {
-          dp[i] = cost;
-          ans[i] = j;
-        }
-      }
-    }
-    // We can now iterate through the answer to find the line break positions
-    size_t i = 0;
-    while (i < n)
-    {
-      lineBreaks.push_back(ans[i] + 1);
-      i = ans[i] + 1;
-    }
-  }
-  // debug helper - dumps out the contents of the block with line breaks
-  void dump(const char *html)
-  {
-    layout(80);
-    int start = 0;
-    for (auto lineBreak : lineBreaks)
-    {
-      for (int i = start; i < lineBreak; i++)
-      {
-        for (int j = words[i]->start; j < words[i]->end; j++)
-        {
-          printf("%c", html[j]);
-        }
-        if (i < words.size() - 1 && html[words[i + 1]->start] != '.')
-        {
-          printf(" ");
-        }
-      }
-      printf("\n");
-      start = lineBreak;
-    }
-    printf("\n--\n");
-  }
-};
+#include "Word.h"
+#include "Block.h"
+#include "Page.h"
 
 // thrown if we get into an unexpected state
 class ParseException : public std::exception
@@ -143,7 +33,11 @@ public:
 class RubbishHtmlParser
 {
 private:
+  const char *m_html;
+  int m_length;
+
   std::list<Block *> blocks;
+  std::vector<Page *> pages;
 
 public:
   // is there any more whitespace we should consider?
@@ -338,6 +232,8 @@ public:
   }
   RubbishHtmlParser(const char *html, int length)
   {
+    m_html = html;
+    m_length = length;
     int index = 0;
     // skip to the html tag
     while (strncmp(html + index, "<html", 5) != 0)
@@ -346,9 +242,61 @@ public:
     }
     blocks.push_back(new Block());
     parse(html, index, length);
+    // for (auto block : blocks)
+    // {
+    //   block->dump(html);
+    // }
+  }
+  ~RubbishHtmlParser()
+  {
     for (auto block : blocks)
     {
-      block->dump(html);
+      delete block;
     }
+  }
+
+  void layout(Renderer *renderer)
+  {
+    const int line_height = renderer->get_line_height();
+    const int page_height = renderer->get_page_height();
+    // first ask the blocks to work out where they should have
+    // line breaks based on the page width
+    for (auto block : blocks)
+    {
+      block->layout(m_html, renderer);
+    }
+    // now we need to allocate the lines to pages
+    // we'll run through each block and the lines within each block and allocate
+    // them to pages. When we run out of space on a page we'll start a new page
+    // and continue
+    int y = 0;
+    pages.push_back(new Page());
+    for (auto block : blocks)
+    {
+      for (int line_break_index = 0; line_break_index < block->line_breaks.size(); line_break_index++)
+      {
+        if (y + line_height > page_height)
+        {
+          pages.push_back(new Page());
+          y = 0;
+        }
+        pages.back()->lines.push_back(new PageLine(block, line_break_index, y));
+        y += line_height;
+      }
+      // add an extra line between blocks
+      y += line_height;
+    }
+  }
+  int get_page_count()
+  {
+    return pages.size();
+  }
+  void render_page(int page_index, Renderer *renderer)
+  {
+    if (page_index < 0 || page_index >= pages.size())
+    {
+      throw std::runtime_error("Invalid page index");
+    }
+    pages[page_index]->render(m_html, renderer);
   }
 };
