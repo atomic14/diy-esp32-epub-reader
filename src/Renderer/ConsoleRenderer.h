@@ -44,6 +44,10 @@ public:
       printf("%c", src[i]);
     }
   }
+  void draw_rect(int x, int y, int width, int height)
+  {
+    // nop
+  }
   virtual int get_page_width()
   {
     return 40;

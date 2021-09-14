@@ -16,12 +16,13 @@ public:
   void layout(const char *html, Renderer *renderer)
   {
     // TODO: fetch the image size
-    width = 100;
-    height = 100;
+    width = renderer->get_page_width();
+    height = renderer->get_page_width();
   }
   void render(const char *html, Renderer *renderer, int y_pos)
   {
-    renderer->draw_text(0, y_pos, html, m_src_start, m_src_end, false, false);
+    renderer->draw_rect(20, y_pos + 20, width - 40, height - 40);
+    renderer->draw_text(20, y_pos + 20, html, m_src_start, m_src_end, false, false);
   }
   virtual void dump(const char *html)
   {

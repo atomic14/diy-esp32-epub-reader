@@ -55,6 +55,11 @@ public:
     get_text(src, start_index, end_index);
     epd_write_string(m_font, buffer, &x, &ypos, m_frame_buffer, &m_font_props);
   }
+  void draw_rect(int x, int y, int width, int height)
+  {
+    epd_draw_rect({.x = x, .y = y, .width = width, .height = height}, 0, m_frame_buffer);
+  }
+
   void clear_display()
   {
     epd_hl_set_all_white(&m_hl);
