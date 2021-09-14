@@ -1,3 +1,6 @@
 [submodule "lib/epdiy/epdiy"]
 	path = lib/epdiy/epdiy
 	url = https://github.com/vroland/epdiy.git
+[submodule "lib/png/PNGdec"]
+	path = lib/png/PNGdec
+	url = git@github.com:bitbank2/PNGdec.git
