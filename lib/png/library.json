@@ -1,0 +1,6 @@
+{
+  "build": {
+    "srcDir": "PNGdec/src",
+    "includeDir": "PNGdec/src"
+  }
+}

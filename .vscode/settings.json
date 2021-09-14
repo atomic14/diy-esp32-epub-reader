@@ -1,0 +1,6 @@
+{
+  "files.associations": {
+    "*.rb": "ruby",
+    "*.ipp": "cpp"
+  }
+}

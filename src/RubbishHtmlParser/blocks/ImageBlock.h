@@ -1,11 +1,12 @@
 #pragma once
 #include "Block.h"
 #include "../../Renderer/JPEGHelper.h"
+#include "../../Renderer/PNGHelper.h"
 
 class ImageBlock : public Block
 {
 private:
-  JPEGHelper *m_helper = NULL;
+  ImageHelper *m_helper = NULL;
   std::string m_src;
 
 public:
@@ -13,7 +14,6 @@ public:
   int x_pos;
   int width;
   int height;
-  int scale_factor;
 
   ImageBlock(std::string src) : m_src(src)
   {
@@ -22,27 +22,21 @@ public:
     {
       m_helper = new JPEGHelper("/sdcard/" + src);
     }
+    if (src.find(".png") != std::string::npos)
+    {
+      m_helper = new PNGHelper("/sdcard/" + src);
+    }
   }
   void layout(const char *html, Renderer *renderer)
   {
     if (
         !m_helper ||
-        !m_helper->get_size(&width, &height))
+        !m_helper->get_size(&width, &height, renderer->get_page_width(), renderer->get_page_height()))
     {
       // if we don't have a helper or the helper fails then
       // fall back to a default size
       width = renderer->get_page_width();
       height = renderer->get_page_width();
-    }
-    // fit the image onto the page
-    // we use very simple scaling to fit in
-    // with the jpeg decoder
-    scale_factor = 0;
-    while (scale_factor < 3 && (width > renderer->get_page_width() || height > renderer->get_page_height()))
-    {
-      width /= 2;
-      height /= 2;
-      scale_factor++;
     }
     // horizontal center
     x_pos = (renderer->get_page_width() - width) / 2;
@@ -51,7 +45,7 @@ public:
   {
     if (
         !m_helper ||
-        !m_helper->render(renderer, x_pos, y_pos, width, height, scale_factor))
+        !m_helper->render(renderer, x_pos, y_pos, width, height))
     {
       // fall back to drawing a rectangle placeholder
       renderer->draw_rect(20, y_pos + 20, width - 40, height - 40);

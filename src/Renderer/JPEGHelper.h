@@ -21,6 +21,7 @@ class JPEGHelper : public ImageHelper
 {
 private:
   std::string m_filename;
+  int scale_factor;
   // temporary vars used for the JPEG callbacks
   FILE *fp;
   Renderer *renderer;
@@ -41,9 +42,10 @@ private:
 
 public:
   JPEGHelper(const std::string &filename) : m_filename(filename) {}
-  bool get_size(int *width, int *height)
+  bool get_size(int *width, int *height, int max_width, int max_height)
   {
     ESP_LOGI("IMG", "Getting size of %s", m_filename.c_str());
+    scale_factor = 0;
     void *pool = malloc(POOL_SIZE);
     if (!pool)
     {
@@ -64,6 +66,13 @@ public:
       ESP_LOGI("IMG", "JPEG Decoded - size %d,%d", dec.width, dec.height);
       *width = dec.width;
       *height = dec.height;
+
+      while (scale_factor < 3 && (*width > max_width || *height > max_height))
+      {
+        *width /= 2;
+        *height /= 2;
+        scale_factor++;
+      }
     }
     else
     {
@@ -75,7 +84,7 @@ public:
     fp = NULL;
     return true;
   }
-  bool render(Renderer *renderer, int x_pos, int y_pos, int width, int height, int scale_factor)
+  bool render(Renderer *renderer, int x_pos, int y_pos, int width, int height)
   {
     this->renderer = renderer;
     this->y_pos = y_pos;
