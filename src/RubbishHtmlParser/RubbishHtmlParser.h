@@ -270,7 +270,7 @@ public:
                 delete currentTextBlock;
                 currentTextBlock = nullptr;
               }
-              blocks.push_back(new ImageBlock(src_start, src_end));
+              blocks.push_back(new ImageBlock(std::string(html + src_start, src_end - src_start)));
               // start a new text block
               startNewTextBlock();
             }
