@@ -16,10 +16,13 @@ extern "C"
 
 void main_task(void *param)
 {
+  ESP_LOGI("main", "Memory before renderer init: %d", esp_get_free_heap_size());
   // create the EPD renderer
   EpdRenderer *renderer = new EpdRenderer();
+  ESP_LOGI("main", "Memory after renderer init: %d", esp_get_free_heap_size());
   // initialise the SDCard
   SDCard *sdcard = new SDCard("/sdcard", PIN_NUM_MISO, PIN_NUM_MOSI, PIN_NUM_CLK, PIN_NUM_CS);
+  ESP_LOGI("main", "Memory after sdcard init: %d", esp_get_free_heap_size());
   // read the epub file
   Epub *epub = new Epub("/sdcard/pg2701.epub");
   // Epub *epub = new Epub("/sdcard/pg14838-images.epub");
