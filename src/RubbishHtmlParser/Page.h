@@ -1,18 +1,29 @@
 #pragma once
 
-// a line of a page
-class PageLine
+#include "blocks/TextBlock.h"
+#include "blocks/ImageBlock.h"
+
+// represents something that has been added to a page
+class PageElement
+{
+public:
+  int y_pos;
+  PageElement(int y_pos) : y_pos(y_pos) {}
+  virtual ~PageElement() {}
+  virtual void render(const char *html, Renderer *renderer) = 0;
+};
+
+// a line from a block element
+class PageLine : public PageElement
 {
 public:
   // the block the line comes from
-  Block *block;
+  TextBlock *block;
   // the line break index
   int line_break_index;
-  // the start position in the page
-  int y_pos;
 
-  PageLine(Block *block, int line_break_index, int y_pos)
-      : block(block), line_break_index(line_break_index), y_pos(y_pos)
+  PageLine(TextBlock *block, int line_break_index, int y_pos)
+      : PageElement(y_pos), block(block), line_break_index(line_break_index)
   {
   }
   void render(const char *html, Renderer *renderer)
@@ -21,24 +32,40 @@ public:
   }
 };
 
+// an image
+class PageImage : public PageElement
+{
+public:
+  // the block the image comes from
+  ImageBlock *block;
+
+  PageImage(ImageBlock *block, int y_pos) : PageElement(y_pos), block(block)
+  {
+  }
+  void render(const char *html, Renderer *renderer)
+  {
+    block->render(html, renderer, y_pos);
+  }
+};
+
 // a layed out page ready to be rendered
 class Page
 {
 public:
   // the list of block index and line numbers on this page
-  std::vector<PageLine *> lines;
+  std::vector<PageElement *> elements;
   void render(const char *html, Renderer *renderer)
   {
-    for (auto line : lines)
+    for (auto element : elements)
     {
-      line->render(html, renderer);
+      element->render(html, renderer);
     }
   }
   ~Page()
   {
-    for (auto line : lines)
+    for (auto element : elements)
     {
-      delete line;
+      delete element;
     }
   }
 };

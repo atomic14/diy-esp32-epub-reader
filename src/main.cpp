@@ -24,14 +24,14 @@ void main_task(void *param)
   SDCard *sdcard = new SDCard("/sdcard", PIN_NUM_MISO, PIN_NUM_MOSI, PIN_NUM_CLK, PIN_NUM_CS);
   ESP_LOGI("main", "Memory after sdcard init: %d", esp_get_free_heap_size());
   // read the epub file
-  Epub *epub = new Epub("/sdcard/pg2701.epub");
-  // Epub *epub = new Epub("/sdcard/pg14838-images.epub");
+  // Epub *epub = new Epub("/sdcard/pg2701.epub");
+  Epub *epub = new Epub("/sdcard/pg14838-images.epub");
   ESP_LOGI("main", "After epub create: %d", esp_get_free_heap_size());
   // get the current section contents
   epub->next_section();
   ESP_LOGI("main", "After skip section 1: %d", esp_get_free_heap_size());
-  epub->next_section();
-  ESP_LOGI("main", "After skip section 2: %d", esp_get_free_heap_size());
+  // epub->next_section();
+  // ESP_LOGI("main", "After skip section 2: %d", esp_get_free_heap_size());
   const char *html = epub->get_section_contents(epub->get_current_section());
   ESP_LOGI("main", "After read html: %d", esp_get_free_heap_size());
   // parse the html

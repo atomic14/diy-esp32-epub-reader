@@ -1,7 +1,6 @@
 #pragma once
 
-#include "../Renderer/Renderer.h"
-
+#include "Block.h"
 // represents a single word in the html
 // to reduce memory use, the word is stored as a reference
 // to the start and end indexes in the html
@@ -32,14 +31,14 @@ public:
 };
 
 // represents a block of words in the html document
-class Block
+class TextBlock : public Block
 {
 public:
   // the words in the block
   std::vector<Word *> words;
   // where do we want to break the words into lines
   std::vector<int> line_breaks;
-  ~Block()
+  ~TextBlock()
   {
     for (auto word : words)
     {
@@ -169,5 +168,9 @@ public:
       start = lineBreak;
     }
     printf("\n--\n");
+  }
+  virtual BlockType getType()
+  {
+    return TEXT_BLOCK;
   }
 };

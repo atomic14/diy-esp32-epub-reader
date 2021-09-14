@@ -7,8 +7,8 @@
 #include <exception>
 #include "Renderer/Renderer.h"
 #include "htmlEntities.h"
-#include "Word.h"
-#include "Block.h"
+#include "blocks/TextBlock.h"
+#include "blocks/ImageBlock.h"
 #include "Page.h"
 
 // thrown if we get into an unexpected state
@@ -28,7 +28,7 @@ public:
   }
 };
 
-// a very stupid xhtml parser - it will probably work for most simple cases
+// a very stupid xhtml parser - it will probably work for very simple cases
 // but will probably fail for complex ones
 class RubbishHtmlParser
 {
@@ -37,6 +37,7 @@ private:
   int m_length;
 
   std::list<Block *> blocks;
+  TextBlock *currentTextBlock = nullptr;
   std::vector<Page *> pages;
 
 public:
@@ -126,15 +127,23 @@ public:
   //    bool isBoldTag(char *html, int start, int end) {
   //        return (strncmp(html+start, "b", end-start) == 0);
   //    }
-  // start a new text block if needed
-  void startNewBlock()
+  bool isImageTag(const char *html, int index, int length)
   {
-    // only create a new block if the current block has some content in
-    // this prevents lots of blank lines
-    if (blocks.back()->words.size() > 0)
+    if (index + 4 < length)
     {
-      blocks.push_back(new Block());
+      return (strncmp(html + index, "<img", 4) == 0);
     }
+    return false;
+  }
+  // start a new text block if needed
+  void startNewTextBlock()
+  {
+    if (currentTextBlock && currentTextBlock->words.size() == 0)
+    {
+      return;
+    }
+    currentTextBlock = new TextBlock();
+    blocks.push_back(currentTextBlock);
   }
   // skip past any white space characters
   int skipWhiteSpace(const char *html, int index, int length)
@@ -144,6 +153,49 @@ public:
       index++;
     }
     return index;
+  }
+  // find the location of an attribute within a tag
+  bool findAttribute(const char *html, int index, int length, const char *name, int *src_start, int *src_end)
+  {
+    // attribute name length
+    int name_length = strlen(name);
+    // skip forward until we find the name of the attribute
+    while (index < length - name_length && strncmp(html + index, name, name_length) != 0 && html[index] != '>')
+    {
+      index++;
+    }
+    // did we actually fund the attribute?
+    if (index < length - name_length && strncmp(html + index, name, name_length) == 0)
+    {
+      // skip past the name of the attribute
+      index += name_length;
+      // skip past any white space
+      index = skipWhiteSpace(html, index, length);
+      // skip past the "="
+      index++;
+      // skip past any white space
+      index = skipWhiteSpace(html, index, length);
+      // skip past the "
+      index++;
+      if (index >= length)
+      {
+        return false;
+      }
+      // find the end of the attribute value
+      int start = index;
+      while (index < length && html[index] != '"')
+      {
+        index++;
+      }
+      if (index >= length)
+      {
+        return false;
+      }
+      *src_start = start;
+      *src_end = index;
+      return true;
+    }
+    return false;
   }
   // a closing tag will have a '/' character immediately following the '<'
   bool isClosingTag(const char *html, int index, int length)
@@ -194,26 +246,55 @@ public:
       {
         if (isClosingTag(html, index, length))
         {
+          ESP_LOGI(TAG, "found closing tag %.4s", html + index);
           if (isClosingBlockTag(html, index, length))
           {
-            startNewBlock();
+            ESP_LOGI(TAG, "found closing block tag");
+            startNewTextBlock();
           }
           else
           {
+            ESP_LOGI(TAG, "non closing block tag");
             // TODO handle </b>, </i> etc..
           }
         }
         else if (isSelfClosing(html, index, length))
         {
+          ESP_LOGI(TAG, "found self closing tag %.4s", html + index);
+          if (isImageTag(html, index, length))
+          {
+            ESP_LOGI(TAG, "Found image tag %.4s", html + index);
+            int src_start, src_end;
+            if (findAttribute(html, index, length, "src", &src_start, &src_end))
+            {
+              ESP_LOGI(TAG, "Found image tag with src: %.*s", src_end - src_start, html + src_start);
+              // don't leave an empty text block in the list
+              if (currentTextBlock->words.size() == 0)
+              {
+                blocks.pop_back();
+                delete currentTextBlock;
+                currentTextBlock = nullptr;
+              }
+              blocks.push_back(new ImageBlock(src_start, src_end));
+              // start a new text block
+              startNewTextBlock();
+            }
+            else
+            {
+              ESP_LOGE(TAG, "Could not find src attribute");
+            }
+          }
           // TODO handle <br/>
         }
         else if (isBlockTag(html, index, length))
         {
-          // we're assuming that self closing is <br/> or <hr/>
-          startNewBlock();
+          ESP_LOGI(TAG, "found block tag %.4s", html + index);
+          startNewTextBlock();
         }
         else
         {
+          ESP_LOGI(TAG, "Found unhandled tag %.4s", html + index);
+
           // TODO handle </b>, </i> etc...
         }
         index = skipTag(html, index, length);
@@ -225,7 +306,7 @@ public:
         index = skipAlphaNum(html, index, length);
         if (index > wordStart)
         {
-          blocks.back()->words.push_back(new Word(wordStart, index));
+          currentTextBlock->words.push_back(new Word(wordStart, index));
         }
       }
     }
@@ -240,7 +321,7 @@ public:
     {
       index++;
     }
-    blocks.push_back(new Block());
+    startNewTextBlock();
     parse(html, index, length);
     // for (auto block : blocks)
     // {
@@ -273,18 +354,33 @@ public:
     pages.push_back(new Page());
     for (auto block : blocks)
     {
-      for (int line_break_index = 0; line_break_index < block->line_breaks.size(); line_break_index++)
+      if (block->getType() == BlockType::TEXT_BLOCK)
       {
-        if (y + line_height > page_height)
+        TextBlock *textBlock = (TextBlock *)block;
+        for (int line_break_index = 0; line_break_index < textBlock->line_breaks.size(); line_break_index++)
+        {
+          if (y + line_height > page_height)
+          {
+            pages.push_back(new Page());
+            y = 0;
+          }
+          pages.back()->elements.push_back(new PageLine(textBlock, line_break_index, y));
+          y += line_height;
+        }
+        // add an extra line between blocks
+        y += line_height;
+      }
+      if (block->getType() == BlockType::IMAGE_BLOCK)
+      {
+        ImageBlock *imageBlock = (ImageBlock *)block;
+        if (y + imageBlock->height > page_height)
         {
           pages.push_back(new Page());
           y = 0;
         }
-        pages.back()->lines.push_back(new PageLine(block, line_break_index, y));
-        y += line_height;
+        pages.back()->elements.push_back(new PageImage(imageBlock, y));
+        y += imageBlock->height;
       }
-      // add an extra line between blocks
-      y += line_height;
     }
   }
   int get_page_count()
