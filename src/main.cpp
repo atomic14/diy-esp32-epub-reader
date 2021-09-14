@@ -25,19 +25,18 @@ void main_task(void *param)
   ESP_LOGI("main", "Memory after sdcard init: %d", esp_get_free_heap_size());
   // read the epub file
   // Epub *epub = new Epub("/sdcard/pg2701.epub");
-  Epub *epub = new Epub("/sdcard/pg14838-images.epub");
+  // Epub *epub = new Epub("/sdcard/pg14838-images.epub");
+  Epub *epub = new Epub("/sdcard/pg19337-images.epub");
   ESP_LOGI("main", "After epub create: %d", esp_get_free_heap_size());
-  // get the current section contents
-  // epub->next_section();
-  const char *html = epub->get_section_contents(epub->get_current_section());
-  ESP_LOGI("main", "After read html: %d", esp_get_free_heap_size());
-  // parse the html
-  RubbishHtmlParser *parser = new RubbishHtmlParser(html, strlen(html));
-  ESP_LOGI("main", "After parse: %d", esp_get_free_heap_size());
-  parser->layout(renderer);
-  ESP_LOGI("main", "After layout: %d", esp_get_free_heap_size());
+  // go through the book
   do
   {
+    char *html = epub->get_section_contents(epub->get_current_section());
+    ESP_LOGI("main", "After read html: %d", esp_get_free_heap_size());
+    RubbishHtmlParser *parser = new RubbishHtmlParser(html, strlen(html));
+    ESP_LOGI("main", "After parse: %d", esp_get_free_heap_size());
+    parser->layout(renderer);
+    ESP_LOGI("main", "After layout: %d", esp_get_free_heap_size());
     for (int page = 0; page < parser->get_page_count(); page++)
     {
       ESP_LOGI("main", "rendering page %d of %d", page, parser->get_page_count());
@@ -49,6 +48,8 @@ void main_task(void *param)
       renderer->flush_display();
       vTaskDelay(pdMS_TO_TICKS(1000));
     }
+    delete parser;
+    delete html;
   } while (epub->next_section());
   esp_deep_sleep_start();
 

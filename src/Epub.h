@@ -103,7 +103,7 @@ public:
   {
     m_current_section = section;
   }
-  const char *get_section_contents(int section)
+  char *get_section_contents(int section)
   {
     if (section < 0 || section >= m_sections.size())
     {
@@ -112,7 +112,7 @@ public:
     }
     ZipFile zip(m_path);
     ESP_LOGI(TAG, "Loading Section: %s", m_sections[section].c_str());
-    auto content = (const char *)zip.read_file_to_memory(m_sections[section].c_str());
+    auto content = (char *)zip.read_file_to_memory(m_sections[section].c_str());
     if (!content)
     {
       ESP_LOGE(TAG, "Failed to read section");
