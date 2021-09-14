@@ -5,6 +5,7 @@
 #include <list>
 #include <vector>
 #include <exception>
+#include "ZipFile.h"
 #include "Renderer/Renderer.h"
 #include "htmlEntities.h"
 #include "blocks/TextBlock.h"
@@ -246,28 +247,22 @@ public:
       {
         if (isClosingTag(html, index, length))
         {
-          ESP_LOGI(TAG, "found closing tag %.4s", html + index);
           if (isClosingBlockTag(html, index, length))
           {
-            ESP_LOGI(TAG, "found closing block tag");
             startNewTextBlock();
           }
           else
           {
-            ESP_LOGI(TAG, "non closing block tag");
             // TODO handle </b>, </i> etc..
           }
         }
         else if (isSelfClosing(html, index, length))
         {
-          ESP_LOGI(TAG, "found self closing tag %.4s", html + index);
           if (isImageTag(html, index, length))
           {
-            ESP_LOGI(TAG, "Found image tag %.4s", html + index);
             int src_start, src_end;
             if (findAttribute(html, index, length, "src", &src_start, &src_end))
             {
-              ESP_LOGI(TAG, "Found image tag with src: %.*s", src_end - src_start, html + src_start);
               // don't leave an empty text block in the list
               if (currentTextBlock->words.size() == 0)
               {
@@ -288,13 +283,10 @@ public:
         }
         else if (isBlockTag(html, index, length))
         {
-          ESP_LOGI(TAG, "found block tag %.4s", html + index);
           startNewTextBlock();
         }
         else
         {
-          ESP_LOGI(TAG, "Found unhandled tag %.4s", html + index);
-
           // TODO handle </b>, </i> etc...
         }
         index = skipTag(html, index, length);
@@ -345,6 +337,7 @@ public:
     for (auto block : blocks)
     {
       block->layout(m_html, renderer);
+      vTaskDelay(1);
     }
     // now we need to allocate the lines to pages
     // we'll run through each block and the lines within each block and allocate
@@ -354,6 +347,7 @@ public:
     pages.push_back(new Page());
     for (auto block : blocks)
     {
+      vTaskDelay(1);
       if (block->getType() == BlockType::TEXT_BLOCK)
       {
         TextBlock *textBlock = (TextBlock *)block;

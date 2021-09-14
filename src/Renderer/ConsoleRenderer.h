@@ -48,6 +48,10 @@ public:
   {
     // nop
   }
+  virtual void draw_pixel(int x, int y, uint8_t color)
+  {
+    //nop
+  }
   virtual int get_page_width()
   {
     return 40;

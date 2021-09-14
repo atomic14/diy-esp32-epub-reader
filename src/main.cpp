@@ -28,8 +28,8 @@ void main_task(void *param)
   Epub *epub = new Epub("/sdcard/pg14838-images.epub");
   ESP_LOGI("main", "After epub create: %d", esp_get_free_heap_size());
   // get the current section contents
-  epub->next_section();
-  ESP_LOGI("main", "After skip section 1: %d", esp_get_free_heap_size());
+  // epub->next_section();
+  // ESP_LOGI("main", "After skip section 1: %d", esp_get_free_heap_size());
   // epub->next_section();
   // ESP_LOGI("main", "After skip section 2: %d", esp_get_free_heap_size());
   const char *html = epub->get_section_contents(epub->get_current_section());
@@ -47,8 +47,8 @@ void main_task(void *param)
     ESP_LOGI("main", "rendered page %d of %d", page, parser->get_page_count());
     // log out the free memory
     ESP_LOGI("main", "after render: %d", esp_get_free_heap_size());
-    vTaskDelay(pdMS_TO_TICKS(2000));
     renderer->flush_display();
+    vTaskDelay(pdMS_TO_TICKS(1000));
   }
   esp_deep_sleep_start();
 
@@ -77,10 +77,9 @@ void main_task(void *param)
   //   ESP_LOGI("main", "rendered page %d of %d", page, parser->get_page_count());
   //   vTaskDelay(pdMS_TO_TICKS(2000));
   // }
-  esp_deep_sleep_start();
 }
 
 void app_main()
 {
-  xTaskCreate(main_task, "main_task", 16384, NULL, 1, NULL);
+  xTaskCreatePinnedToCore(main_task, "main_task", 32768, NULL, 1, NULL, 1);
 }

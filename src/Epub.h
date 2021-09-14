@@ -27,7 +27,6 @@ public:
     ESP_LOGI(TAG, "Epub: %s", m_path);
     ZipFile zip(m_path);
     const char *contents = (const char *)zip.read_file_to_memory("OEBPS/content.opf");
-    ESP_LOGI(TAG, "contents: %s", contents);
     // parse the contents
     tinyxml2::XMLDocument doc;
     auto result = doc.Parse(contents);
@@ -46,7 +45,31 @@ public:
     std::map<std::string, std::string> items;
     while (item)
     {
+      vTaskDelay(10);
       items[item->Attribute("id")] = std::string("OEBPS/") + item->Attribute("href");
+      // extract any images for use late
+      if (strcmp(item->Attribute("media-type"), "image/jpeg") == 0 ||
+          strcmp(item->Attribute("media-type"), "image/png") == 0 ||
+          strcmp(item->Attribute("media-type"), "image/gif") == 0)
+      {
+        // check to see if the file exists
+        std::string dst_file = std::string("/sdcard/") + item->Attribute("href");
+        FILE *fp = fopen(dst_file.c_str(), "rb");
+        if (!fp)
+        {
+          ESP_LOGI(TAG, "Extracting image: %s", item->Attribute("href"));
+          bool res = zip.read_file_to_file(items[item->Attribute("id")].c_str(), dst_file.c_str());
+          if (!res)
+          {
+            ESP_LOGE(TAG, "Failed to extract image: %s", item->Attribute("href"));
+          }
+        }
+        else
+        {
+          ESP_LOGI(TAG, "Image already extracted: %s", item->Attribute("href"));
+          fclose(fp);
+        }
+      }
       item = item->NextSiblingElement("item");
     }
     // find the spine

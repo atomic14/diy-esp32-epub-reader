@@ -59,7 +59,10 @@ public:
   {
     epd_draw_rect({.x = x, .y = y, .width = width, .height = height}, 0, m_frame_buffer);
   }
-
+  virtual void draw_pixel(int x, int y, uint8_t color)
+  {
+    epd_draw_pixel(x, y, color, m_frame_buffer);
+  }
   void clear_display()
   {
     epd_hl_set_all_white(&m_hl);

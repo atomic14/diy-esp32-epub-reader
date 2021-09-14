@@ -85,13 +85,28 @@ public:
       ESP_LOGE(TAG, "Error %s\n", mz_zip_get_error_string(zip_archive.m_last_error));
       return false;
     }
-    bool res = mz_zip_reader_extract_file_to_file(&zip_archive, filename, dest, 0);
-    mz_zip_reader_end(&zip_archive);
-    if (!res)
+    // Run through the archive and find the requiested file
+    for (int i = 0; i < (int)mz_zip_reader_get_num_files(&zip_archive); i++)
     {
-      ESP_LOGE(TAG, "mz_zip_reader_extract_file_to_file() %s to %s failed!\n", filename, dest);
+      mz_zip_archive_file_stat file_stat;
+      if (!mz_zip_reader_file_stat(&zip_archive, i, &file_stat))
+      {
+        ESP_LOGE(TAG, "mz_zip_reader_file_stat() failed!\n");
+        ESP_LOGE(TAG, "Error %s\n", mz_zip_get_error_string(zip_archive.m_last_error));
+        mz_zip_reader_end(&zip_archive);
+        return false;
+      }
+      // is this the file we're looking for?
+      if (strcmp(filename, file_stat.m_filename) == 0)
+      {
+        ESP_LOGI(TAG, "Extracting %s\n", file_stat.m_filename);
+        mz_zip_reader_extract_file_to_file(&zip_archive, file_stat.m_filename, dest, 0);
+        mz_zip_reader_end(&zip_archive);
+        return true;
+      }
     }
-    return res;
+    mz_zip_reader_end(&zip_archive);
+    return false;
   }
 
   ~ZipFile()
