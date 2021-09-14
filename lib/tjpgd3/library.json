@@ -1,0 +1,6 @@
+{
+  "build": {
+    "includeDir": "src",
+    "srcDir": "src"
+  }
+}

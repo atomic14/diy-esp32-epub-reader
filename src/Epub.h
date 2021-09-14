@@ -26,7 +26,8 @@ public:
     // we can then read the files in the order they are in the spine
     ESP_LOGI(TAG, "Epub: %s", m_path);
     ZipFile zip(m_path);
-    const char *contents = zip.read_file_to_memory("OEBPS/content.opf");
+    const char *contents = (const char *)zip.read_file_to_memory("OEBPS/content.opf");
+    ESP_LOGI(TAG, "contents: %s", contents);
     // parse the contents
     tinyxml2::XMLDocument doc;
     auto result = doc.Parse(contents);
@@ -88,7 +89,7 @@ public:
     }
     ZipFile zip(m_path);
     ESP_LOGI(TAG, "Loading Section: %s", m_sections[section].c_str());
-    auto content = zip.read_file_to_memory(m_sections[section].c_str());
+    auto content = (const char *)zip.read_file_to_memory(m_sections[section].c_str());
     if (!content)
     {
       ESP_LOGE(TAG, "Failed to read section");

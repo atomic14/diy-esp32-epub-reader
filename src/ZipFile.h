@@ -74,6 +74,26 @@ public:
     mz_zip_reader_end(&zip_archive);
     return nullptr;
   }
+  bool read_file_to_file(const char *filename, const char *dest)
+  {
+    mz_zip_archive zip_archive;
+    memset(&zip_archive, 0, sizeof(zip_archive));
+    bool status = mz_zip_reader_init_file(&zip_archive, m_filename, 0);
+    if (!status)
+    {
+      ESP_LOGE(TAG, "mz_zip_reader_init_file() failed!\n");
+      ESP_LOGE(TAG, "Error %s\n", mz_zip_get_error_string(zip_archive.m_last_error));
+      return false;
+    }
+    bool res = mz_zip_reader_extract_file_to_file(&zip_archive, filename, dest, 0);
+    mz_zip_reader_end(&zip_archive);
+    if (!res)
+    {
+      ESP_LOGE(TAG, "mz_zip_reader_extract_file_to_file() %s to %s failed!\n", filename, dest);
+    }
+    return res;
+  }
+
   ~ZipFile()
   {
   }
