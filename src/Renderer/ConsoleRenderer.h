@@ -52,6 +52,10 @@ public:
   {
     //nop
   }
+  virtual void clear_screen()
+  {
+    //nop
+  }
   virtual int get_page_width()
   {
     return 40;

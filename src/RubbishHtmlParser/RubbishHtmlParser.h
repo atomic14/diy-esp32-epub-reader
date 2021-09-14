@@ -387,6 +387,7 @@ public:
     {
       throw std::runtime_error("Invalid page index");
     }
+    renderer->clear_screen();
     pages[page_index]->render(m_html, renderer);
   }
 };

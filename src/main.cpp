@@ -25,8 +25,8 @@ void main_task(void *param)
   ESP_LOGI("main", "Memory after sdcard init: %d", esp_get_free_heap_size());
   // read the epub file
   // Epub *epub = new Epub("/sdcard/pg2701.epub");
-  // Epub *epub = new Epub("/sdcard/pg14838-images.epub");
-  Epub *epub = new Epub("/sdcard/pg19337-images.epub");
+  Epub *epub = new Epub("/sdcard/pg14838-images.epub");
+  // Epub *epub = new Epub("/sdcard/pg19337-images.epub");
   ESP_LOGI("main", "After epub create: %d", esp_get_free_heap_size());
   // go through the book
   do
@@ -40,7 +40,6 @@ void main_task(void *param)
     for (int page = 0; page < parser->get_page_count(); page++)
     {
       ESP_LOGI("main", "rendering page %d of %d", page, parser->get_page_count());
-      renderer->clear_display();
       parser->render_page(page, renderer);
       ESP_LOGI("main", "rendered page %d of %d", page, parser->get_page_count());
       // log out the free memory
