@@ -1,3 +1,5 @@
+#include <sys/types.h>
+#include <dirent.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <esp_log.h>
@@ -23,6 +25,24 @@ void main_task(void *param)
   // initialise the SDCard
   SDCard *sdcard = new SDCard("/sdcard", PIN_NUM_MISO, PIN_NUM_MOSI, PIN_NUM_CLK, PIN_NUM_CS);
   ESP_LOGI("main", "Memory after sdcard init: %d", esp_get_free_heap_size());
+  // list the file
+  DIR *dir;
+  struct dirent *ent;
+  if ((dir = opendir("/sdcard")) != NULL)
+  {
+    /* print all the files and directories within directory */
+    while ((ent = readdir(dir)) != NULL)
+    {
+      printf("%s\n", ent->d_name);
+    }
+    closedir(dir);
+  }
+  else
+  {
+    /* could not open directory */
+    perror("");
+  }
+
   // read the epub file
   // Epub *epub = new Epub("/sdcard/pg2701.epub");
   Epub *epub = new Epub("/sdcard/pg14838-images.epub");
@@ -52,32 +72,6 @@ void main_task(void *param)
     delete html;
   }
   esp_deep_sleep_start();
-
-  // create the console renderer
-  // ConsoleRenderer *renderer = new ConsoleRenderer();
-  // // initialise the SDCard
-  // SDCard *sdcard = new SDCard("/sdcard", PIN_NUM_MISO, PIN_NUM_MOSI, PIN_NUM_CLK, PIN_NUM_CS);
-  // // read the epub file
-  // Epub *epub = new Epub("/sdcard/pg2701.epub");
-  // // Epub *epub = new Epub("/sdcard/pg14838-images.epub");
-
-  // // get the current section contents
-  // epub->next_section();
-  // const char *html = epub->get_section_contents(epub->get_current_section());
-  // // ESP_LOGI("main", "html: %s", html);
-  // // parse the html
-  // RubbishHtmlParser *parser = new RubbishHtmlParser(html, strlen(html));
-  // ESP_LOGI("main", "parsed html");
-  // parser->layout(renderer);
-  // ESP_LOGI("main", "layed out html");
-  // for (int page = 0; page < parser->get_page_count(); page++)
-  // {
-  //   ESP_LOGI("main", "rendering page %d of %d", page, parser->get_page_count());
-
-  //   parser->render_page(page, renderer);
-  //   ESP_LOGI("main", "rendered page %d of %d", page, parser->get_page_count());
-  //   vTaskDelay(pdMS_TO_TICKS(2000));
-  // }
 }
 
 void app_main()
