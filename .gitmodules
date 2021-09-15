@@ -3,4 +3,4 @@
 	url = https://github.com/vroland/epdiy.git
 [submodule "lib/png/PNGdec"]
 	path = lib/png/PNGdec
-	url = git@github.com:bitbank2/PNGdec.git
+	url = https://github.com/atomic14/PNGdec.git
