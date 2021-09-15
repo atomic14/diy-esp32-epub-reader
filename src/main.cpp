@@ -27,15 +27,16 @@ void main_task(void *param)
   // Epub *epub = new Epub("/sdcard/pg2701.epub");
   Epub *epub = new Epub("/sdcard/pg14838-images.epub");
   // Epub *epub = new Epub("/sdcard/pg19337-images.epub");
+  epub->load();
   ESP_LOGI("main", "After epub create: %d", esp_get_free_heap_size());
   // go through the book
-  do
+  for (int section_idx = 0; section_idx < epub->get_sections_count(); section_idx++)
   {
-    char *html = epub->get_section_contents(epub->get_current_section());
+    char *html = epub->get_section_contents(section_idx);
     ESP_LOGI("main", "After read html: %d", esp_get_free_heap_size());
     RubbishHtmlParser *parser = new RubbishHtmlParser(html, strlen(html));
     ESP_LOGI("main", "After parse: %d", esp_get_free_heap_size());
-    parser->layout(renderer);
+    parser->layout(renderer, epub);
     ESP_LOGI("main", "After layout: %d", esp_get_free_heap_size());
     for (int page = 0; page < parser->get_page_count(); page++)
     {
@@ -49,7 +50,7 @@ void main_task(void *param)
     }
     delete parser;
     delete html;
-  } while (epub->next_section());
+  }
   esp_deep_sleep_start();
 
   // create the console renderer

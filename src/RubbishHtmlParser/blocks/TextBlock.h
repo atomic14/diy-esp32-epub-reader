@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../Renderer/Renderer.h"
 #include "Block.h"
 // represents a single word in the html
 // to reduce memory use, the word is stored as a reference
@@ -46,7 +47,7 @@ public:
     }
   }
   // given a renderer works out where to break the words into lines
-  void layout(const char *html, Renderer *renderer)
+  void layout(const char *html, Renderer *renderer, Epub *epub)
   {
     // make sure all the words have been measured
     for (auto word : words)

@@ -11,6 +11,7 @@
 #include "blocks/TextBlock.h"
 #include "blocks/ImageBlock.h"
 #include "Page.h"
+#include "Epub.h"
 
 // thrown if we get into an unexpected state
 class ParseException : public std::exception
@@ -328,7 +329,7 @@ public:
     }
   }
 
-  void layout(Renderer *renderer)
+  void layout(Renderer *renderer, Epub *epub)
   {
     const int line_height = renderer->get_line_height();
     const int page_height = renderer->get_page_height();
@@ -336,7 +337,7 @@ public:
     // line breaks based on the page width
     for (auto block : blocks)
     {
-      block->layout(m_html, renderer);
+      block->layout(m_html, renderer, epub);
       vTaskDelay(1);
     }
     // now we need to allocate the lines to pages
@@ -347,6 +348,7 @@ public:
     pages.push_back(new Page());
     for (auto block : blocks)
     {
+      // feed the watchdog
       vTaskDelay(1);
       if (block->getType() == BlockType::TEXT_BLOCK)
       {

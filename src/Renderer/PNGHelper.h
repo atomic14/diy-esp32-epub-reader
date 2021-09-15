@@ -56,12 +56,11 @@ private:
   friend void png_draw_callback(PNGDRAW *draw);
 
 public:
-  PNGHelper(const std::string &filename) : m_filename(filename) {}
-  bool get_size(int *width, int *height, int max_width, int max_height)
+  bool get_size(const std::string &path, int *width, int *height, int max_width, int max_height)
   {
     ESP_LOGI("IMG", "Getting size of %s", m_filename.c_str());
     scale = 1;
-    int rc = png.open(m_filename.c_str(), myOpen, myClose, myRead, mySeek, NULL);
+    int rc = png.open(path.c_str(), myOpen, myClose, myRead, mySeek, NULL);
     if (rc == PNG_SUCCESS)
     {
       ESP_LOGI(TAG, "image specs: (%d x %d), %d bpp, pixel type: %d", png.getWidth(), png.getHeight(), png.getBpp(), png.getPixelType());
@@ -79,13 +78,13 @@ public:
       return false;
     }
   }
-  bool render(Renderer *renderer, int x_pos, int y_pos, int width, int height)
+  bool render(const std::string &path, Renderer *renderer, int x_pos, int y_pos, int width, int height)
   {
     this->renderer = renderer;
     this->y_pos = y_pos;
     this->x_pos = x_pos;
     this->current_y = 0;
-    int rc = png.open(m_filename.c_str(), myOpen, myClose, myRead, mySeek, png_draw_callback);
+    int rc = png.open(path.c_str(), myOpen, myClose, myRead, mySeek, png_draw_callback);
     if (rc == PNG_SUCCESS)
     {
       this->tmp_rgb565_buffer = (uint16_t *)malloc(png.getWidth() * 2);
@@ -119,7 +118,7 @@ public:
       // draw the average value from the accumulation buffer
       for (int i = 0; i < png.getWidth(); i++)
       {
-        renderer->draw_pixel(i * scale, draw->y * scale, accumulation_buffer[int(i*scale)] / count_buffer[int(i*scale)]);
+        renderer->draw_pixel(i * scale, draw->y * scale, accumulation_buffer[int(i * scale)] / count_buffer[int(i * scale)]);
       }
       // clear the accumulation buffer
       memset(accumulation_buffer, 0, sizeof(int) * png.getWidth() * scale);

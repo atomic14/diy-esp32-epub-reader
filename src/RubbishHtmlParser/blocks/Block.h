@@ -1,6 +1,7 @@
 #pragma once
 
-#include "../../Renderer/Renderer.h"
+class Renderer;
+class Epub;
 
 typedef enum
 {
@@ -13,7 +14,7 @@ class Block
 {
 public:
   virtual ~Block() {}
-  virtual void layout(const char *html, Renderer *renderer) = 0;
+  virtual void layout(const char *html, Renderer *renderer, Epub *epub) = 0;
   virtual void dump(const char *html) = 0;
   virtual BlockType getType() = 0;
 };
