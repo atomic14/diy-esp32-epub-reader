@@ -57,7 +57,7 @@ void Renderer::draw_image(const std::string &filename, int x, int y, int width, 
 bool Renderer::get_image_size(const std::string &filename, int *width, int *height)
 {
   ImageHelper *helper = get_image_helper(filename);
-  if (helper && helper->get_size(filename, width, height, get_page_width(), get_page_height()))
+  if (helper && helper->get_size(filename, width, height))
   {
     return true;
   }

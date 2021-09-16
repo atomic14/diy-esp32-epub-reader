@@ -9,10 +9,9 @@ static const char *TAG = "JPG";
 
 #define POOL_SIZE 32768
 
-bool JPEGHelper::get_size(const std::string &path, int *width, int *height, int max_width, int max_height)
+bool JPEGHelper::get_size(const std::string &path, int *width, int *height)
 {
   ESP_LOGI(TAG, "Getting size of %s", path.c_str());
-  scale_factor = 0;
   void *pool = malloc(POOL_SIZE);
   if (!pool)
   {
@@ -33,13 +32,6 @@ bool JPEGHelper::get_size(const std::string &path, int *width, int *height, int 
     ESP_LOGI(TAG, "JPEG Decoded - size %d,%d", dec.width, dec.height);
     *width = dec.width;
     *height = dec.height;
-
-    while (scale_factor < 3 && (*width > max_width || *height > max_height))
-    {
-      *width /= 2;
-      *height /= 2;
-      scale_factor++;
-    }
   }
   else
   {
@@ -74,7 +66,21 @@ bool JPEGHelper::render(const std::string &path, Renderer *renderer, int x_pos, 
   JRESULT res = jd_prepare(&dec, read_jpeg_data, pool, POOL_SIZE, this);
   if (res == JDR_OK)
   {
-    ESP_LOGI(TAG, "JPEG Decoded - size %d,%d", dec.width, dec.height);
+    this->x_scale = std::min(1.0f, float(width) / float(dec.width));
+    this->y_scale = std::min(1.0f, float(height) / float(dec.height));
+
+    this->scale_factor = 0;
+    while (x_scale <= 1.0f && y_scale <= 1.0f && scale_factor <= 3)
+    {
+      this->scale_factor++;
+      x_scale *= 2;
+      y_scale *= 2;
+    }
+    scale_factor--;
+    x_scale /= 2;
+    y_scale /= 2;
+
+    ESP_LOGI(TAG, "JPEG Decoded - size %d,%d, scale = %f, %f", dec.width, dec.height, x_scale, y_scale);
     jd_decomp(&dec, draw_jpeg_function, scale_factor);
   }
   else
@@ -124,10 +130,9 @@ int draw_jpeg_function(
   {
     for (int x = rect->left; x <= rect->right; x++)
     {
-      renderer->draw_pixel(x + context->x_pos, y + context->y_pos, *grey);
+      renderer->draw_pixel(context->x_pos + x * context->x_scale, context->y_pos + y * context->y_scale, *grey);
       grey++;
     }
   }
-  vTaskDelay(1);
   return 1;
 }

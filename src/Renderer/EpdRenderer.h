@@ -48,9 +48,9 @@ public:
     int ypos = y + this->get_line_height();
     epd_write_string(m_font, text.c_str(), &x, &ypos, m_frame_buffer, &m_font_props);
   }
-  void draw_rect(int x, int y, int width, int height)
+  void draw_rect(int x, int y, int width, int height, uint8_t color = 0)
   {
-    epd_draw_rect({.x = x, .y = y, .width = width, .height = height}, 0, m_frame_buffer);
+    epd_draw_rect({.x = x, .y = y, .width = width, .height = height}, color, m_frame_buffer);
   }
   virtual void draw_pixel(int x, int y, uint8_t color)
   {
@@ -65,8 +65,8 @@ public:
     ESP_LOGI("EPD", "Flushing display");
     epd_poweron();
     // ESP_LOGI(TAG, "epd_ambient_temperature=%f", epd_ambient_temperature());
-    epd_hl_update_screen(&m_hl, MODE_GL16, 20);
-    vTaskDelay(50);
+    epd_hl_update_screen(&m_hl, MODE_GC16, 20);
+    // vTaskDelay(50);
     epd_poweroff();
   }
   virtual void clear_screen()

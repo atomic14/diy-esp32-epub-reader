@@ -30,10 +30,13 @@ void main_task(void *param)
   EpubList *epubList = new EpubList();
   if (epubList->load("/sdcard/"))
   {
-    vTaskDelay(1);
     ESP_LOGI("main", "Epub files loaded");
-    epubList->render(0, renderer);
-    renderer->flush_display();
+    for (int i = 0; i < epubList->get_num_epubs(); i++)
+    {
+      epubList->render(i, renderer);
+      renderer->flush_display();
+      vTaskDelay(1);
+    }
   }
   else
   {

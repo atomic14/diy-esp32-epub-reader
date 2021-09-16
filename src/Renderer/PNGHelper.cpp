@@ -45,19 +45,15 @@ int32_t mySeek(PNGFILE *png_file, int32_t position)
   return fseek((FILE *)(png_file->fHandle), position, SEEK_SET);
 }
 
-bool PNGHelper::get_size(const std::string &path, int *width, int *height, int max_width, int max_height)
+bool PNGHelper::get_size(const std::string &path, int *width, int *height)
 {
   ESP_LOGI("IMG", "Getting size of %s", m_filename.c_str());
-  scale = 1;
   int rc = png.open(path.c_str(), myOpen, myClose, myRead, mySeek, NULL);
   if (rc == PNG_SUCCESS)
   {
     ESP_LOGI(TAG, "image specs: (%d x %d), %d bpp, pixel type: %d", png.getWidth(), png.getHeight(), png.getBpp(), png.getPixelType());
     *width = png.getWidth();
     *height = png.getHeight();
-    scale = std::min(1.0f, std::min(float(max_width) / float(*width), float(max_height) / float(*height)));
-    *width = *width * scale;
-    *height = *height * scale;
     return true;
     png.close();
   }
@@ -72,21 +68,17 @@ bool PNGHelper::render(const std::string &path, Renderer *renderer, int x_pos, i
   this->renderer = renderer;
   this->y_pos = y_pos;
   this->x_pos = x_pos;
-  this->current_y = 0;
   int rc = png.open(path.c_str(), myOpen, myClose, myRead, mySeek, png_draw_callback);
   if (rc == PNG_SUCCESS)
   {
+    this->x_scale = std::min(1.0f, float(width) / float(png.getWidth()));
+    this->y_scale = std::min(1.0f, float(height) / float(png.getHeight()));
+    this->last_y = -1;
     this->tmp_rgb565_buffer = (uint16_t *)malloc(png.getWidth() * 2);
-    this->accumulation_buffer = (int *)malloc(sizeof(int) * png.getWidth() * scale);
-    this->count_buffer = (int *)malloc(sizeof(int) * png.getWidth() * scale);
-    memset(accumulation_buffer, 0, sizeof(int) * png.getWidth() * scale);
-    memset(count_buffer, 0, sizeof(int) * png.getWidth() * scale);
 
     png.decode(this, 0);
     png.close();
     free(this->tmp_rgb565_buffer);
-    free(this->accumulation_buffer);
-    free(this->count_buffer);
     return true;
   }
   else
@@ -97,30 +89,21 @@ bool PNGHelper::render(const std::string &path, Renderer *renderer, int x_pos, i
 }
 void PNGHelper::draw_callback(PNGDRAW *draw)
 {
-  if (draw->y * scale > current_y)
-  {
-    // draw the average value from the accumulation buffer
-    for (int i = 0; i < png.getWidth(); i++)
-    {
-      renderer->draw_pixel(i * scale, draw->y * scale, accumulation_buffer[int(i * scale)] / count_buffer[int(i * scale)]);
-    }
-    // clear the accumulation buffer
-    memset(accumulation_buffer, 0, sizeof(int) * png.getWidth() * scale);
-    memset(count_buffer, 0, sizeof(int) * png.getWidth() * scale);
-    current_y = draw->y * scale;
-  }
   // // get the rgb 565 pixel values
   png.getLineAsRGB565(draw, tmp_rgb565_buffer, 0, 0);
   // add the grayscale values to the accumulation buffer
-  for (int i = 0; i < png.getWidth(); i++)
+  int y = y_pos + draw->y * y_scale;
+  if (y != last_y)
   {
-    uint8_t r, g, b;
-    convert_rgb_565_to_rgb(tmp_rgb565_buffer[i], &r, &g, &b);
-    uint8_t gray = (r + g + b) / 3;
-    accumulation_buffer[int(i * scale)] += gray;
-    count_buffer[int(i * scale)]++;
+    for (int x = 0; x < png.getWidth() * x_scale; x++)
+    {
+      uint8_t r, g, b;
+      convert_rgb_565_to_rgb(tmp_rgb565_buffer[int(x / x_scale)], &r, &g, &b);
+      uint8_t gray = (r + g + b) / 3;
+      renderer->draw_pixel(x_pos + x, y, gray);
+    }
+    last_y = y;
   }
-  vTaskDelay(1);
 };
 
 void png_draw_callback(PNGDRAW *draw)

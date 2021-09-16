@@ -44,7 +44,7 @@ public:
       printf("%c", src[i]);
     }
   }
-  void draw_rect(int x, int y, int width, int height)
+  void draw_rect(int x, int y, int width, int height, uint8_t color = 0)
   {
     // nop
   }

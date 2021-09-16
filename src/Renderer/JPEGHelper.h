@@ -20,6 +20,8 @@ class JPEGHelper : public ImageHelper
 {
 private:
   std::string m_filename;
+  float x_scale;
+  float y_scale;
   int scale_factor;
   // temporary vars used for the JPEG callbacks
   FILE *fp;
@@ -40,6 +42,6 @@ private:
   );
 
 public:
-  bool get_size(const std::string &path, int *width, int *height, int max_width, int max_height);
+  bool get_size(const std::string &path, int *width, int *height);
   bool render(const std::string &path, Renderer *renderer, int x_pos, int y_pos, int width, int height);
 };

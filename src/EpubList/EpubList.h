@@ -9,6 +9,8 @@ class EpubList
 {
 private:
   std::vector<Epub *> epubs;
+  int last_rendered_page = -1;
+  int last_selected_item = -1;
 
 public:
   bool load(char *path);
