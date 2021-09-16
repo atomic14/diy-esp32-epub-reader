@@ -38,15 +38,9 @@ public:
   }
   void draw_text(int x, int y, const char *src, int start_index, int end_index, bool italic = false, bool bold = false)
   {
-    int ypos = y + this->get_line_height();
     get_text(src, start_index, end_index);
+    int ypos = y + get_line_height();
     epd_write_string(m_font, buffer, &x, &ypos, m_frame_buffer, &m_font_props);
-  }
-  void draw_text_box(const std::string &text, int x, int y, int width, int height)
-  {
-    // TODO - wrap the string
-    int ypos = y + this->get_line_height();
-    epd_write_string(m_font, text.c_str(), &x, &ypos, m_frame_buffer, &m_font_props);
   }
   void draw_rect(int x, int y, int width, int height, uint8_t color = 0)
   {

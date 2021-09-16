@@ -67,3 +67,27 @@ bool Renderer::get_image_size(const std::string &filename, int *width, int *heig
   *height = *width;
   return false;
 }
+
+void Renderer::draw_text_box(const std::string &text, int x, int y, int width, int height)
+{
+  int length = text.length();
+  // fit the text into the box
+  int start = 0;
+  int end = 1;
+  int ypos = 0;
+  while (start < length && ypos + get_line_height() < height)
+  {
+    while (end < length && get_text_width(text.c_str(), start, end, false, false) < width)
+    {
+      end++;
+    }
+    if (get_text_width(text.c_str(), start, end, false, false) > width)
+    {
+      end--;
+    }
+    draw_text(x, y + ypos, text.c_str(), start, end, false, false);
+    ypos += get_line_height();
+    start = end;
+    end = start + 1;
+  }
+}

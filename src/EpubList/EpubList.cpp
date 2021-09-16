@@ -11,7 +11,7 @@
 
 static const char *TAG = "PUBLIST";
 
-#define PADDING 40
+#define PADDING 20
 #define EPUBS_PER_PAGE 5
 
 bool EpubList::load(char *path)
@@ -99,11 +99,15 @@ void EpubList::render(int selected_item, Renderer *renderer)
     }
     if (last_selected_item == i)
     {
-      renderer->draw_rect(PADDING / 2, ypos + PADDING / 2, renderer->get_page_width() - PADDING, cell_height - PADDING, 255);
+      for(int i = 0; i<3; i++) {
+        renderer->draw_rect(PADDING / 2+i, ypos + PADDING / 2 + i, renderer->get_page_width() - PADDING - 2*i, cell_height - PADDING - 2*i, 255);
+      }
     }
     if (selected_item == i)
     {
-      renderer->draw_rect(PADDING / 2, ypos + PADDING / 2, renderer->get_page_width() - PADDING, cell_height - PADDING);
+      for(int i = 0; i<3; i++) {
+        renderer->draw_rect(PADDING / 2+i, ypos + PADDING / 2 + i, renderer->get_page_width() - PADDING - 2*i, cell_height - PADDING - 2*i, 0);
+      }
     }
     ypos += cell_height;
   }
