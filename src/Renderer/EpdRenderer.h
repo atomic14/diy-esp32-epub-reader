@@ -13,20 +13,6 @@ private:
   EpdiyHighlevelState m_hl;
   uint8_t *m_frame_buffer;
   EpdFontProperties m_font_props;
-  // temp buffer for measuring and rendering text
-  char buffer[100];
-
-  void get_text(const char *src, int start_index, int end_index)
-  {
-    // make a copy of the string from the src to the temp buffer
-    // TODO handle html entities in the string
-    int index = 0;
-    for (int i = start_index; i < end_index && index < 99; i++)
-    {
-      buffer[index++] = src[i];
-    }
-    buffer[index] = 0;
-  }
 
 public:
   EpdRenderer()
@@ -56,6 +42,12 @@ public:
     get_text(src, start_index, end_index);
     epd_write_string(m_font, buffer, &x, &ypos, m_frame_buffer, &m_font_props);
   }
+  void draw_text_box(const std::string &text, int x, int y, int width, int height)
+  {
+    // TODO - wrap the string
+    int ypos = y + this->get_line_height();
+    epd_write_string(m_font, text.c_str(), &x, &ypos, m_frame_buffer, &m_font_props);
+  }
   void draw_rect(int x, int y, int width, int height)
   {
     epd_draw_rect({.x = x, .y = y, .width = width, .height = height}, 0, m_frame_buffer);
@@ -74,6 +66,7 @@ public:
     epd_poweron();
     // ESP_LOGI(TAG, "epd_ambient_temperature=%f", epd_ambient_temperature());
     epd_hl_update_screen(&m_hl, MODE_GL16, 20);
+    vTaskDelay(50);
     epd_poweroff();
   }
   virtual void clear_screen()

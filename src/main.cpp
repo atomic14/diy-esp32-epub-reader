@@ -1,15 +1,16 @@
-#include <sys/types.h>
-#include <dirent.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <esp_log.h>
 #include <esp_sleep.h>
 #include "config.h"
 #include "SDCard.h"
-#include "Epub.h"
+#include "EpubList/Epub.h"
+#include "EpubList/EpubList.h"
 #include "RubbishHtmlParser/RubbishHtmlParser.h"
 #include "Renderer/EpdRenderer.h"
 #include "Renderer/ConsoleRenderer.h"
+#include <list>
+#include <string.h>
 
 extern "C"
 {
@@ -25,23 +26,20 @@ void main_task(void *param)
   // initialise the SDCard
   SDCard *sdcard = new SDCard("/sdcard", PIN_NUM_MISO, PIN_NUM_MOSI, PIN_NUM_CLK, PIN_NUM_CS);
   ESP_LOGI("main", "Memory after sdcard init: %d", esp_get_free_heap_size());
-  // list the file
-  DIR *dir;
-  struct dirent *ent;
-  if ((dir = opendir("/sdcard")) != NULL)
+  ESP_LOGI("main", "Loading epub files");
+  EpubList *epubList = new EpubList();
+  if (epubList->load("/sdcard/"))
   {
-    /* print all the files and directories within directory */
-    while ((ent = readdir(dir)) != NULL)
-    {
-      printf("%s\n", ent->d_name);
-    }
-    closedir(dir);
+    vTaskDelay(1);
+    ESP_LOGI("main", "Epub files loaded");
+    epubList->render(0, renderer);
+    renderer->flush_display();
   }
   else
   {
-    /* could not open directory */
-    perror("");
+    ESP_LOGE("main", "Epub files not loaded");
   }
+  esp_deep_sleep_start();
 
   // read the epub file
   // Epub *epub = new Epub("/sdcard/pg2701.epub");
@@ -76,5 +74,6 @@ void main_task(void *param)
 
 void app_main()
 {
+  ESP_LOGI("main", "Memory before main task start %d", esp_get_free_heap_size());
   xTaskCreatePinnedToCore(main_task, "main_task", 32768, NULL, 1, NULL, 1);
 }

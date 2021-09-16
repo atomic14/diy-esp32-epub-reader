@@ -52,6 +52,10 @@ public:
   {
     //nop
   }
+  virtual void draw_image(const char *filename, int x, int y, int width, int height)
+  {
+    printf("[%s]\n", filename);
+  }
   virtual void clear_screen()
   {
     //nop

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../Renderer/Renderer.h"
+#include <limits.h>
 #include "Block.h"
 // represents a single word in the html
 // to reduce memory use, the word is stored as a reference
