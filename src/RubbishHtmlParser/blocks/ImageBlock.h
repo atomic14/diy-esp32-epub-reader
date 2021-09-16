@@ -25,6 +25,14 @@ public:
   {
     m_image_path = epub->get_image_path(m_src);
     renderer->get_image_size(m_image_path, &width, &height);
+    if (width > renderer->get_page_width() || height > renderer->get_page_height())
+    {
+      float scale = std::min(
+          float(renderer->get_page_width()) / float(width),
+          float(renderer->get_page_height()) / float(height));
+      width *= scale;
+      height *= scale;
+    }
     // horizontal center
     x_pos = (renderer->get_page_width() - width) / 2;
   }
