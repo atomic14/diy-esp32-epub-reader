@@ -31,10 +31,6 @@ RubbishHtmlParser::RubbishHtmlParser(const char *html, int length)
   }
   startNewTextBlock();
   parse(html, index, length);
-  // for (auto block : blocks)
-  // {
-  //   block->dump(html);
-  // }
 }
 
 RubbishHtmlParser::~RubbishHtmlParser()
@@ -53,7 +49,7 @@ void RubbishHtmlParser::getTagName(const char *html, int length, int index, int 
     end++;
   }
 }
-bool RubbishHtmlParser::isHeadingTag(const char *html, int length, int index)
+bool RubbishHtmlParser::isOpeningHeaderTag(const char *html, int length, int index)
 {
   // skip past the '<'
   index++;
@@ -72,7 +68,7 @@ bool RubbishHtmlParser::isHeadingTag(const char *html, int length, int index)
       (strncmp(html + start, "h4", end - start) == 0);
   return isBlock;
 }
-bool RubbishHtmlParser::isBlockTag(const char *html, int index, int length)
+bool RubbishHtmlParser::isOpeningBlockTag(const char *html, int index, int length)
 {
   // skip past the '<'
   index++;
@@ -139,7 +135,7 @@ bool RubbishHtmlParser::isClosingBlockTag(const char *html, int index, int lengt
 }
 
 // move past an html tag - basically move forward until we hit '>'
-int RubbishHtmlParser::skipTag(const char *html, int index, int length)
+int RubbishHtmlParser::skipToEndOfTagMarker(const char *html, int index, int length)
 {
   // skip past the '<'
   index++;
@@ -168,7 +164,7 @@ bool RubbishHtmlParser::isImageTag(const char *html, int index, int length)
   }
   return false;
 }
-bool RubbishHtmlParser::isBoldTag(const char *html, int index, int length)
+bool RubbishHtmlParser::isOpeningBoldTag(const char *html, int index, int length)
 {
   if (index + 3 < length)
   {
@@ -177,7 +173,7 @@ bool RubbishHtmlParser::isBoldTag(const char *html, int index, int length)
   return false;
 }
 
-bool RubbishHtmlParser::isItalicTag(const char *html, int index, int length)
+bool RubbishHtmlParser::isOpeningItalicTag(const char *html, int index, int length)
 {
   if (index + 3 < length)
   {
@@ -186,7 +182,7 @@ bool RubbishHtmlParser::isItalicTag(const char *html, int index, int length)
   return false;
 }
 
-bool RubbishHtmlParser::isBoldCloseTag(const char *html, int index, int length)
+bool RubbishHtmlParser::isClosingBoldTag(const char *html, int index, int length)
 {
   if (index + 4 < length)
   {
@@ -195,7 +191,7 @@ bool RubbishHtmlParser::isBoldCloseTag(const char *html, int index, int length)
   return false;
 }
 
-bool RubbishHtmlParser::isItalicCloseTag(const char *html, int index, int length)
+bool RubbishHtmlParser::isClosingItalicTag(const char *html, int index, int length)
 {
   if (index + 4 < length)
   {
@@ -311,11 +307,11 @@ void RubbishHtmlParser::processClosingTag(const char *html, int index, int lengt
   }
   else
   {
-    if (isBoldCloseTag(html, index, length))
+    if (isClosingBoldTag(html, index, length))
     {
       is_bold = false;
     }
-    if (isItalicCloseTag(html, index, length))
+    if (isClosingItalicTag(html, index, length))
     {
       is_italic = false;
     }
@@ -349,20 +345,20 @@ void RubbishHtmlParser::processSelfClosingTag(const char *html, int index, int l
 
 void RubbishHtmlParser::processOpeningTag(const char *html, int index, int length, bool &is_bold, bool &is_italic)
 {
-  if (isHeadingTag(html, index, length))
+  if (isOpeningHeaderTag(html, index, length))
   {
     is_bold = true;
     startNewTextBlock();
   }
-  else if (isBlockTag(html, index, length))
+  else if (isOpeningBlockTag(html, index, length))
   {
     startNewTextBlock();
   }
-  else if (isBoldTag(html, index, length))
+  else if (isOpeningBoldTag(html, index, length))
   {
     is_bold = true;
   }
-  else if (isItalicTag(html, index, length))
+  else if (isOpeningItalicTag(html, index, length))
   {
     is_italic = true;
   }
@@ -396,7 +392,7 @@ void RubbishHtmlParser::parse(const char *html, int index, int length)
       {
         processOpeningTag(html, index, length, is_bold, is_italic);
       }
-      index = skipTag(html, index, length);
+      index = skipToEndOfTagMarker(html, index, length);
     }
     else
     {
