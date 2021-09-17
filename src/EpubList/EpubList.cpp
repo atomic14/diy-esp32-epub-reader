@@ -80,7 +80,7 @@ void EpubList::render(int selected_item, Renderer *renderer)
   for (int i = start_index; i < start_index + EPUBS_PER_PAGE && i < epubs.size(); i++)
   {
     ESP_LOGI(TAG, "Rendering EPUB list %d", i);
-    // if (current_page != last_rendered_page)
+    if (current_page != last_rendered_page)
     {
       // draw the cover page
       int image_xpos = PADDING;

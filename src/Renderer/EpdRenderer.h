@@ -72,18 +72,18 @@ public:
 
   virtual int get_page_width()
   {
-    // TODO: get this from the EPD driver
-    return 540;
+    // don't forget we are rotated
+    return EPD_HEIGHT;
   }
   virtual int get_page_height()
   {
-    // TODO: get this from the EPD driver
-    return 960;
+    // don't forget we are rotated
+    return EPD_WIDTH
   }
   virtual int get_space_width()
   {
-    // TODO: - look up the space character width
-    return 11;
+    auto space_glyph = epd_get_glyph(m_regular_font, ' ', m_font_props);
+    return space_glyph->width;
   }
   virtual int get_line_height()
   {
