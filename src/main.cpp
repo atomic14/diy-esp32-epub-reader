@@ -11,6 +11,10 @@
 #include "Renderer/ConsoleRenderer.h"
 #include <list>
 #include <string.h>
+#include "Fonts/lato-regular.h"
+#include "Fonts/lato-bold.h"
+#include "Fonts/lato-italic.h"
+#include "Fonts/lato-bold-italic.h"
 
 extern "C"
 {
@@ -21,7 +25,7 @@ void main_task(void *param)
 {
   ESP_LOGI("main", "Memory before renderer init: %d", esp_get_free_heap_size());
   // create the EPD renderer
-  EpdRenderer *renderer = new EpdRenderer();
+  EpdRenderer *renderer = new EpdRenderer(&lato_regular, &lato_bold, &lato_italic, &lato_bold_italic);
   ESP_LOGI("main", "Memory after renderer init: %d", esp_get_free_heap_size());
   // initialise the SDCard
   SDCard *sdcard = new SDCard("/sdcard", PIN_NUM_MISO, PIN_NUM_MOSI, PIN_NUM_CLK, PIN_NUM_CS);
