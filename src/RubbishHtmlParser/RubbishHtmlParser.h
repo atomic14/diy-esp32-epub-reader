@@ -47,23 +47,9 @@ private:
   }
   // get a tag name
   void getTagName(const char *html, int length, int index, int &start, int &end);
-  // we've got a limited set of tags that we treat as block tags
-  // e.g. <div>, <p>, <h1> etc...
-  // block tags contain a paragraph of text
-  bool isOpeningHeaderTag(const char *html, int length, int index);
-  bool isOpeningBlockTag(const char *html, int index, int length);
-  bool isClosingHeadingTag(const char *html, int index, int length);
-  bool isClosingBlockTag(const char *html, int index, int length);
-  // italic and bold tags
-  bool isOpeningItalicTag(const char *html, int index, int length);
-  bool isOpeningBoldTag(const char *html, int index, int length);
-  bool isClosingItalicTag(const char *html, int index, int length);
-  bool isClosingBoldTag(const char *html, int index, int length);
-  // image tag handling
-  bool isImageTag(const char *html, int index, int length);
   // move past an html tag - basically move forward until we hit '>'
   int skipToEndOfTagMarker(const char *html, int index, int length);
-  // move past anything that should be considered part of a work
+  // move past anything that should be considered part of a word
   int skipAlphaNum(const char *html, int index, int length);
   // start a new text block if needed
   void startNewTextBlock();
