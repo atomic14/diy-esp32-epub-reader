@@ -105,14 +105,14 @@ void EpubList::render(int selected_item, Renderer *renderer)
     }
     if (last_selected_item == i)
     {
-      for (int i = 0; i < 3; i++)
+      for (int i = 0; i < 5; i++)
       {
         renderer->draw_rect(PADDING / 2 + i, ypos + PADDING / 2 + i, renderer->get_page_width() - PADDING - 2 * i, cell_height - PADDING - 2 * i, 255);
       }
     }
     if (selected_item == i)
     {
-      for (int i = 0; i < 3; i++)
+      for (int i = 0; i < 5; i++)
       {
         renderer->draw_rect(PADDING / 2 + i, ypos + PADDING / 2 + i, renderer->get_page_width() - PADDING - 2 * i, cell_height - PADDING - 2 * i, 0);
       }

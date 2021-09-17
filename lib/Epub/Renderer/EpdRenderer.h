@@ -3,7 +3,6 @@
 #include <epd_driver.h>
 #include <epd_highlevel.h>
 #include "Renderer.h"
-#include "epdiy_ED047TC1.h"
 
 class EpdRenderer : public Renderer
 {
@@ -40,7 +39,7 @@ public:
     m_font_props = epd_font_properties_default();
     // start up the EPD
     epd_init(EPD_OPTIONS_DEFAULT);
-    m_hl = epd_hl_init(&epdiy_ED047TC1);
+    m_hl = epd_hl_init(EPD_BUILTIN_WAVEFORM);
     // first set full screen to white
     epd_hl_set_all_white(&m_hl);
     epd_set_rotation(EPD_ROT_INVERTED_PORTRAIT);
@@ -78,7 +77,7 @@ public:
     ESP_LOGI("EPD", "Flushing display");
     epd_poweron();
     // ESP_LOGI(TAG, "epd_ambient_temperature=%f", epd_ambient_temperature());
-    epd_hl_update_screen(&m_hl, MODE_GC16, 20);
+    epd_hl_update_screen(&m_hl, MODE_GL16, 20);
     // vTaskDelay(50);
     epd_poweroff();
   }
