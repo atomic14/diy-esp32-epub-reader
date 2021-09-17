@@ -10,11 +10,11 @@ private:
 public:
   ConsoleRenderer() {}
   ~ConsoleRenderer() {}
-  int get_text_width(const char *src, int start_index, int end_index, bool italic = false, bool bold = false)
+  int get_text_width(const char *src, int start_index, int end_index, bool bold = false, bool italic = false)
   {
     return end_index - start_index;
   }
-  void draw_text(int x, int y, const char *src, int start_index, int end_index, bool italic = false, bool bold = false)
+  void draw_text(int x, int y, const char *src, int start_index, int end_index, bool bold = false, bool italic = false)
   {
     if (y_cursor < y)
     {

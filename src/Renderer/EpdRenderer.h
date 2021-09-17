@@ -16,6 +16,23 @@ private:
   uint8_t *m_frame_buffer;
   EpdFontProperties m_font_props;
 
+  const EpdFont *get_font(bool is_bold, bool is_italic)
+  {
+    if (is_bold && is_italic)
+    {
+      return m_bold_italic_font;
+    }
+    if (is_bold)
+    {
+      return m_bold_font;
+    }
+    if (is_italic)
+    {
+      return m_italic_font;
+    }
+    return m_regular_font;
+  }
+
 public:
   EpdRenderer(const EpdFont *regular_font, const EpdFont *bold_font, const EpdFont *italic_font, const EpdFont *bold_italic_font)
       : m_regular_font(regular_font), m_bold_font(bold_font), m_italic_font(italic_font), m_bold_italic_font(bold_italic_font)
@@ -31,18 +48,18 @@ public:
     epd_clear();
   }
   ~EpdRenderer() {}
-  int get_text_width(const char *src, int start_index, int end_index, bool italic = false, bool bold = false)
+  int get_text_width(const char *src, int start_index, int end_index, bool bold = false, bool italic = false)
   {
     get_text(src, start_index, end_index);
     int x = 0, y = 0, x1 = 0, y1 = 0, x2 = 0, y2 = 0;
-    epd_get_text_bounds(m_regular_font, buffer, &x, &y, &x1, &y1, &x2, &y2, &m_font_props);
+    epd_get_text_bounds(get_font(bold, italic), buffer, &x, &y, &x1, &y1, &x2, &y2, &m_font_props);
     return x2 - x1;
   }
-  void draw_text(int x, int y, const char *src, int start_index, int end_index, bool italic = false, bool bold = false)
+  void draw_text(int x, int y, const char *src, int start_index, int end_index, bool bold = false, bool italic = false)
   {
     get_text(src, start_index, end_index);
     int ypos = y + get_line_height();
-    epd_write_string(m_regular_font, buffer, &x, &ypos, m_frame_buffer, &m_font_props);
+    epd_write_string(get_font(bold, italic), buffer, &x, &ypos, m_frame_buffer, &m_font_props);
   }
   void draw_rect(int x, int y, int width, int height, uint8_t color = 0)
   {
@@ -78,12 +95,12 @@ public:
   virtual int get_page_height()
   {
     // don't forget we are rotated
-    return EPD_WIDTH
+    return EPD_WIDTH;
   }
   virtual int get_space_width()
   {
-    auto space_glyph = epd_get_glyph(m_regular_font, ' ', m_font_props);
-    return space_glyph->width;
+    auto space_glyph = epd_get_glyph(m_regular_font, ' ');
+    return space_glyph->advance_x;
   }
   virtual int get_line_height()
   {

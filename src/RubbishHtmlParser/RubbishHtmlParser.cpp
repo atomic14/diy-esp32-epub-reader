@@ -40,7 +40,7 @@ RubbishHtmlParser::~RubbishHtmlParser()
     delete block;
   }
 }
-void RubbishHtmlParser::getTagName(const char *html, int length, int index, int &start, int &end)
+void RubbishHtmlParser::getTagName(const char *html, int index, int length, int &start, int &end)
 {
   start = index;
   end = index;
@@ -49,7 +49,8 @@ void RubbishHtmlParser::getTagName(const char *html, int length, int index, int 
     end++;
   }
 }
-bool RubbishHtmlParser::isOpeningHeaderTag(const char *html, int length, int index)
+
+bool RubbishHtmlParser::isOpeningHeaderTag(const char *html, int index, int length)
 {
   // skip past the '<'
   index++;
@@ -60,7 +61,11 @@ bool RubbishHtmlParser::isOpeningHeaderTag(const char *html, int length, int ind
   // find the end of the tag name
   int start = index;
   int end = index;
-  getTagName(html, length, index, start, end);
+  getTagName(html, index, length, start, end);
+  if (end - start != 2)
+  {
+    return false;
+  }
   bool isBlock =
       (strncmp(html + start, "h1", end - start) == 0) ||
       (strncmp(html + start, "h2", end - start) == 0) ||
@@ -81,9 +86,9 @@ bool RubbishHtmlParser::isOpeningBlockTag(const char *html, int index, int lengt
   int end = index;
   getTagName(html, length, index, start, end);
   bool isBlock =
-      (strncmp(html + start, "p", end - start) == 0) ||
-      (strncmp(html + start, "div", end - start) == 0) ||
-      (strncmp(html + start, "li", end - start) == 0);
+      (strncmp(html + start, "p", end - start) == 0 && end - start != 1) ||
+      (strncmp(html + start, "div", end - start) == 0 && end - start != 2) ||
+      (strncmp(html + start, "li", end - start) == 0 && end - start != 2);
   return isBlock;
 }
 bool RubbishHtmlParser::isClosingHeadingTag(const char *html, int index, int length)
@@ -102,7 +107,11 @@ bool RubbishHtmlParser::isClosingHeadingTag(const char *html, int index, int len
   // find the end of the tag name
   int start = index;
   int end = index;
-  getTagName(html, length, index, start, end);
+  getTagName(html, index, length, start, end);
+  if (end - start != 2)
+  {
+    return false;
+  }
   bool isBlock =
       (strncmp(html + start, "h1", end - start) == 0) ||
       (strncmp(html + start, "h2", end - start) == 0) ||
@@ -126,11 +135,11 @@ bool RubbishHtmlParser::isClosingBlockTag(const char *html, int index, int lengt
   // find the end of the tag name
   int start = index;
   int end = index;
-  getTagName(html, length, index, start, end);
+  getTagName(html, index, length, start, end);
   bool isBlock =
-      (strncmp(html + start, "p", end - start) == 0) ||
-      (strncmp(html + start, "div", end - start) == 0) ||
-      (strncmp(html + start, "li", end - start) == 0);
+      (strncmp(html + start, "p", end - start) == 0 && end - start != 1) ||
+      (strncmp(html + start, "div", end - start) == 0 && end - start != 3) ||
+      (strncmp(html + start, "li", end - start) == 0 && end - start != 2);
   return isBlock;
 }
 
@@ -166,49 +175,64 @@ bool RubbishHtmlParser::isImageTag(const char *html, int index, int length)
 }
 bool RubbishHtmlParser::isOpeningBoldTag(const char *html, int index, int length)
 {
-  if (index + 3 < length)
+  index++;
+  if (index + 1 > length)
   {
-    return (strncmp(html + index, "<b>", 3) == 0);
+    return false;
   }
-  return false;
+  int start = index;
+  int end = index;
+  getTagName(html, index, length, start, end);
+  return (strncmp(html + index, "b", end - start) == 0 && end - start == 1);
 }
 
 bool RubbishHtmlParser::isOpeningItalicTag(const char *html, int index, int length)
 {
-  if (index + 3 < length)
+  index++;
+  if (index + 1 > length)
   {
-    return (strncmp(html + index, "<i>", 3) == 0);
+    return false;
   }
-  return false;
+  int start = index;
+  int end = index;
+  getTagName(html, index, length, start, end);
+  return (strncmp(html + index, "i", end - start) == 0 && end - start == 1);
 }
 
 bool RubbishHtmlParser::isClosingBoldTag(const char *html, int index, int length)
 {
-  if (index + 4 < length)
+  index += 2;
+  if (index + 1 > length)
   {
-    return (strncmp(html + index, "</b>", 3) == 0);
+    return false;
   }
-  return false;
+  int start = index;
+  int end = index;
+  getTagName(html, index, length, start, end);
+  return (strncmp(html + index, "b", end - start) == 0 && end - start == 1);
 }
 
 bool RubbishHtmlParser::isClosingItalicTag(const char *html, int index, int length)
 {
-  if (index + 4 < length)
+  index += 2;
+  if (index + 1 > length)
   {
-    return (strncmp(html + index, "</i>", 3) == 0);
+    return false;
   }
-  return false;
+  int start = index;
+  int end = index;
+  getTagName(html, index, length, start, end);
+  return (strncmp(html + index, "i", end - start) == 0 && end - start == 1);
 }
 
 // start a new text block if needed
 void RubbishHtmlParser::startNewTextBlock()
 {
-  if (currentTextBlock && currentTextBlock->words.size() == 0)
+  if (!currentTextBlock || currentTextBlock->words.size() > 0)
   {
-    return;
+    currentTextBlock = new TextBlock();
+    blocks.push_back(currentTextBlock);
   }
-  currentTextBlock = new TextBlock();
-  blocks.push_back(currentTextBlock);
 }
 
 // skip past any white space characters
@@ -309,10 +333,12 @@ void RubbishHtmlParser::processClosingTag(const char *html, int index, int lengt
   {
     if (isClosingBoldTag(html, index, length))
     {
+      ESP_LOGI(TAG, "closing bold tag");
       is_bold = false;
     }
     if (isClosingItalicTag(html, index, length))
     {
+      ESP_LOGI(TAG, "closing italic tag");
       is_italic = false;
     }
   }
@@ -356,18 +382,20 @@ void RubbishHtmlParser::processOpeningTag(const char *html, int index, int lengt
   }
   else if (isOpeningBoldTag(html, index, length))
   {
+    ESP_LOGI(TAG, "opening bold tag");
     is_bold = true;
   }
   else if (isOpeningItalicTag(html, index, length))
   {
+    ESP_LOGI(TAG, "opening italic tag");
     is_italic = true;
   }
 }
 
 void RubbishHtmlParser::parse(const char *html, int index, int length)
 {
-  bool is_italic = false;
   bool is_bold = false;
+  bool is_italic = false;
   // keep track of inline tag depth
   while (index < length)
   {

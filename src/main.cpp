@@ -30,23 +30,23 @@ void main_task(void *param)
   // initialise the SDCard
   SDCard *sdcard = new SDCard("/sdcard", PIN_NUM_MISO, PIN_NUM_MOSI, PIN_NUM_CLK, PIN_NUM_CS);
   ESP_LOGI("main", "Memory after sdcard init: %d", esp_get_free_heap_size());
-  ESP_LOGI("main", "Loading epub files");
-  EpubList *epubList = new EpubList();
-  if (epubList->load("/sdcard/"))
-  {
-    ESP_LOGI("main", "Epub files loaded");
-    for (int i = 0; i < epubList->get_num_epubs(); i++)
-    {
-      epubList->render(i, renderer);
-      renderer->flush_display();
-      vTaskDelay(1);
-    }
-  }
-  else
-  {
-    ESP_LOGE("main", "Epub files not loaded");
-  }
-  esp_deep_sleep_start();
+  // ESP_LOGI("main", "Loading epub files");
+  // EpubList *epubList = new EpubList();
+  // if (epubList->load("/sdcard/"))
+  // {
+  //   ESP_LOGI("main", "Epub files loaded");
+  //   for (int i = 0; i < epubList->get_num_epubs(); i++)
+  //   {
+  //     epubList->render(i, renderer);
+  //     renderer->flush_display();
+  //     vTaskDelay(1);
+  //   }
+  // }
+  // else
+  // {
+  //   ESP_LOGE("main", "Epub files not loaded");
+  // }
+  // esp_deep_sleep_start();
 
   // read the epub file
   // Epub *epub = new Epub("/sdcard/pg2701.epub");
