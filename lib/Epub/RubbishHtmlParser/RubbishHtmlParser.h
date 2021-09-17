@@ -1,6 +1,5 @@
 #pragma once
 
-#include <stdexcept>
 #include <string>
 #include <list>
 #include <vector>
@@ -9,23 +8,7 @@ class TextBlock;
 class Block;
 class Page;
 class Renderer;
-
-// thrown if we get into an unexpected state
-class ParseException : public std::exception
-{
-private:
-  std::string message;
-
-public:
-  ParseException(int index)
-  {
-    message = "Parse error at index " + std::to_string(index);
-  }
-  const char *what() const throw()
-  {
-    return message.c_str();
-  }
-};
+class Epub;
 
 // a very stupid xhtml parser - it will probably work for very simple cases
 // but will probably fail for complex ones
@@ -63,9 +46,9 @@ private:
   // this assumes that we have already eliminated the possibility of a closing tag
   bool isSelfClosing(const char *html, int index, int length);
 
-  void processClosingTag(const char *html, int index, int length, bool &is_bold, bool &is_italic);
-  void processSelfClosingTag(const char *html, int index, int length);
-  void processOpeningTag(const char *html, int index, int length, bool &is_bold, bool &is_italic);
+  int processClosingTag(const char *html, int index, int length, bool &is_bold, bool &is_italic);
+  int processSelfClosingTag(const char *html, int index, int length);
+  int processOpeningTag(const char *html, int index, int length, bool &is_bold, bool &is_italic);
 
 public:
   RubbishHtmlParser(const char *html, int length);
@@ -76,6 +59,10 @@ public:
   int get_page_count()
   {
     return pages.size();
+  }
+  const std::list<Block *> &get_blocks()
+  {
+    return blocks;
   }
   void render_page(int page_index, Renderer *renderer);
 };

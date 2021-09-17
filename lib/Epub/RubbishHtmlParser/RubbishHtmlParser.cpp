@@ -1,19 +1,24 @@
+#ifndef UNIT_TEST
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <esp_log.h>
+#else
+#define vTaskDelay(t)
+#define ESP_LOGE(args...)
+#define ESP_LOGI(args...)
+#endif
 #include <stdio.h>
-#include <stdexcept>
 #include <string.h>
 #include <string>
 #include <list>
 #include <vector>
 #include <exception>
-#include "ZipFile.h"
-#include "Renderer/Renderer.h"
+#include "../ZipFile/ZipFile.h"
+#include "../Renderer/Renderer.h"
 #include "htmlEntities.h"
 #include "blocks/TextBlock.h"
 #include "blocks/ImageBlock.h"
 #include "Page.h"
-#include <esp_log.h>
 #include "RubbishHtmlParser.h"
 #include "../EpubList/Epub.h"
 
@@ -193,14 +198,10 @@ bool RubbishHtmlParser::isSelfClosing(const char *html, int index, int length)
     }
     index++;
   }
-  if (index == length)
-  {
-    throw ParseException(index);
-  }
   return false;
 }
 
-void RubbishHtmlParser::processClosingTag(const char *html, int index, int length, bool &is_bold, bool &is_italic)
+int RubbishHtmlParser::processClosingTag(const char *html, int index, int length, bool &is_bold, bool &is_italic)
 {
   // skip past the '</'
   index += 2;
@@ -226,9 +227,10 @@ void RubbishHtmlParser::processClosingTag(const char *html, int index, int lengt
   {
     is_italic = false;
   }
+  return index;
 }
 
-void RubbishHtmlParser::processSelfClosingTag(const char *html, int index, int length)
+int RubbishHtmlParser::processSelfClosingTag(const char *html, int index, int length)
 {
   // skip past the '<'
   index++;
@@ -260,9 +262,10 @@ void RubbishHtmlParser::processSelfClosingTag(const char *html, int index, int l
       ESP_LOGE(TAG, "Could not find src attribute");
     }
   }
+  return index;
 }
 
-void RubbishHtmlParser::processOpeningTag(const char *html, int index, int length, bool &is_bold, bool &is_italic)
+int RubbishHtmlParser::processOpeningTag(const char *html, int index, int length, bool &is_bold, bool &is_italic)
 {
   // skip past the '<'
   index++;
@@ -274,6 +277,7 @@ void RubbishHtmlParser::processOpeningTag(const char *html, int index, int lengt
   // is this a tag that should be skipped?
   if (matches(html, tag_start, tag_end, SKIP_TAGS, NUM_SKIP_TAGS))
   {
+    printf("Hit a skip tag\n");
     // move forward until we find a matching end tag - we assume that skip tags are not nested
     while (index < length)
     {
@@ -290,6 +294,7 @@ void RubbishHtmlParser::processOpeningTag(const char *html, int index, int lengt
         if (close_tag_end - close_tag_start == tag_end - tag_start &&
             strncmp(html + close_tag_start, html + tag_start, close_tag_end - close_tag_start) == 0)
         {
+          printf("found a matching close tag\n");
           // we found the matching end tag
           break;
         }
@@ -317,6 +322,7 @@ void RubbishHtmlParser::processOpeningTag(const char *html, int index, int lengt
   {
     is_italic = true;
   }
+  return index;
 }
 
 void RubbishHtmlParser::parse(const char *html, int index, int length)
@@ -337,15 +343,15 @@ void RubbishHtmlParser::parse(const char *html, int index, int length)
     {
       if (isClosingTag(html, index, length))
       {
-        processClosingTag(html, index, length, is_bold, is_italic);
+        index = processClosingTag(html, index, length, is_bold, is_italic);
       }
       else if (isSelfClosing(html, index, length))
       {
-        processSelfClosingTag(html, index, length);
+        index = processSelfClosingTag(html, index, length);
       }
       else
       {
-        processOpeningTag(html, index, length, is_bold, is_italic);
+        index = processOpeningTag(html, index, length, is_bold, is_italic);
       }
       index = skipToEndOfTagMarker(html, index, length);
     }
@@ -359,6 +365,11 @@ void RubbishHtmlParser::parse(const char *html, int index, int length)
         currentTextBlock->words.push_back(new Word(wordStart, index, is_bold, is_italic));
       }
     }
+  }
+  if (blocks.back()->isEmpty())
+  {
+    delete blocks.back();
+    blocks.pop_back();
   }
 }
 
@@ -415,10 +426,6 @@ void RubbishHtmlParser::layout(Renderer *renderer, Epub *epub)
 
 void RubbishHtmlParser::render_page(int page_index, Renderer *renderer)
 {
-  if (page_index < 0 || page_index >= pages.size())
-  {
-    throw std::runtime_error("Invalid page index");
-  }
   renderer->clear_screen();
   pages[page_index]->render(m_html, renderer);
 }

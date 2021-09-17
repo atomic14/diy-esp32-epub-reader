@@ -2,7 +2,12 @@
 #include "../../Renderer/Renderer.h"
 #include "Block.h"
 #include "../../EpubList/Epub.h"
+#ifndef UNIT_TEST
 #include <esp_log.h>
+#else
+#define ESP_LOGE(args...)
+#define ESP_LOGI(args...)
+#endif
 
 class ImageBlock : public Block
 {
@@ -20,6 +25,10 @@ public:
 
   ImageBlock(std::string src) : m_src(src)
   {
+  }
+  virtual bool isEmpty()
+  {
+    return m_src.empty();
   }
   void layout(const char *html, Renderer *renderer, Epub *epub)
   {

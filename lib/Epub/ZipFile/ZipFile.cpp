@@ -1,5 +1,9 @@
+#ifndef UNIT_TEST
 #include <esp_log.h>
-
+#else
+#define ESP_LOGE(args...)
+#define ESP_LOGI(args...)
+#endif
 #include "ZipFile.h"
 
 #include "miniz.h"

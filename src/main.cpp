@@ -6,15 +6,15 @@
 #include "SDCard.h"
 #include "EpubList/Epub.h"
 #include "EpubList/EpubList.h"
-#include "RubbishHtmlParser/RubbishHtmlParser.h"
+#include <RubbishHtmlParser/RubbishHtmlParser.h>
 #include "Renderer/EpdRenderer.h"
 #include "Renderer/ConsoleRenderer.h"
 #include <list>
 #include <string.h>
-#include "Fonts/regular_font.h"
-#include "Fonts/bold_font.h"
-#include "Fonts/italic_font.h"
-#include "Fonts/bold_italic_font.h"
+#include <regular_font.h>
+#include <bold_font.h>
+#include <italic_font.h>
+#include <bold_italic_font.h>
 
 extern "C"
 {

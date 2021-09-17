@@ -1,12 +1,16 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#ifndef UNIT_TEST
 #include <esp_log.h>
-
+#else
+#define ESP_LOGI(args...)
+#define ESP_LOGE(args...)
+#define ESP_LOGD(args...)
+#endif
 #include <map>
-
 #include "tinyxml2.h"
-#include "ZipFile.h"
+#include "../ZipFile/ZipFile.h"
 #include "Epub.h"
 
 static const char *TAG = "EPUB";

@@ -47,6 +47,10 @@ public:
       delete word;
     }
   }
+  bool isEmpty()
+  {
+    return words.empty();
+  }
   // given a renderer works out where to break the words into lines
   void layout(const char *html, Renderer *renderer, Epub *epub)
   {
@@ -152,24 +156,14 @@ public:
   // debug helper - dumps out the contents of the block with line breaks
   void dump(const char *html)
   {
-    int start = 0;
-    for (auto lineBreak : line_breaks)
+    for (auto word : words)
     {
-      for (int i = start; i < lineBreak; i++)
+      for (int i = word->start; i < word->end; i++)
       {
-        for (int j = words[i]->start; j < words[i]->end; j++)
-        {
-          printf("%c", html[j]);
-        }
-        if (i < words.size() - 1 && html[words[i + 1]->start] != '.')
-        {
-          printf(" ");
-        }
+        printf("%c", html[i]);
       }
-      printf("\n");
-      start = lineBreak;
+      printf(" ");
     }
-    printf("\n--\n");
   }
   virtual BlockType getType()
   {

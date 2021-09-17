@@ -1,10 +1,16 @@
+#ifndef UNIT_TEST
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 #include <esp_log.h>
+#else
+#define vTaskDelay(t)
+#define ESP_LOGE(args...)
+#define ESP_LOGI(args...)
+#endif
 #include <sys/types.h>
 #include <dirent.h>
 #include <string.h>
 #include <algorithm>
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
 #include "EpubList.h"
 #include "Epub.h"
 #include "Renderer/Renderer.h"

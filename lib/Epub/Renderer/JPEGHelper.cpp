@@ -1,9 +1,15 @@
 
+#ifndef UNIT_TEST
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <esp_log.h>
+#else
+#define vTaskDelay(t)
+#define ESP_LOGE(args...)
+#define ESP_LOGI(args...)
+#endif
 #include "JPEGHelper.h"
 #include "Renderer.h"
-#include <esp_log.h>
 
 static const char *TAG = "JPG";
 

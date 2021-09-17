@@ -17,4 +17,5 @@ public:
   virtual void layout(const char *html, Renderer *renderer, Epub *epub) = 0;
   virtual void dump(const char *html) = 0;
   virtual BlockType getType() = 0;
+  virtual bool isEmpty() = 0;
 };
