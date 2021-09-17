@@ -160,14 +160,6 @@ int RubbishHtmlParser::skipAlphaNum(const char *html, int index, int length)
   return index;
 }
 
-//    bool isItalicTag(char *html, int start, int end) {
-//        return (strncmp(html+start, "i", end-start) == 0);
-//    }
-
-//    bool isBoldTag(char *html, int start, int end) {
-//        return (strncmp(html+start, "b", end-start) == 0);
-//    }
-
 bool RubbishHtmlParser::isImageTag(const char *html, int index, int length)
 {
   if (index + 4 < length)
@@ -178,20 +170,22 @@ bool RubbishHtmlParser::isImageTag(const char *html, int index, int length)
 }
 bool RubbishHtmlParser::isBoldTag(const char *html, int index, int length)
 {
-  if (index + 4 < length)
+  if (index + 3 < length)
   {
     return (strncmp(html + index, "<b>", 3) == 0);
   }
   return false;
 }
+
 bool RubbishHtmlParser::isItalicTag(const char *html, int index, int length)
 {
-  if (index + 4 < length)
+  if (index + 3 < length)
   {
     return (strncmp(html + index, "<i>", 3) == 0);
   }
   return false;
 }
+
 bool RubbishHtmlParser::isBoldCloseTag(const char *html, int index, int length)
 {
   if (index + 4 < length)
@@ -200,6 +194,7 @@ bool RubbishHtmlParser::isBoldCloseTag(const char *html, int index, int length)
   }
   return false;
 }
+
 bool RubbishHtmlParser::isItalicCloseTag(const char *html, int index, int length)
 {
   if (index + 4 < length)
@@ -208,6 +203,7 @@ bool RubbishHtmlParser::isItalicCloseTag(const char *html, int index, int length
   }
   return false;
 }
+
 // start a new text block if needed
 void RubbishHtmlParser::startNewTextBlock()
 {
@@ -302,6 +298,76 @@ bool RubbishHtmlParser::isSelfClosing(const char *html, int index, int length)
   return false;
 }
 
+void RubbishHtmlParser::processClosingTag(const char *html, int index, int length, bool &is_bold, bool &is_italic)
+{
+  if (isClosingHeadingTag(html, index, length))
+  {
+    is_bold = false;
+    startNewTextBlock();
+  }
+  else if (isClosingBlockTag(html, index, length))
+  {
+    startNewTextBlock();
+  }
+  else
+  {
+    if (isBoldCloseTag(html, index, length))
+    {
+      is_bold = false;
+    }
+    if (isItalicCloseTag(html, index, length))
+    {
+      is_italic = false;
+    }
+  }
+}
+
+void RubbishHtmlParser::processSelfClosingTag(const char *html, int index, int length)
+{
+  if (isImageTag(html, index, length))
+  {
+    int src_start, src_end;
+    if (findAttribute(html, index, length, "src", &src_start, &src_end))
+    {
+      // don't leave an empty text block in the list
+      if (currentTextBlock->words.size() == 0)
+      {
+        blocks.pop_back();
+        delete currentTextBlock;
+        currentTextBlock = nullptr;
+      }
+      blocks.push_back(new ImageBlock(std::string(html + src_start, src_end - src_start)));
+      // start a new text block
+      startNewTextBlock();
+    }
+    else
+    {
+      ESP_LOGE(TAG, "Could not find src attribute");
+    }
+  }
+}
+
+void RubbishHtmlParser::processOpeningTag(const char *html, int index, int length, bool &is_bold, bool &is_italic)
+{
+  if (isHeadingTag(html, index, length))
+  {
+    is_bold = true;
+    startNewTextBlock();
+  }
+  else if (isBlockTag(html, index, length))
+  {
+    startNewTextBlock();
+  }
+  else if (isBoldTag(html, index, length))
+  {
+    is_bold = true;
+  }
+  else if (isItalicTag(html, index, length))
+  {
+    is_italic = true;
+  }
+}
+
 void RubbishHtmlParser::parse(const char *html, int index, int length)
 {
   bool is_italic = false;
@@ -315,82 +381,20 @@ void RubbishHtmlParser::parse(const char *html, int index, int length)
     }
     // skip past any whitespace
     index = skipWhiteSpace(html, index, length);
-    // TODO
-    // // are we on a tag that we should ignore - e.g. <head>
-    // if (ignoreTag(html, index, length))
-    // {
-    //   index = skipTag(html, index, length);
-    // }
     // have we hit a tag?
     if (html[index] == '<')
     {
       if (isClosingTag(html, index, length))
       {
-        if (isClosingHeadingTag(html, index, length))
-        {
-          is_bold = false;
-          startNewTextBlock();
-        }
-        else if (isClosingBlockTag(html, index, length))
-        {
-          startNewTextBlock();
-        }
-        else
-        {
-          if (isBoldCloseTag(html, index, length))
-          {
-            is_bold = false;
-          }
-          if (isItalicCloseTag(html, index, length))
-          {
-            is_italic = false;
-          }
-        }
+        processClosingTag(html, index, length, is_bold, is_italic);
       }
       else if (isSelfClosing(html, index, length))
       {
-        if (isImageTag(html, index, length))
-        {
-          int src_start, src_end;
-          if (findAttribute(html, index, length, "src", &src_start, &src_end))
-          {
-            // don't leave an empty text block in the list
-            if (currentTextBlock->words.size() == 0)
-            {
-              blocks.pop_back();
-              delete currentTextBlock;
-              currentTextBlock = nullptr;
-            }
-            blocks.push_back(new ImageBlock(std::string(html + src_start, src_end - src_start)));
-            // start a new text block
-            startNewTextBlock();
-          }
-          else
-          {
-            ESP_LOGE(TAG, "Could not find src attribute");
-          }
-        }
-        // TODO handle <br/>
-      }
-      else if (isHeadingTag(html, index, length))
-      {
-        is_bold = true;
-        startNewTextBlock();
-      }
-      else if (isBlockTag(html, index, length))
-      {
-        startNewTextBlock();
+        processSelfClosingTag(html, index, length);
       }
       else
       {
-        if (isBoldTag(html, index, length))
-        {
-          is_bold = true;
-        }
-        if (isItalicTag(html, index, length))
-        {
-          is_italic = true;
-        }
+        processOpeningTag(html, index, length, is_bold, is_italic);
       }
       index = skipTag(html, index, length);
     }

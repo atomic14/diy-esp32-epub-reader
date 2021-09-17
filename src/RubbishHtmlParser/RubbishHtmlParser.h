@@ -39,9 +39,7 @@ private:
   TextBlock *currentTextBlock = nullptr;
   std::vector<Page *> pages;
 
-public:
-  RubbishHtmlParser(const char *html, int length);
-  ~RubbishHtmlParser();
+private:
   // is there any more whitespace we should consider?
   bool isWhiteSpace(char c)
   {
@@ -76,6 +74,15 @@ public:
   // self closing tags have a / before we hit the '>'
   // this assumes that we have already eliminated the possibility of a closing tag
   bool isSelfClosing(const char *html, int index, int length);
+
+  void processClosingTag(const char *html, int index, int length, bool &is_bold, bool &is_italic);
+  void processSelfClosingTag(const char *html, int index, int length);
+  void processOpeningTag(const char *html, int index, int length, bool &is_bold, bool &is_italic);
+
+public:
+  RubbishHtmlParser(const char *html, int length);
+  ~RubbishHtmlParser();
+
   void parse(const char *html, int index, int length);
   void layout(Renderer *renderer, Epub *epub);
   int get_page_count()
