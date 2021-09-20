@@ -21,6 +21,7 @@ public:
   Epub(const std::string &path);
   ~Epub() {}
   bool load();
+  const std::string &get_path() const { return m_path; }
   const std::string &get_title();
   const std::string get_cover_image_filename();
   std::string get_image_path(const std::string &image_name);

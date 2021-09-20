@@ -44,7 +44,7 @@ public:
     epd_hl_set_all_white(&m_hl);
     epd_set_rotation(EPD_ROT_INVERTED_PORTRAIT);
     m_frame_buffer = epd_hl_get_framebuffer(&m_hl);
-    epd_clear();
+    // epd_clear();
   }
   ~EpdRenderer() {}
   int get_text_width(const char *src, int start_index, int end_index, bool bold = false, bool italic = false)
@@ -71,13 +71,14 @@ public:
   void clear_display()
   {
     epd_hl_set_all_white(&m_hl);
+    epd_clear();
   }
   void flush_display()
   {
     ESP_LOGI("EPD", "Flushing display");
     epd_poweron();
     // ESP_LOGI(TAG, "epd_ambient_temperature=%f", epd_ambient_temperature());
-    epd_hl_update_screen(&m_hl, MODE_GL16, 20);
+    epd_hl_update_screen(&m_hl, MODE_GC16, 20);
     // vTaskDelay(50);
     epd_poweroff();
   }
