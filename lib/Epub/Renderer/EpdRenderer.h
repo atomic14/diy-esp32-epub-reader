@@ -46,7 +46,10 @@ public:
     m_frame_buffer = epd_hl_get_framebuffer(&m_hl);
     // epd_clear();
   }
-  ~EpdRenderer() {}
+  ~EpdRenderer()
+  {
+    epd_deinit();
+  }
   int get_text_width(const char *src, int start_index, int end_index, bool bold = false, bool italic = false)
   {
     get_text(src, start_index, end_index);
@@ -78,9 +81,10 @@ public:
     ESP_LOGI("EPD", "Flushing display");
     epd_poweron();
     // ESP_LOGI(TAG, "epd_ambient_temperature=%f", epd_ambient_temperature());
-    epd_hl_update_screen(&m_hl, MODE_GC16, 20);
+    epd_hl_update_screen(&m_hl, MODE_GL16, 20);
     // vTaskDelay(50);
     epd_poweroff();
+    ESP_LOGI("EPD", "Flushed display");
   }
   virtual void clear_screen()
   {
@@ -106,4 +110,50 @@ public:
   {
     return m_regular_font->advance_y;
   }
+  // deep sleep helper - persist any state to disk that may be needed on wake
+  virtual void dehydrate()
+  {
+    ESP_LOGI("EPD", "Dehydrating EPD");
+    // save the two buffers - the front and the back buffers
+    FILE *fp = fopen("/sdcard/front_buffer.bin", "wb");
+    if (fp)
+    {
+      fwrite(m_hl.front_fb, 1, EPD_HEIGHT * EPD_WIDTH / 2, fp);
+      fclose(fp);
+    }
+    fp = fopen("/sdcard/back_buffer.bin", "wb");
+    if (fp)
+    {
+      fwrite(m_hl.back_fb, 1, EPD_HEIGHT * EPD_WIDTH / 2, fp);
+      fclose(fp);
+    }
+    ESP_LOGI("EPD", "Dehydrated EPD");
+  };
+  // deep sleep helper - retrieve any state from disk after wake
+  virtual void hydrate()
+  {
+    ESP_LOGI("EPD", "Hydrating EPD");
+    // load the two buffers - the front and the back buffers
+    FILE *fp = fopen("/sdcard/front_buffer.bin", "rb");
+    if (fp)
+    {
+      fread(m_hl.front_fb, 1, EPD_HEIGHT * EPD_WIDTH / 2, fp);
+      fclose(fp);
+    }
+    else
+    {
+      ESP_LOGI("EPD", "No front buffer found");
+    }
+    fp = fopen("/sdcard/back_buffer.bin", "rb");
+    if (fp)
+    {
+      fread(m_hl.back_fb, 1, EPD_HEIGHT * EPD_WIDTH / 2, fp);
+      fclose(fp);
+    }
+    else
+    {
+      ESP_LOGI("EPD", "No back buffer found");
+    }
+    ESP_LOGI("EPD", "Hydrated EPD");
+  };
 };

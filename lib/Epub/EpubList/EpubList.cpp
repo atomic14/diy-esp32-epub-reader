@@ -111,7 +111,7 @@ void EpubList::render(Renderer *renderer)
   for (int i = start_index; i < start_index + EPUBS_PER_PAGE && i < epubs.size(); i++)
   {
     // do we need to draw a new page of items?
-    if (current_page != state.previous_rendered_page || state.previous_selected_item == i || state.selected_item == i)
+    if (current_page != state.previous_rendered_page)
     {
       ESP_LOGI(TAG, "Rendering item %d", i);
       // draw the cover page

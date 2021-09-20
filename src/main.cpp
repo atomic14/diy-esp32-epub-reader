@@ -21,6 +21,7 @@
 #include <italic_font.h>
 #include <bold_italic_font.h>
 #include "ulp_main.h"
+#include <epd_driver.h>
 
 extern const uint8_t ulp_main_bin_start[] asm("_binary_ulp_main_bin_start");
 extern const uint8_t ulp_main_bin_end[] asm("_binary_ulp_main_bin_end");
@@ -29,10 +30,6 @@ extern "C"
 {
   void app_main();
 }
-
-const gpio_num_t BUTTON_UP_GPIO_NUM = GPIO_NUM_34;
-const gpio_num_t BUTTON_DOWN_GPIO_NUM = GPIO_NUM_39;
-const gpio_num_t BUTTON_SELECT_GPIO_NUM = GPIO_NUM_35;
 
 const char *TAG = "main";
 
@@ -63,6 +60,10 @@ RTC_DATA_ATTR EpubListState epub_list_state;
 // the sate data for reading an epub
 RTC_DATA_ATTR EpubReaderState epub_reader_state;
 
+const gpio_num_t BUTTON_UP_GPIO_NUM = GPIO_NUM_34;
+const gpio_num_t BUTTON_DOWN_GPIO_NUM = GPIO_NUM_39;
+const gpio_num_t BUTTON_SELECT_GPIO_NUM = GPIO_NUM_35;
+
 typedef enum
 {
   NONE,
@@ -79,9 +80,9 @@ static void init_ulp_program()
   esp_err_t err = ulp_load_binary(0, ulp_main_bin_start, (ulp_main_bin_end - ulp_main_bin_start) / sizeof(uint32_t));
   ESP_ERROR_CHECK(err);
 
-  gpio_num_t gpio_p1 = GPIO_NUM_34;
-  gpio_num_t gpio_p2 = GPIO_NUM_39;
-  gpio_num_t gpio_p3 = GPIO_NUM_35;
+  gpio_num_t gpio_p1 = BUTTON_UP_GPIO_NUM;
+  gpio_num_t gpio_p2 = BUTTON_DOWN_GPIO_NUM;
+  gpio_num_t gpio_p3 = BUTTON_SELECT_GPIO_NUM;
 
   //    GPIO 34 - RTC 4
   //    GPIO 39 - RTC 3
@@ -91,22 +92,22 @@ static void init_ulp_program()
   rtc_gpio_set_direction(gpio_p1, RTC_GPIO_MODE_INPUT_ONLY);
   rtc_gpio_pulldown_dis(gpio_p1);
   rtc_gpio_pullup_dis(gpio_p1);
-  rtc_gpio_hold_en(gpio_p1);
-  // rtc_gpio_isolate(GPIO_NUM_34);
+  rtc_gpio_hold_dis(gpio_p1);
+  // rtc_gpio_isolate(gpio_p1);
 
   rtc_gpio_init(gpio_p2);
   rtc_gpio_set_direction(gpio_p2, RTC_GPIO_MODE_INPUT_ONLY);
   rtc_gpio_pulldown_dis(gpio_p2);
   rtc_gpio_pullup_dis(gpio_p2);
-  rtc_gpio_hold_en(gpio_p2);
-  // rtc_gpio_isolate(GPIO_NUM_39);
+  rtc_gpio_hold_dis(gpio_p2);
+  //rtc_gpio_isolate(gpio_p2);
 
   rtc_gpio_init(gpio_p3);
   rtc_gpio_set_direction(gpio_p3, RTC_GPIO_MODE_INPUT_ONLY);
   rtc_gpio_pulldown_dis(gpio_p3);
   rtc_gpio_pullup_dis(gpio_p3);
-  rtc_gpio_hold_en(gpio_p3);
-  // rtc_gpio_isolate(GPIO_NUM_35);
+  rtc_gpio_hold_dis(gpio_p3);
+  // rtc_gpio_isolate(gpio_p3);
 
   ulp_set_wakeup_period(0, 100 * 1000); // 100 ms
   err = ulp_run(&ulp_entry - RTC_SLOW_MEM);
@@ -114,22 +115,27 @@ static void init_ulp_program()
   ESP_ERROR_CHECK(err);
 }
 
+EpubReader *reader = nullptr;
 void handleEpub(Renderer *renderer, UIAction action)
 {
-  EpubReader *reader = new EpubReader(epub_reader_state, renderer);
+  if (!reader)
+  {
+    reader = new EpubReader(epub_reader_state, renderer);
+    reader->load();
+  }
   switch (action)
   {
   case UP:
-    reader->next();
+    reader->prev();
     break;
   case DOWN:
-    reader->prev();
+    reader->next();
     break;
   case SELECT:
     // switch back to main screen
     ui_state = SELECTING_EPUB;
     handleEpubList(renderer, NONE);
-    break;
+    return;
   case NONE:
   default:
     break;
@@ -138,23 +144,27 @@ void handleEpub(Renderer *renderer, UIAction action)
   renderer->flush_display();
 }
 
+static EpubList *epubList = nullptr;
 void handleEpubList(Renderer *renderer, UIAction action)
 {
   // load up the epub list from the filesystem
-  ESP_LOGI("main", "Loading epub files");
-  EpubList *epubList = new EpubList(epub_list_state);
-  if (epubList->load("/sdcard/"))
+  if (!epubList)
   {
-    ESP_LOGI("main", "Epub files loaded");
+    ESP_LOGI("main", "Loading epub files");
+    epubList = new EpubList(epub_list_state);
+    if (epubList->load("/sdcard/"))
+    {
+      ESP_LOGI("main", "Epub files loaded");
+    }
   }
   // work out what the user wante us to do
   switch (action)
   {
   case UP:
-    epubList->next();
+    epubList->prev();
     break;
   case DOWN:
-    epubList->prev();
+    epubList->next();
     break;
   case SELECT:
     strcpy(epub_reader_state.epub_path, epubList->get_current_epub_path());
@@ -162,7 +172,7 @@ void handleEpubList(Renderer *renderer, UIAction action)
     epub_reader_state.current_page = 0;
     ui_state = READING_EPUB;
     handleEpub(renderer, NONE);
-    break;
+    return;
   case NONE:
   default:
     // nothing to do
@@ -175,15 +185,18 @@ void handleEpubList(Renderer *renderer, UIAction action)
   renderer->flush_display();
 }
 
-void setup_pin(gpio_num_t gpio_num)
+void handleUserInteraction(Renderer *renderer, UIAction ui_action)
 {
-  if (!rtc_gpio_is_valid_gpio(gpio_num))
+  switch (ui_state)
   {
-    ESP_LOGE(TAG, "GPIO %d cannot be used in deep sleep", gpio_num);
+  case READING_EPUB:
+    handleEpub(renderer, ui_action);
+    break;
+  case SELECTING_EPUB:
+  default:
+    handleEpubList(renderer, ui_action);
+    break;
   }
-  gpio_pad_select_gpio(gpio_num);
-  gpio_set_direction(gpio_num, GPIO_MODE_INPUT);
-  rtc_gpio_hold_en(gpio_num);
 }
 
 void main_task(void *param)
@@ -198,100 +211,77 @@ void main_task(void *param)
 
   // work out if we were woken via EXT1 and which button was pressed
   UIAction ui_action = NONE;
-  if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_EXT1)
+  if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_ULP)
   {
-    ESP_LOGI("main", "Woken by EXT1");
-    // work out which button was pressed
-    uint64_t button_pressed = esp_sleep_get_ext1_wakeup_status();
-    // if (button_pressed & (1ULL << BUTTON_UP_GPIO_NUM))
-    // {
-    //   ESP_LOGI("main", "Button UP pressed");
-    //   ui_action = UP;
-    // }
-    if (button_pressed & (1ULL << BUTTON_DOWN_GPIO_NUM))
+    // restore the renderer state - it should have been saved when we went to sleep...
+    renderer->hydrate();
+
+    uint16_t rtc_pin = ulp_gpio_status & UINT16_MAX;
+    ESP_LOGI("main", "Woken by ULP %d", rtc_pin);
+    if (rtc_pin == rtc_io_number_get(BUTTON_UP_GPIO_NUM))
+    {
+      ESP_LOGI("main", "Button UP pressed");
+      handleUserInteraction(renderer, UP);
+    }
+    else if (rtc_pin == rtc_io_number_get(BUTTON_DOWN_GPIO_NUM))
     {
       ESP_LOGI("main", "Button DOWN pressed");
-      ui_action = DOWN;
+      handleUserInteraction(renderer, DOWN);
     }
-    else if (button_pressed & (1ULL << BUTTON_SELECT_GPIO_NUM))
+    else if (rtc_pin == rtc_io_number_get(BUTTON_SELECT_GPIO_NUM))
     {
       ESP_LOGI("main", "Button SELECT pressed");
-      ui_action = SELECT;
+      handleUserInteraction(renderer, SELECT);
     }
     else
     {
-      ESP_LOGI("main", "Unknown button pressed %lld", button_pressed);
+      handleUserInteraction(renderer, NONE);
     }
   }
-  if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_ULP)
+  else
   {
-    ESP_LOGI("main", "Woken by ULP %d", ulp_gpio_status);
-    if (ulp_gpio_status & (1 << rtc_io_number_get(BUTTON_UP_GPIO_NUM)))
+    ESP_LOGI(TAG, "Initialise ULP program");
+    init_ulp_program();
+
+    renderer->clear_display();
+    handleUserInteraction(renderer, NONE);
+  }
+
+  gpio_set_direction(BUTTON_UP_GPIO_NUM, GPIO_MODE_INPUT);
+  gpio_set_direction(BUTTON_DOWN_GPIO_NUM, GPIO_MODE_INPUT);
+  gpio_set_direction(BUTTON_SELECT_GPIO_NUM, GPIO_MODE_INPUT);
+
+  int64_t last_user_interaction = esp_timer_get_time();
+  while (esp_timer_get_time() - last_user_interaction < 30 * 1000 * 1000)
+  {
+    // check to see if up is presses
+    if (gpio_get_level(BUTTON_DOWN_GPIO_NUM) == 0)
     {
-      ui_action = UP;
+      handleUserInteraction(renderer, DOWN);
+      last_user_interaction = esp_timer_get_time();
     }
-    if (ulp_gpio_status & (1 << rtc_io_number_get(BUTTON_DOWN_GPIO_NUM)))
+    else if (gpio_get_level(BUTTON_UP_GPIO_NUM) == 0)
     {
-      ui_action = DOWN;
+      handleUserInteraction(renderer, UP);
+      last_user_interaction = esp_timer_get_time();
     }
-    if (ulp_gpio_status & (1 << rtc_io_number_get(BUTTON_SELECT_GPIO_NUM)))
+    else if (gpio_get_level(BUTTON_SELECT_GPIO_NUM) == 0)
     {
-      ui_action = SELECT;
+      handleUserInteraction(renderer, SELECT);
+      last_user_interaction = esp_timer_get_time();
+    }
+    else
+    {
+      vTaskDelay(pdMS_TO_TICKS(50));
     }
   }
 
-  switch (ui_state)
-  {
-  case READING_EPUB:
-    handleEpub(renderer, ui_action);
-    break;
-  case SELECTING_EPUB:
-  default:
-    handleEpubList(renderer, ui_action);
-    break;
-  }
-  // setup the buttons for deep sleep
-  // setup_pin(BUTTON_UP_GPIO_NUM);
-  // setup_pin(BUTTON_DOWN_GPIO_NUM);
-  // setup_pin(BUTTON_SELECT_GPIO_NUM);
-  // esp_sleep_enable_ext1_wakeup(
-  //     // (1ULL << BUTTON_UP_GPIO_NUM) |
-  //     (1ULL << BUTTON_DOWN_GPIO_NUM) | (1ULL << BUTTON_SELECT_GPIO_NUM),
-  //     ESP_EXT1_WAKEUP_ANY_HIGH);
-  // esp_deep_sleep_start();
+  ESP_LOGI("main", "Saving state");
+  // save the state
+  renderer->dehydrate();
 
-  // // read the epub file
-  // // Epub *epub = new Epub("/sdcard/pg2701.epub");
-  // Epub *epub = new Epub("/sdcard/pg14838-images.epub");
-  // // Epub *epub = new Epub("/sdcard/pg19337-images.epub");
-  // epub->load();
-  // ESP_LOGI("main", "After epub create: %d", esp_get_free_heap_size());
-  // // go through the book
-  // for (int section_idx = 0; section_idx < epub->get_sections_count(); section_idx++)
-  // {
-  //   char *html = epub->get_section_contents(section_idx);
-  //   ESP_LOGI("main", "After read html: %d", esp_get_free_heap_size());
-  //   RubbishHtmlParser *parser = new RubbishHtmlParser(html, strlen(html));
-  //   ESP_LOGI("main", "After parse: %d", esp_get_free_heap_size());
-  //   parser->layout(renderer, epub);
-  //   ESP_LOGI("main", "After layout: %d", esp_get_free_heap_size());
-  //   for (int page = 0; page < parser->get_page_count(); page++)
-  //   {
-  //     ESP_LOGI("main", "rendering page %d of %d", page, parser->get_page_count());
-  //     parser->render_page(page, renderer);
-  //     ESP_LOGI("main", "rendered page %d of %d", page, parser->get_page_count());
-  //     // log out the free memory
-  //     ESP_LOGI("main", "after render: %d", esp_get_free_heap_size());
-  //     renderer->flush_display();
-  //     vTaskDelay(pdMS_TO_TICKS(1000));
-  //   }
-  //   delete parser;
-  //   delete html;
-  // }
-  //
-  init_ulp_program();
-  ESP_LOGI("main", "Entering deep sleep");
   ESP_ERROR_CHECK(esp_sleep_enable_ulp_wakeup());
+  ESP_LOGI("main", "Entering deep sleep");
   esp_deep_sleep_start();
 }
 

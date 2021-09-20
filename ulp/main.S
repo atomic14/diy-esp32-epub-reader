@@ -14,6 +14,24 @@ gpio_status:
 exit:
 	halt
 
+wakeup_pin4:
+	MOVE r0, 4
+	MOVE r1, gpio_status
+	ST r0, r1, 0
+	JUMP wakeup
+
+wakeup_pin3:
+	MOVE r0, 3
+	MOVE r1, gpio_status
+	ST r0, r1, 0
+	JUMP wakeup
+
+wakeup_pin5:
+	MOVE r0, 5
+	MOVE r1, gpio_status
+	ST r0, r1, 0
+	JUMP wakeup
+
 wakeup:
 	/* try to wakeup SoC, if not => halt */
 	STAGE_INC  1
@@ -28,25 +46,17 @@ wakeup:
 entry:
 	STAGE_RST
 
-	READ_RTC_REG (RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S, 16)
-	move r1, gpio_status
-	st r0, r1, 0
+	READ_RTC_REG (RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S+4, 1)
+	and r0, r0, 1
+	jump wakeup_pin4, eq
 
-	move r1, r0
-	rsh r1, r1, 4
-	and r1, r1, 1
 
-	jump wakeup, eq
+	READ_RTC_REG (RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S+3, 1)
+	and r0, r0, 1
+	jump wakeup_pin3, eq
 
-	move r1, r0
-	rsh r1, r1, 3
-	and r1, r1, 1
+	READ_RTC_REG (RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S+5, 1)
+	and r0, r0, 1
+	jump wakeup_pin5, eq
 
-	jump wakeup, eq
-
-	move r1, r0
-	rsh r1, r1, 5
-	and r1, r1, 1
-
-	jump wakeup, eq
 	halt

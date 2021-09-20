@@ -23,7 +23,7 @@ protected:
   void get_text(const char *src, int start_index, int end_index);
 
 public:
-  ~Renderer();
+  virtual ~Renderer();
   virtual void draw_image(const std::string &filename, int x, int y, int width, int height);
   virtual bool get_image_size(const std::string &filename, int *width, int *height);
   virtual void draw_pixel(int x, int y, uint8_t color) = 0;
@@ -37,4 +37,8 @@ public:
   virtual int get_page_height() = 0;
   virtual int get_space_width() = 0;
   virtual int get_line_height() = 0;
+  // deep sleep helper - persist any state to disk that may be needed on wake
+  virtual void dehydrate(){};
+  // deep sleep helper - retrieve any state from disk after wake
+  virtual void hydrate(){};
 };

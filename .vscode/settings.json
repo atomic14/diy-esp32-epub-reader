@@ -58,6 +58,8 @@
     "streambuf": "cpp",
     "thread": "cpp",
     "cinttypes": "cpp",
-    "typeinfo": "cpp"
+    "typeinfo": "cpp",
+    "display_ops.h": "c",
+    "esp_log.h": "c"
   }
 }

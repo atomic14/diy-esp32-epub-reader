@@ -37,7 +37,7 @@ const char *ZipFile::read_file_to_memory(const char *filename)
     // is this the file we're looking for?
     if (strcmp(filename, file_stat.m_filename) == 0)
     {
-      ESP_LOGI(TAG, "Extracting %s", file_stat.m_filename);
+      // ESP_LOGI(TAG, "Extracting %s", file_stat.m_filename);
       // allocate memory for the file
       size_t file_size = file_stat.m_uncomp_size;
       char *file_data = (char *)malloc(file_size + 1);
@@ -60,7 +60,7 @@ const char *ZipFile::read_file_to_memory(const char *filename)
       }
       // Close the archive, freeing any resources it was using
       mz_zip_reader_end(&zip_archive);
-      ESP_LOGI(TAG, "Extracted data");
+      // ESP_LOGI(TAG, "Extracted data");
       return file_data;
     }
   }
