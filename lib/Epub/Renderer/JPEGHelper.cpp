@@ -75,10 +75,10 @@ bool JPEGHelper::render(const std::string &path, Renderer *renderer, int x_pos, 
     this->x_scale = std::min(1.0f, float(width) / float(dec.width));
     this->y_scale = std::min(1.0f, float(height) / float(dec.height));
 
-    this->scale_factor = 0;
+    scale_factor = 0;
     while (x_scale <= 1.0f && y_scale <= 1.0f && scale_factor <= 3)
     {
-      this->scale_factor++;
+      scale_factor++;
       x_scale *= 2;
       y_scale *= 2;
     }
