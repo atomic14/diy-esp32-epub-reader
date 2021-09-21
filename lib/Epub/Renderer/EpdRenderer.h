@@ -3,6 +3,7 @@
 #include <epd_driver.h>
 #include <epd_highlevel.h>
 #include "Renderer.h"
+#include "miniz.h"
 
 class EpdRenderer : public Renderer
 {
@@ -76,12 +77,11 @@ public:
     epd_hl_set_all_white(&m_hl);
     epd_clear();
   }
-  void flush_display()
+  void flush_display(bool is_grey_scale = true)
   {
     ESP_LOGI("EPD", "Flushing display");
     epd_poweron();
-    // ESP_LOGI(TAG, "epd_ambient_temperature=%f", epd_ambient_temperature());
-    epd_hl_update_screen(&m_hl, MODE_GL16, 20);
+    epd_hl_update_screen(&m_hl, is_grey_scale ? MODE_GC16 : MODE_DU, 20);
     // vTaskDelay(50);
     epd_poweroff();
     ESP_LOGI("EPD", "Flushed display");
@@ -115,17 +115,32 @@ public:
   {
     ESP_LOGI("EPD", "Dehydrating EPD");
     // save the two buffers - the front and the back buffers
-    FILE *fp = fopen("/sdcard/front_buffer.bin", "wb");
-    if (fp)
-    {
-      fwrite(m_hl.front_fb, 1, EPD_HEIGHT * EPD_WIDTH / 2, fp);
-      fclose(fp);
+    size_t compressed_size = 0;
+    void *compressed = tdefl_compress_mem_to_heap(m_frame_buffer, EPD_WIDTH * EPD_HEIGHT/2, &compressed_size, 0);
+    if (compressed) {
+      ESP_LOGI("EPD", "Front buffer compressed size: %d", compressed_size);
+      FILE *fp = fopen("/sdcard/front_buffer.z", "wb");
+      if (fp)
+      {
+        fwrite(compressed, 1, compressed_size, fp);
+        fclose(fp);
+      }
+      free(compressed);
+    } else {
+      ESP_LOGE("EPD", "Failed to compress front buffer");
     }
-    fp = fopen("/sdcard/back_buffer.bin", "wb");
-    if (fp)
-    {
-      fwrite(m_hl.back_fb, 1, EPD_HEIGHT * EPD_WIDTH / 2, fp);
-      fclose(fp);
+    compressed_size = 0;
+    compressed = tdefl_compress_mem_to_heap(m_hl.back_fb, EPD_WIDTH * EPD_HEIGHT/2, &compressed_size, 0);
+    if (compressed) {
+      ESP_LOGI("EPD", "Back buffer compressed size: %d", compressed_size);
+      FILE *fp = fopen("/sdcard/back_buffer.z", "wb");
+      if (fp)
+      {
+        fwrite(compressed, 1, compressed_size, fp);
+        fclose(fp);
+      }
+    } else {
+      ESP_LOGE("EPD", "Failed to compress back buffer");
     }
     ESP_LOGI("EPD", "Dehydrated EPD");
   };
@@ -134,21 +149,37 @@ public:
   {
     ESP_LOGI("EPD", "Hydrating EPD");
     // load the two buffers - the front and the back buffers
-    FILE *fp = fopen("/sdcard/front_buffer.bin", "rb");
+    FILE *fp = fopen("/sdcard/front_buffer.z", "rb");
     if (fp)
     {
-      fread(m_hl.front_fb, 1, EPD_HEIGHT * EPD_WIDTH / 2, fp);
+      fseek(fp, 0, SEEK_END);
+      size_t compressed_size = ftell(fp);
+      fseek(fp, 0, SEEK_SET);
+      void *compressed = malloc(compressed_size);
+      if (compressed) {
+        fread(compressed, 1, compressed_size, fp);
+        tinfl_decompress_mem_to_mem(m_hl.front_fb, EPD_HEIGHT * EPD_WIDTH / 2, compressed, compressed_size, 0);
+        free(compressed);
+      }
       fclose(fp);
     }
     else
     {
       ESP_LOGI("EPD", "No front buffer found");
     }
-    fp = fopen("/sdcard/back_buffer.bin", "rb");
+    fp = fopen("/sdcard/back_buffer.z", "rb");
     if (fp)
     {
-      fread(m_hl.back_fb, 1, EPD_HEIGHT * EPD_WIDTH / 2, fp);
-      fclose(fp);
+      fseek(fp, 0, SEEK_END);
+      size_t compressed_size = ftell(fp);
+      fseek(fp, 0, SEEK_SET);
+      void *compressed = malloc(compressed_size);
+      if (compressed) {
+        fread(compressed, 1, compressed_size, fp);
+        tinfl_decompress_mem_to_mem(m_hl.back_fb, EPD_HEIGHT * EPD_WIDTH / 2, compressed, compressed_size, 0);
+        free(compressed);
+       }
+       fclose(fp);
     }
     else
     {

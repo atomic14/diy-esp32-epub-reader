@@ -121,8 +121,8 @@ void handleEpub(Renderer *renderer, UIAction action)
   if (!reader)
   {
     reader = new EpubReader(epub_reader_state, renderer);
-    reader->load();
   }
+  reader->load();
   switch (action)
   {
   case UP:
@@ -134,6 +134,9 @@ void handleEpub(Renderer *renderer, UIAction action)
   case SELECT:
     // switch back to main screen
     ui_state = SELECTING_EPUB;
+    renderer->clear_screen();
+    // force a redraw
+    epub_list_state.previous_rendered_page = -1;
     handleEpubList(renderer, NONE);
     return;
   case NONE:
@@ -141,7 +144,7 @@ void handleEpub(Renderer *renderer, UIAction action)
     break;
   }
   reader->render();
-  renderer->flush_display();
+  renderer->flush_display(true);
 }
 
 static EpubList *epubList = nullptr;
@@ -171,6 +174,8 @@ void handleEpubList(Renderer *renderer, UIAction action)
     epub_reader_state.current_section = 0;
     epub_reader_state.current_page = 0;
     ui_state = READING_EPUB;
+    renderer->clear_screen();
+    renderer->flush_display();
     handleEpub(renderer, NONE);
     return;
   case NONE:
@@ -182,7 +187,6 @@ void handleEpubList(Renderer *renderer, UIAction action)
   ESP_LOGI("main", "previous_selected_item=%d", epub_list_state.previous_selected_item);
   ESP_LOGI("main", "selected_item=%d", epub_list_state.selected_item);
   epubList->render(renderer);
-  renderer->flush_display();
 }
 
 void handleUserInteraction(Renderer *renderer, UIAction ui_action)

@@ -105,14 +105,15 @@ void EpubList::render(Renderer *renderer)
   if (current_page != state.previous_rendered_page)
   {
     renderer->clear_screen();
-    renderer->flush_display();
     state.previous_selected_item = -1;
   }
+  bool is_grey = false;
   for (int i = start_index; i < start_index + EPUBS_PER_PAGE && i < epubs.size(); i++)
   {
     // do we need to draw a new page of items?
     if (current_page != state.previous_rendered_page)
     {
+      is_grey = true;
       ESP_LOGI(TAG, "Rendering item %d", i);
       // draw the cover page
       int image_xpos = PADDING;
@@ -147,4 +148,5 @@ void EpubList::render(Renderer *renderer)
   }
   state.previous_selected_item = state.selected_item;
   state.previous_rendered_page = current_page;
+  renderer->flush_display(is_grey);
 }

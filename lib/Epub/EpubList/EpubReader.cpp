@@ -10,24 +10,32 @@ static const char *TAG = "EREADER";
 bool EpubReader::load()
 {
   ESP_LOGI(TAG, "Before epub load: %d", esp_get_free_heap_size());
-  epub = new Epub(state.epub_path);
-  if (epub->load())
-  {
-    ESP_LOGI(TAG, "After epub load: %d", esp_get_free_heap_size());
-    return false;
+  // do we need to load the epub?
+  if (!epub || epub->get_path() != state.epub_path) {
+    delete epub;
+    delete parser;
+    parser = nullptr;
+    epub = new Epub(state.epub_path);
+    if (epub->load())
+    {
+      ESP_LOGI(TAG, "After epub load: %d", esp_get_free_heap_size());
+      return false;
+    }
   }
   return true;
 }
 
 void EpubReader::parse_and_layout_current_section()
 {
-  ESP_LOGI(TAG, "BEfore read html: %d", esp_get_free_heap_size());
-  char *html = epub->get_section_contents(state.current_section);
-  ESP_LOGI(TAG, "After read html: %d", esp_get_free_heap_size());
-  parser = new RubbishHtmlParser(html, strlen(html));
-  ESP_LOGI(TAG, "After parse: %d", esp_get_free_heap_size());
-  parser->layout(renderer, epub);
-  state.pages_in_current_section = parser->get_page_count();
+  if (!parser) {
+    ESP_LOGI(TAG, "Before read html: %d", esp_get_free_heap_size());
+    char *html = epub->get_section_contents(state.current_section);
+    ESP_LOGI(TAG, "After read html: %d", esp_get_free_heap_size());
+    parser = new RubbishHtmlParser(html, strlen(html));
+    ESP_LOGI(TAG, "After parse: %d", esp_get_free_heap_size());
+    parser->layout(renderer, epub);
+    state.pages_in_current_section = parser->get_page_count();
+  }
 }
 
 void EpubReader::next()
@@ -37,8 +45,9 @@ void EpubReader::next()
   {
     state.current_section++;
     state.current_page = 0;
+    delete parser;
+    parser = nullptr;
   }
-  parse_and_layout_current_section();
 }
 
 void EpubReader::prev()
@@ -50,11 +59,12 @@ void EpubReader::prev()
       state.current_section--;
       parse_and_layout_current_section();
       state.current_page = state.pages_in_current_section - 1;
+      delete parser;
+      parser = nullptr;
       return;
     }
   }
   state.current_page--;
-  parse_and_layout_current_section();
 }
 
 void EpubReader::render()

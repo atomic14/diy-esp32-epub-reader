@@ -60,6 +60,7 @@
     "cinttypes": "cpp",
     "typeinfo": "cpp",
     "display_ops.h": "c",
-    "esp_log.h": "c"
+    "esp_log.h": "c",
+    "epdiy_ed047tc1.h": "c"
   }
 }
