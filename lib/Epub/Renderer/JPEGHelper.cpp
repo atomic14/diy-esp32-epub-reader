@@ -76,15 +76,15 @@ bool JPEGHelper::render(const std::string &path, Renderer *renderer, int x_pos, 
     this->y_scale = std::min(1.0f, float(height) / float(dec.height));
 
     this->scale_factor = 0;
-    // while (x_scale <= 1.0f && y_scale <= 1.0f && scale_factor <= 3)
-    // {
-    //   this->scale_factor++;
-    //   x_scale *= 2;
-    //   y_scale *= 2;
-    // }
-    // scale_factor--;
-    // x_scale /= 2;
-    // y_scale /= 2;
+    while (x_scale <= 1.0f && y_scale <= 1.0f && scale_factor <= 3)
+    {
+      this->scale_factor++;
+      x_scale *= 2;
+      y_scale *= 2;
+    }
+    scale_factor--;
+    x_scale /= 2;
+    y_scale /= 2;
 
     ESP_LOGI(TAG, "JPEG Decoded - size %d,%d, scale = %f, %f", dec.width, dec.height, x_scale, y_scale);
     jd_decomp(&dec, draw_jpeg_function, scale_factor);
@@ -123,7 +123,7 @@ size_t read_jpeg_data(
   return ndata;
 }
 
-UINT draw_jpeg_function(
+int draw_jpeg_function(
     JDEC *jdec,   /* Pointer to the decompression object */
     void *bitmap, /* Bitmap to be output */
     JRECT *rect   /* Rectangular region to output */

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <esp32/rom/tjpgd.h>
+#include <tjpgd.h>
 #include <string>
 #include "ImageHelper.h"
 
@@ -10,7 +10,7 @@ size_t read_jpeg_data(
     size_t ndata   /* Number of bytes to read/remove */
 );
 
-UINT draw_jpeg_function(
+int draw_jpeg_function(
     JDEC *jdec,   /* Pointer to the decompression object */
     void *bitmap, /* Bitmap to be output */
     JRECT *rect   /* Rectangular region to output */
@@ -35,7 +35,7 @@ private:
       size_t ndata   /* Number of bytes to read/remove */
   );
 
-  friend UINT draw_jpeg_function(
+  friend int draw_jpeg_function(
       JDEC *jdec,   /* Pointer to the decompression object */
       void *bitmap, /* Bitmap to be output */
       JRECT *rect   /* Rectangular region to output */
