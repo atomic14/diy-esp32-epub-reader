@@ -382,6 +382,7 @@ void RubbishHtmlParser::layout(Renderer *renderer, Epub *epub)
   for (auto block : blocks)
   {
     block->layout(m_html, renderer, epub);
+    // feed the watchdog
     vTaskDelay(1);
   }
   // now we need to allocate the lines to pages

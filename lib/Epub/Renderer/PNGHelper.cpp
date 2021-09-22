@@ -105,7 +105,7 @@ void PNGHelper::draw_callback(PNGDRAW *draw)
     {
       uint8_t r, g, b;
       convert_rgb_565_to_rgb(tmp_rgb565_buffer[int(x / x_scale)], &r, &g, &b);
-      uint8_t gray = (r + g + b) / 3;
+      uint32_t gray = (r*38 + g*75 + b*15) >> 7;
       renderer->draw_pixel(x_pos + x, y, gray);
     }
     last_y = y;

@@ -1,6 +1,4 @@
 #ifndef UNIT_TEST
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
 #include <esp_log.h>
 #else
 #define vTaskDelay(t)
@@ -44,7 +42,6 @@ bool EpubList::load(const char *path)
   {
     while ((ent = readdir(dir)) != NULL)
     {
-      // vTaskDelay(1);
       // ignore any hidden files starting with "." and any directories
       if (ent->d_name[0] == '.' || ent->d_type == DT_DIR)
       {

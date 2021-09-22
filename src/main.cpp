@@ -39,20 +39,6 @@ typedef enum
   READING_EPUB
 } UIState;
 
-typedef struct
-{
-  // what mode are we currently in?
-  UIState ui_state;
-  // the currently selected epub
-  int epub_index;
-  // the filename of the epub we are currently reading
-  char epub_filename[256];
-  // the section we are currently reading
-  int current_section;
-  // the page we are currently reading
-  int page;
-} STATE;
-
 // default to showing the list of epubs to the user
 RTC_DATA_ATTR UIState ui_state = SELECTING_EPUB;
 // the state data for the epub list
@@ -60,9 +46,10 @@ RTC_DATA_ATTR EpubListState epub_list_state;
 // the sate data for reading an epub
 RTC_DATA_ATTR EpubReaderState epub_reader_state;
 
-const gpio_num_t BUTTON_UP_GPIO_NUM = GPIO_NUM_34;
-const gpio_num_t BUTTON_DOWN_GPIO_NUM = GPIO_NUM_39;
-const gpio_num_t BUTTON_SELECT_GPIO_NUM = GPIO_NUM_35;
+// the pins for the buttons
+const gpio_num_t BUTTON_UP_GPIO_NUM = GPIO_NUM_34; // RTC 4
+const gpio_num_t BUTTON_DOWN_GPIO_NUM = GPIO_NUM_39; // RTC 3
+const gpio_num_t BUTTON_SELECT_GPIO_NUM = GPIO_NUM_35; // RTC 5
 
 typedef enum
 {
@@ -84,30 +71,23 @@ static void init_ulp_program()
   gpio_num_t gpio_p2 = BUTTON_DOWN_GPIO_NUM;
   gpio_num_t gpio_p3 = BUTTON_SELECT_GPIO_NUM;
 
-  //    GPIO 34 - RTC 4
-  //    GPIO 39 - RTC 3
-  //    GPIO 35 - RTC 5
-
   rtc_gpio_init(gpio_p1);
   rtc_gpio_set_direction(gpio_p1, RTC_GPIO_MODE_INPUT_ONLY);
   rtc_gpio_pulldown_dis(gpio_p1);
   rtc_gpio_pullup_dis(gpio_p1);
   rtc_gpio_hold_dis(gpio_p1);
-  // rtc_gpio_isolate(gpio_p1);
 
   rtc_gpio_init(gpio_p2);
   rtc_gpio_set_direction(gpio_p2, RTC_GPIO_MODE_INPUT_ONLY);
   rtc_gpio_pulldown_dis(gpio_p2);
   rtc_gpio_pullup_dis(gpio_p2);
   rtc_gpio_hold_dis(gpio_p2);
-  //rtc_gpio_isolate(gpio_p2);
 
   rtc_gpio_init(gpio_p3);
   rtc_gpio_set_direction(gpio_p3, RTC_GPIO_MODE_INPUT_ONLY);
   rtc_gpio_pulldown_dis(gpio_p3);
   rtc_gpio_pullup_dis(gpio_p3);
   rtc_gpio_hold_dis(gpio_p3);
-  // rtc_gpio_isolate(gpio_p3);
 
   ulp_set_wakeup_period(0, 100 * 1000); // 100 ms
   err = ulp_run(&ulp_entry - RTC_SLOW_MEM);
@@ -183,9 +163,6 @@ void handleEpubList(Renderer *renderer, UIAction action)
     // nothing to do
     break;
   }
-  ESP_LOGI("main", "previous_rendered_page=%d", epub_list_state.previous_rendered_page);
-  ESP_LOGI("main", "previous_selected_item=%d", epub_list_state.previous_selected_item);
-  ESP_LOGI("main", "selected_item=%d", epub_list_state.selected_item);
   epubList->render(renderer);
 }
 
@@ -214,7 +191,6 @@ void main_task(void *param)
   ESP_LOGI("main", "Memory after sdcard init: %d", esp_get_free_heap_size());
 
   // work out if we were woken via EXT1 and which button was pressed
-  UIAction ui_action = NONE;
   if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_ULP)
   {
     // restore the renderer state - it should have been saved when we went to sleep...

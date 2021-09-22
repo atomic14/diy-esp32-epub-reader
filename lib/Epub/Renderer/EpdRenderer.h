@@ -2,8 +2,11 @@
 #include <esp_log.h>
 #include <epd_driver.h>
 #include <epd_highlevel.h>
+#include <math.h>
 #include "Renderer.h"
 #include "miniz.h"
+
+#define GAMMA_VALUE (1.0f / 0.9f)
 
 class EpdRenderer : public Renderer
 {
@@ -15,6 +18,7 @@ private:
   EpdiyHighlevelState m_hl;
   uint8_t *m_frame_buffer;
   EpdFontProperties m_font_props;
+  uint8_t gamma_curve[256] = {0};
 
   const EpdFont *get_font(bool is_bold, bool is_italic)
   {
@@ -45,7 +49,9 @@ public:
     epd_hl_set_all_white(&m_hl);
     epd_set_rotation(EPD_ROT_INVERTED_PORTRAIT);
     m_frame_buffer = epd_hl_get_framebuffer(&m_hl);
-    // epd_clear();
+    
+    for (int gray_value =0; gray_value<256;gray_value++)
+    gamma_curve[gray_value] = round (255*pow(gray_value/255.0, GAMMA_VALUE));
   }
   ~EpdRenderer()
   {
@@ -70,7 +76,7 @@ public:
   }
   virtual void draw_pixel(int x, int y, uint8_t color)
   {
-    epd_draw_pixel(x, y, color, m_frame_buffer);
+    epd_draw_pixel(x, y, gamma_curve[color], m_frame_buffer);
   }
   void clear_display()
   {
