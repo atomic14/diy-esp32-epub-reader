@@ -78,11 +78,6 @@ public:
   {
     epd_draw_pixel(x, y, gamma_curve[color], m_frame_buffer);
   }
-  void clear_display()
-  {
-    epd_hl_set_all_white(&m_hl);
-    epd_clear();
-  }
   void flush_display(bool is_grey_scale = true)
   {
     ESP_LOGI("EPD", "Flushing display");
@@ -95,8 +90,8 @@ public:
   virtual void clear_screen()
   {
     epd_hl_set_all_white(&m_hl);
+    epd_clear();
   }
-
   virtual int get_page_width()
   {
     // don't forget we are rotated

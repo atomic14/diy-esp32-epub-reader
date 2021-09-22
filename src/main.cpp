@@ -184,7 +184,8 @@ void main_task(void *param)
 {
   ESP_LOGI("main", "Memory before renderer init: %d", esp_get_free_heap_size());
   // create the EPD renderer
-  EpdRenderer *renderer = new EpdRenderer(&regular_font, &bold_font, &italic_font, &bold_italic_font);
+  Renderer *renderer = new EpdRenderer(&regular_font, &bold_font, &italic_font, &bold_italic_font);
+  //Renderer *renderer = new ConsoleRenderer();
   ESP_LOGI("main", "Memory after renderer init: %d", esp_get_free_heap_size());
   // initialise the SDCard
   SDCard *sdcard = new SDCard("/sdcard", PIN_NUM_MISO, PIN_NUM_MOSI, PIN_NUM_CLK, PIN_NUM_CS);
@@ -223,7 +224,7 @@ void main_task(void *param)
     ESP_LOGI(TAG, "Initialise ULP program");
     init_ulp_program();
 
-    renderer->clear_display();
+    renderer->clear_screen();
     handleUserInteraction(renderer, NONE);
   }
 
