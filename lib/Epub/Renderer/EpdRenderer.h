@@ -19,6 +19,7 @@ private:
   uint8_t *m_frame_buffer;
   EpdFontProperties m_font_props;
   uint8_t gamma_curve[256] = {0};
+  bool needs_gray_flush = false;
 
   const EpdFont *get_font(bool is_bold, bool is_italic)
   {
@@ -49,9 +50,11 @@ public:
     epd_hl_set_all_white(&m_hl);
     epd_set_rotation(EPD_ROT_INVERTED_PORTRAIT);
     m_frame_buffer = epd_hl_get_framebuffer(&m_hl);
-    
-    for (int gray_value =0; gray_value<256;gray_value++)
-    gamma_curve[gray_value] = round (255*pow(gray_value/255.0, GAMMA_VALUE));
+
+    for (int gray_value = 0; gray_value < 256; gray_value++)
+    {
+      gamma_curve[gray_value] = round(255 * pow(gray_value / 255.0, GAMMA_VALUE));
+    }
   }
   ~EpdRenderer()
   {
@@ -66,23 +69,36 @@ public:
   }
   void draw_text(int x, int y, const char *src, int start_index, int end_index, bool bold = false, bool italic = false)
   {
+    // text is antialised so contains grey values
+    needs_gray_flush = true;
     get_text(src, start_index, end_index);
     int ypos = y + get_line_height();
     epd_write_string(get_font(bold, italic), buffer, &x, &ypos, m_frame_buffer, &m_font_props);
   }
   void draw_rect(int x, int y, int width, int height, uint8_t color = 0)
   {
+    if (color != 0 && color != 255)
+    {
+      needs_gray_flush = true;
+    }
     epd_draw_rect({.x = x, .y = y, .width = width, .height = height}, color, m_frame_buffer);
   }
   virtual void draw_pixel(int x, int y, uint8_t color)
   {
-    epd_draw_pixel(x, y, gamma_curve[color], m_frame_buffer);
+    uint8_t corrected_color = gamma_curve[color];
+    if (corrected_color != 0 && corrected_color != 255)
+    {
+      needs_gray_flush = true;
+    }
+    epd_draw_pixel(x, y, corrected_color, m_frame_buffer);
   }
-  void flush_display(bool is_grey_scale = true)
+  void flush_display()
   {
-    ESP_LOGI("EPD", "Flushing display");
+    ESP_LOGI("EPD", "Flushing display %d", needs_gray_flush);
     epd_poweron();
-    epd_hl_update_screen(&m_hl, is_grey_scale ? MODE_GC16 : MODE_DU, 20);
+    epd_hl_update_screen(&m_hl, needs_gray_flush ? MODE_GC16 : MODE_DU, 20);
+    // epd_hl_update_screen(&m_hl, MODE_GC16, 20);
+    needs_gray_flush = false;
     // vTaskDelay(50);
     epd_poweroff();
     ESP_LOGI("EPD", "Flushed display");
@@ -90,7 +106,6 @@ public:
   virtual void clear_screen()
   {
     epd_hl_set_all_white(&m_hl);
-    epd_clear();
   }
   virtual int get_page_width()
   {
@@ -117,8 +132,9 @@ public:
     ESP_LOGI("EPD", "Dehydrating EPD");
     // save the two buffers - the front and the back buffers
     size_t compressed_size = 0;
-    void *compressed = tdefl_compress_mem_to_heap(m_frame_buffer, EPD_WIDTH * EPD_HEIGHT/2, &compressed_size, 0);
-    if (compressed) {
+    void *compressed = tdefl_compress_mem_to_heap(m_frame_buffer, EPD_WIDTH * EPD_HEIGHT / 2, &compressed_size, 0);
+    if (compressed)
+    {
       ESP_LOGI("EPD", "Front buffer compressed size: %d", compressed_size);
       FILE *fp = fopen("/sdcard/front_buffer.z", "wb");
       if (fp)
@@ -127,12 +143,15 @@ public:
         fclose(fp);
       }
       free(compressed);
-    } else {
+    }
+    else
+    {
       ESP_LOGE("EPD", "Failed to compress front buffer");
     }
     compressed_size = 0;
-    compressed = tdefl_compress_mem_to_heap(m_hl.back_fb, EPD_WIDTH * EPD_HEIGHT/2, &compressed_size, 0);
-    if (compressed) {
+    compressed = tdefl_compress_mem_to_heap(m_hl.back_fb, EPD_WIDTH * EPD_HEIGHT / 2, &compressed_size, 0);
+    if (compressed)
+    {
       ESP_LOGI("EPD", "Back buffer compressed size: %d", compressed_size);
       FILE *fp = fopen("/sdcard/back_buffer.z", "wb");
       if (fp)
@@ -140,7 +159,9 @@ public:
         fwrite(compressed, 1, compressed_size, fp);
         fclose(fp);
       }
-    } else {
+    }
+    else
+    {
       ESP_LOGE("EPD", "Failed to compress back buffer");
     }
     ESP_LOGI("EPD", "Dehydrated EPD");
@@ -157,7 +178,8 @@ public:
       size_t compressed_size = ftell(fp);
       fseek(fp, 0, SEEK_SET);
       void *compressed = malloc(compressed_size);
-      if (compressed) {
+      if (compressed)
+      {
         fread(compressed, 1, compressed_size, fp);
         tinfl_decompress_mem_to_mem(m_hl.front_fb, EPD_HEIGHT * EPD_WIDTH / 2, compressed, compressed_size, 0);
         free(compressed);
@@ -175,12 +197,13 @@ public:
       size_t compressed_size = ftell(fp);
       fseek(fp, 0, SEEK_SET);
       void *compressed = malloc(compressed_size);
-      if (compressed) {
+      if (compressed)
+      {
         fread(compressed, 1, compressed_size, fp);
         tinfl_decompress_mem_to_mem(m_hl.back_fb, EPD_HEIGHT * EPD_WIDTH / 2, compressed, compressed_size, 0);
         free(compressed);
-       }
-       fclose(fp);
+      }
+      fclose(fp);
     }
     else
     {

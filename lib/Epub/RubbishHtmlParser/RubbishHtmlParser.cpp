@@ -27,7 +27,7 @@ static const char *TAG = "HTML";
 const char *HEADER_TAGS[] = {"h1", "h2", "h3", "h4", "h5", "h6"};
 const int NUM_HEADER_TAGS = sizeof(HEADER_TAGS) / sizeof(HEADER_TAGS[0]);
 
-const char *BLOCK_TAGS[] = {"div", "p", "li"};
+const char *BLOCK_TAGS[] = {"p", "li", "div"};
 const int NUM_BLOCK_TAGS = sizeof(BLOCK_TAGS) / sizeof(BLOCK_TAGS[0]);
 
 const char *BOLD_TAGS[] = {"b"};

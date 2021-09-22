@@ -124,7 +124,6 @@ void handleEpub(Renderer *renderer, UIAction action)
     break;
   }
   reader->render();
-  renderer->flush_display(true);
 }
 
 static EpubList *epubList = nullptr;

@@ -4,6 +4,7 @@
 #include "EpubReader.h"
 #include "Epub.h"
 #include "../RubbishHtmlParser/RubbishHtmlParser.h"
+#include "../Renderer/Renderer.h"
 
 static const char *TAG = "EREADER";
 
@@ -77,4 +78,5 @@ void EpubReader::render()
   parser->render_page(state.current_page, renderer);
   ESP_LOGI(TAG, "rendered page %d of %d", state.current_page, parser->get_page_count());
   ESP_LOGI(TAG, "after render: %d", esp_get_free_heap_size());
+  renderer->flush_display();
 }
