@@ -6,7 +6,7 @@
 #include "Renderer.h"
 #include "miniz.h"
 
-#define GAMMA_VALUE (1.0f / 0.9f)
+#define GAMMA_VALUE (1.0f / 0.8f)
 
 class EpdRenderer : public Renderer
 {
@@ -210,5 +210,9 @@ public:
       ESP_LOGI("EPD", "No back buffer found");
     }
     ESP_LOGI("EPD", "Hydrated EPD");
+  };
+  virtual void reset()
+  {
+    epd_fullclear(&m_hl, 20);
   };
 };

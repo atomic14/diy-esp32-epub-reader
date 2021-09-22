@@ -30,7 +30,7 @@ void EpubReader::parse_and_layout_current_section()
 {
   if (!parser) {
     ESP_LOGI(TAG, "Before read html: %d", esp_get_free_heap_size());
-    char *html = epub->get_section_contents(state.current_section);
+    char *html = epub->get_spine_item_contents(state.current_section);
     ESP_LOGI(TAG, "After read html: %d", esp_get_free_heap_size());
     parser = new RubbishHtmlParser(html, strlen(html));
     ESP_LOGI(TAG, "After parse: %d", esp_get_free_heap_size());

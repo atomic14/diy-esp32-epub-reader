@@ -18,4 +18,5 @@ public:
   virtual void dump(const char *html) = 0;
   virtual BlockType getType() = 0;
   virtual bool isEmpty() = 0;
+  virtual void finish() {};
 };

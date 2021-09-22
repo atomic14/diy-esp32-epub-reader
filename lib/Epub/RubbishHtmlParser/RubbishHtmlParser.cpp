@@ -116,6 +116,10 @@ void RubbishHtmlParser::startNewTextBlock()
 {
   if (!currentTextBlock || currentTextBlock->words.size() > 0)
   {
+    if (currentTextBlock)
+    {
+      currentTextBlock->finish();
+    }
     currentTextBlock = new TextBlock();
     blocks.push_back(currentTextBlock);
   }
@@ -371,6 +375,15 @@ void RubbishHtmlParser::parse(const char *html, int index, int length)
     delete blocks.back();
     blocks.pop_back();
   }
+  int total_words = 0;
+  for (auto block : blocks)
+  {
+    if (block->getType() == BlockType::TEXT_BLOCK)
+    {
+      total_words += ((TextBlock *)block)->words.size();
+    }
+  }
+  ESP_LOGI(TAG, "Parsed %d blocks with %d words", blocks.size(), total_words);
 }
 
 void RubbishHtmlParser::layout(Renderer *renderer, Epub *epub)

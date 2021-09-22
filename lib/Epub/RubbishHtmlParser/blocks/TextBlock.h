@@ -13,8 +13,8 @@ public:
   bool italic;
   int start;
   int end;
-  int xpos = 0;
-  int width = 0;
+  uint16_t xpos = 0;
+  uint16_t width = 0;
   Word(int start, int end, bool bold = false, bool italic = false)
   {
     this->start = start;
@@ -46,6 +46,11 @@ public:
     {
       delete word;
     }
+  }
+  void finish()
+  {
+    // clean up any wasted space
+    words.resize(words.size());
   }
   bool isEmpty()
   {
@@ -143,6 +148,7 @@ public:
       }
       start_word = line_breaks[i];
     }
+    line_breaks.resize(line_breaks.size());
   }
   void render(const char *html, Renderer *renderer, int line_break_index, int y_pos)
   {

@@ -70,6 +70,7 @@ bool Epub::load()
   if (!manifest)
   {
     ESP_LOGE(TAG, "Missing manifest");
+    return false;
   }
   // create a mapping from id to file name
   auto item = manifest->FirstChildElement("item");
@@ -81,7 +82,7 @@ bool Epub::load()
     // grab the cover image
     if (item_id == cover_item)
     {
-      m_cover_archive_path = href;
+      m_cover_image_name = href;
     }
     items[item_id] = href;
     item = item->NextSiblingElement("item");
@@ -91,6 +92,7 @@ bool Epub::load()
   if (!spine)
   {
     ESP_LOGE(TAG, "Missing spine");
+    return false;
   }
   // read the spine
   auto itemref = spine->FirstChildElement("itemref");
@@ -99,14 +101,9 @@ bool Epub::load()
     auto id = itemref->Attribute("idref");
     if (items.find(id) != items.end())
     {
-      m_sections.push_back(items[id]);
+      m_spine.push_back(items[id]);
     }
     itemref = itemref->NextSiblingElement("itemref");
-  }
-  // dump out the spine
-  for (auto &s : m_sections)
-  {
-    ESP_LOGD(TAG, "Spine: %s", s.c_str());
   }
   return true;
 }
@@ -118,7 +115,7 @@ const std::string &Epub::get_title()
 
 const std::string Epub::get_cover_image_filename()
 {
-  return get_image_path(m_cover_archive_path);
+  return get_image_path(m_cover_image_name);
 }
 
 std::string Epub::get_image_path(const std::string &image_name)
@@ -145,21 +142,21 @@ std::string Epub::get_image_path(const std::string &image_name)
   return dst_file;
 }
 
-int Epub::get_sections_count()
+int Epub::get_spine_items_count()
 {
-  return m_sections.size();
+  return m_spine.size();
 }
 
-char *Epub::get_section_contents(int section)
+char *Epub::get_spine_item_contents(int section)
 {
-  if (section < 0 || section >= m_sections.size())
+  if (section < 0 || section >= m_spine.size())
   {
     ESP_LOGI(TAG, "Invalid section %d", section);
     return nullptr;
   }
   ZipFile zip(m_path.c_str());
-  ESP_LOGI(TAG, "Loading Section: %s", m_sections[section].c_str());
-  std::string archive_path = "OEBPS/" + m_sections[section];
+  ESP_LOGI(TAG, "Loading Section: %s", m_spine[section].c_str());
+  std::string archive_path = "OEBPS/" + m_spine[section];
   auto content = (char *)zip.read_file_to_memory(archive_path.c_str());
   if (!content)
   {

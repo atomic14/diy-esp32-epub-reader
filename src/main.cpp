@@ -47,8 +47,8 @@ RTC_DATA_ATTR EpubListState epub_list_state;
 RTC_DATA_ATTR EpubReaderState epub_reader_state;
 
 // the pins for the buttons
-const gpio_num_t BUTTON_UP_GPIO_NUM = GPIO_NUM_34; // RTC 4
-const gpio_num_t BUTTON_DOWN_GPIO_NUM = GPIO_NUM_39; // RTC 3
+const gpio_num_t BUTTON_UP_GPIO_NUM = GPIO_NUM_34;     // RTC 4
+const gpio_num_t BUTTON_DOWN_GPIO_NUM = GPIO_NUM_39;   // RTC 3
 const gpio_num_t BUTTON_SELECT_GPIO_NUM = GPIO_NUM_35; // RTC 5
 
 typedef enum
@@ -223,7 +223,7 @@ void main_task(void *param)
     ESP_LOGI(TAG, "Initialise ULP program");
     init_ulp_program();
 
-    renderer->clear_screen();
+    renderer->reset();
     handleUserInteraction(renderer, NONE);
   }
 

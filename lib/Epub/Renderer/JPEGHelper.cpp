@@ -77,17 +77,17 @@ bool JPEGHelper::render(const std::string &path, Renderer *renderer, int x_pos, 
 
     scale_factor = 0;
     // this doesn't seem to work very well...
-    // while (x_scale <= 1.0f && y_scale <= 1.0f && scale_factor <= 3)
-    // {
-    //   scale_factor++;
-    //   x_scale *= 2;
-    //   y_scale *= 2;
-    // }
-    // scale_factor--;
-    // x_scale /= 2;
-    // y_scale /= 2;
+    while (x_scale <= 1.0f && y_scale <= 1.0f && scale_factor <= 3)
+    {
+      scale_factor++;
+      x_scale *= 2;
+      y_scale *= 2;
+    }
+    scale_factor--;
+    x_scale /= 2;
+    y_scale /= 2;
 
-    ESP_LOGI(TAG, "JPEG Decoded - size %d,%d, scale = %f, %f", dec.width, dec.height, x_scale, y_scale);
+    ESP_LOGI(TAG, "JPEG Decoded - size %d,%d, scale = %f, %f, %d", dec.width, dec.height, x_scale, y_scale, scale_factor);
     jd_decomp(&dec, draw_jpeg_function, scale_factor);
   }
   else
@@ -140,7 +140,7 @@ int draw_jpeg_function(
       uint8_t r = *rgb++;
       uint8_t g = *rgb++;
       uint8_t b = *rgb++;
-      uint32_t gray = (r*38 + g*75 + b*15) >> 7;
+      uint32_t gray = (r * 38 + g * 75 + b * 15) >> 7;
       renderer->draw_pixel(context->x_pos + x * context->x_scale, context->y_pos + y * context->y_scale, gray);
     }
   }
