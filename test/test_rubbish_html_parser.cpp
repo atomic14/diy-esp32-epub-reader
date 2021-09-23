@@ -1,7 +1,7 @@
 #include <unity.h>
 #include <string.h>
 #include <RubbishHtmlParser/RubbishHtmlParser.h>
-#include <RubbishHtmlParser/Blocks/Block.h>
+#include <RubbishHtmlParser/blocks/Block.h>
 
 void test_parser(void)
 {

@@ -1,6 +1,12 @@
 #include <string.h>
+#ifndef UNIT_TEST
 #include <esp_log.h>
 #include <esp_system.h>
+#else
+#define ESP_LOGI(args...)
+#define ESP_LOGE(args...)
+#define ESP_LOGD(args...)
+#endif
 #include "EpubReader.h"
 #include "Epub.h"
 #include "../RubbishHtmlParser/RubbishHtmlParser.h"
@@ -12,7 +18,8 @@ bool EpubReader::load()
 {
   ESP_LOGI(TAG, "Before epub load: %d", esp_get_free_heap_size());
   // do we need to load the epub?
-  if (!epub || epub->get_path() != state.epub_path) {
+  if (!epub || epub->get_path() != state.epub_path)
+  {
     delete epub;
     delete parser;
     parser = nullptr;
@@ -28,7 +35,8 @@ bool EpubReader::load()
 
 void EpubReader::parse_and_layout_current_section()
 {
-  if (!parser) {
+  if (!parser)
+  {
     ESP_LOGI(TAG, "Before read html: %d", esp_get_free_heap_size());
     char *html = epub->get_spine_item_contents(state.current_section);
     ESP_LOGI(TAG, "After read html: %d", esp_get_free_heap_size());
