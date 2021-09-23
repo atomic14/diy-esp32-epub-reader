@@ -42,6 +42,7 @@ public:
   EpdRenderer(const EpdFont *regular_font, const EpdFont *bold_font, const EpdFont *italic_font, const EpdFont *bold_italic_font)
       : m_regular_font(regular_font), m_bold_font(bold_font), m_italic_font(italic_font), m_bold_italic_font(bold_italic_font)
   {
+    // this seems to be needed to power up the SDCard - probably not needed with other boards...
     m_font_props = epd_font_properties_default();
     // start up the EPD
     epd_init(EPD_OPTIONS_DEFAULT);
@@ -95,12 +96,8 @@ public:
   void flush_display()
   {
     ESP_LOGI("EPD", "Flushing display %d", needs_gray_flush);
-    epd_poweron();
     epd_hl_update_screen(&m_hl, needs_gray_flush ? MODE_GC16 : MODE_DU, 20);
-    // epd_hl_update_screen(&m_hl, MODE_GC16, 20);
     needs_gray_flush = false;
-    // vTaskDelay(50);
-    epd_poweroff();
     ESP_LOGI("EPD", "Flushed display");
   }
   virtual void clear_screen()

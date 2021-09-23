@@ -47,11 +47,6 @@ public:
       delete word;
     }
   }
-  void finish()
-  {
-    // clean up any wasted space
-    words.resize(words.size());
-  }
   bool isEmpty()
   {
     return words.empty();
@@ -148,7 +143,6 @@ public:
       }
       start_word = line_breaks[i];
     }
-    line_breaks.resize(line_breaks.size());
   }
   void render(const char *html, Renderer *renderer, int line_break_index, int y_pos)
   {

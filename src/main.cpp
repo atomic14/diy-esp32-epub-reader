@@ -21,7 +21,6 @@
 #include <italic_font.h>
 #include <bold_italic_font.h>
 #include "ulp_main.h"
-#include <epd_driver.h>
 
 extern const uint8_t ulp_main_bin_start[] asm("_binary_ulp_main_bin_start");
 extern const uint8_t ulp_main_bin_end[] asm("_binary_ulp_main_bin_end");
@@ -181,6 +180,7 @@ void handleUserInteraction(Renderer *renderer, UIAction ui_action)
 
 void main_task(void *param)
 {
+  epd_poweron();
   ESP_LOGI("main", "Memory before renderer init: %d", esp_get_free_heap_size());
   // create the EPD renderer
   Renderer *renderer = new EpdRenderer(&regular_font, &bold_font, &italic_font, &bold_italic_font);
@@ -262,6 +262,7 @@ void main_task(void *param)
 
   ESP_ERROR_CHECK(esp_sleep_enable_ulp_wakeup());
   ESP_LOGI("main", "Entering deep sleep");
+  epd_poweroff();
   esp_deep_sleep_start();
 }
 
