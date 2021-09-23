@@ -11,52 +11,62 @@ gpio_status:
 
 	.text
 
+	.global up_mask
+
+up_mask:
+	.long 0
+
+	.global down_mask
+
+down_mask:
+	.long 0
+
+	.global select_mask
+
+select_mask:
+	.long 0
+
 exit:
 	halt
 
-wakeup_pin4:
-	MOVE r0, 4
-	MOVE r1, gpio_status
-	ST r0, r1, 0
-	JUMP wakeup
-
-wakeup_pin3:
-	MOVE r0, 3
-	MOVE r1, gpio_status
-	ST r0, r1, 0
-	JUMP wakeup
-
-wakeup_pin5:
-	MOVE r0, 5
-	MOVE r1, gpio_status
-	ST r0, r1, 0
-	JUMP wakeup
-
 wakeup:
+	// r1 should contain the bitmask of the pin that woke us up
+	MOVE r0, gpio_status
+	ST r1, r0, 0
+try_wakeup:
 	/* try to wakeup SoC, if not => halt */
 	STAGE_INC  1
 	JUMPS exit, 10, GT
 
 	READ_RTC_FIELD(RTC_CNTL_LOW_POWER_ST_REG, RTC_CNTL_RDY_FOR_WAKEUP)
 	AND r0, r0, 1
-	JUMP wakeup, eq
+	JUMP try_wakeup, eq
 	wake
 
 	.global entry
 entry:
 	STAGE_RST
 
-	READ_RTC_REG (RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S+4, 1)
-	and r0, r0, 1
-	jump wakeup_pin4, eq
+	// this will read the first 16 bits of the RTC GPIO pins
+	// if you need the higher 16 bits then you'll need to adjust
+	// this
+	READ_RTC_REG (RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S, 16)
+	move r2, r0
+	move r1, up_mask
+	ld r1, r1, 0
+	and r0, r0, r1
+	jump wakeup, eq
 
+	move r0, r2
+	move r1, down_mask
+	ld r1, r1, 0
+	and r0, r0, r1
+	jump wakeup, eq
 
-	READ_RTC_REG (RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S+3, 1)
-	and r0, r0, 1
-	jump wakeup_pin3, eq
-
-	READ_RTC_REG (RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S+5, 1)
-	and r0, r0, 1
-	jump wakeup_pin5, eq
+	move r0, r2
+	move r1, select_mask
+	ld r1, r1, 0
+	and r0, r0, r1
+	jump wakeup, eq
 
 	halt
