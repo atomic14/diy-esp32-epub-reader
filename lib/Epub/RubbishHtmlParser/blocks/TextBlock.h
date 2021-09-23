@@ -114,8 +114,30 @@ public:
     size_t i = 0;
     while (i < n)
     {
-      line_breaks.push_back(ans[i] + 1);
       i = ans[i] + 1;
+      if (i > n)
+      {
+        ESP_LOGI("TextBlock", "fallen off the end of the words");
+        dump(html);
+
+        for (int x = 0; x < n; x++)
+        {
+          ESP_LOGI("TextBlock", "line break %d=>%d", x, ans[x]);
+        }
+        break;
+      }
+      line_breaks.push_back(i);
+      if (line_breaks.size() > 1000)
+      {
+        ESP_LOGE("TextBlock", "too many line breaks");
+        dump(html);
+
+        for (int x = 0; x < n; x++)
+        {
+          ESP_LOGI("TextBlock", "line break %d=>%d", x, ans[x]);
+        }
+        break;
+      }
     }
     // With the page breaks calculated we can now position the words along the line
     int start_word = 0;
@@ -158,11 +180,12 @@ public:
   {
     for (auto word : words)
     {
+      printf("##%d#", word->width);
       for (int i = word->start; i < word->end; i++)
       {
         printf("%c", html[i]);
       }
-      printf(" ");
+      printf("## ");
     }
   }
   virtual BlockType getType()

@@ -22,12 +22,3 @@ void test_parser(void)
   RubbishHtmlParser parser(html, strlen(html));
   TEST_ASSERT_EQUAL(6, parser.get_blocks().size());
 }
-
-int main(int argc, char **argv)
-{
-  UNITY_BEGIN();
-  RUN_TEST(test_parser);
-  UNITY_END();
-
-  return 0;
-}

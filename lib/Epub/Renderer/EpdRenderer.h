@@ -44,6 +44,8 @@ public:
   {
     // this seems to be needed to power up the SDCard - probably not needed with other boards...
     m_font_props = epd_font_properties_default();
+    // fallback to a question mark for character not available in the font
+    m_font_props.fallback_glyph = '?';
     // start up the EPD
     epd_init(EPD_OPTIONS_DEFAULT);
     m_hl = epd_hl_init(EPD_BUILTIN_WAVEFORM);
