@@ -1,41 +1,74 @@
 #include <unity.h>
 #include <string.h>
+#include <stdio.h>
 #include <tinyxml2.h>
+#include <list>
+
+class MyVisitor : public tinyxml2::XMLVisitor
+{
+public:
+  virtual bool VisitEnter(const tinyxml2::XMLElement &element, const tinyxml2::XMLAttribute *firstAttribute)
+  {
+    printf("**** Entering element %s\n", element.Name());
+    return true;
+  }
+  /// Visit a text node.
+  virtual bool Visit(const tinyxml2::XMLText &text)
+  {
+    printf("+++ Text\n");
+    printf("%s\n", text.Value());
+    printf("--- Text\n");
+    return true;
+  }
+  virtual bool VisitExit(const tinyxml2::XMLElement &element)
+  {
+    printf("**** Exiting element %s\n", element.Name());
+    return true;
+  }
+};
 
 void test_xml_parser(void)
 {
-  const char *html =
-      "<html>"
-      "<head>"
-      "<title>Test</title>"
-      "</head>"
-      "<body>"
-      "<h1>This is a title</h1>"
-      "<p>Text</p>"
-      "<p>Some more text</p>"
-      "<div>A block of text"
-      "<p>A Paragraph in a div</p>"
-      "Some more text"
-      "</div>"
-      "<h2>A sub heading</h2>"
-      "<p>Bananas! <b>Bold</b> <i>italic text</i> in pyjamas</p>"
-      "</body>"
-      "</html>";
-  tinyxml2::XMLDocument doc;
+  FILE *fp = fopen("test/fixtures/test.html", "rb");
+  fseek(fp, 0, SEEK_END);
+  long fsize = ftell(fp);
+  fseek(fp, 0, SEEK_SET); //same as rewind(f);
+
+  char *html = (char *)malloc(fsize + 1);
+  fread(html, fsize, 1, fp);
+  html[fsize] = 0;
+
+  tinyxml2::XMLDocument doc(false, tinyxml2::COLLAPSE_WHITESPACE);
   auto result = doc.Parse(html);
   TEST_ASSERT_EQUAL(tinyxml2::XML_SUCCESS, result);
-  doc.Print();
   auto body = doc.FirstChildElement("html")->FirstChildElement("body");
   TEST_ASSERT_NOT_NULL_MESSAGE(body, "Body element not found");
-  auto tag = body->FirstChild();
-  while (tag)
-  {
-    printf("%s\n", tag->Value());
-    printf("%s\n", tag->ToElement()->GetText());
-    if (!tag->ToElement()->NoChildren())
-    {
-      printf("**** has children...\n");
-    }
-    tag = tag->NextSibling();
-  }
+  body->Accept(new MyVisitor());
+  // auto tag = body->FirstChild();
+  // std::list<tinyxml2::XMLNode *> stack;
+  // while (tag)
+  // {
+  //   printf("%s\n", tag->Value());
+  //   if (!tag->FirstChild())
+  //   {
+  //     auto child = tag->FirstChild();
+  //     printf("Has Childdren '%s'\n", child->Value());
+  //   }
+  //   // {
+  //   //   printf("Got a child");
+  //   //   stack.push_back(tag);
+  //   //   tag = tag->FirstChild();
+  //   // }
+  //   // else
+  //   // {
+  //   tag = tag->NextSibling();
+  //   // }
+  //   // if (!tag && !stack.empty())
+  //   // {
+  //   //   printf("Finished with child");
+  //   //   tag = stack.back();
+  //   //   stack.pop_back();
+  //   // }
+  // }
+  printf("Finished XML parse\n");
 }

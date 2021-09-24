@@ -28,7 +28,7 @@ public:
   }
   void render(const char *html, Renderer *renderer)
   {
-    block->render(html, renderer, line_break_index, y_pos);
+    block->render(renderer, line_break_index, y_pos);
   }
 };
 
@@ -44,7 +44,7 @@ public:
   }
   void render(const char *html, Renderer *renderer)
   {
-    block->render(html, renderer, y_pos);
+    block->render(renderer, y_pos);
   }
 };
 

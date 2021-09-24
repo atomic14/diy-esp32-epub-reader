@@ -14,21 +14,13 @@ private:
 
   ImageHelper *get_image_helper(const std::string &filename);
 
-protected:
-  // temp buffer for measuring and rendering text - assumes that we don't have any words longer than
-  // MAX_WORD_LENGTH
-  char buffer[MAX_WORD_LENGTH];
-
-  // helper function to get text from the src
-  void get_text(const char *src, int start_index, int end_index);
-
 public:
   virtual ~Renderer();
   virtual void draw_image(const std::string &filename, int x, int y, int width, int height);
   virtual bool get_image_size(const std::string &filename, int *width, int *height);
   virtual void draw_pixel(int x, int y, uint8_t color) = 0;
-  virtual int get_text_width(const char *src, int start_index, int end_index, bool bold = false, bool italic = false) = 0;
-  virtual void draw_text(int x, int y, const char *src, int start_index, int end_index, bool bold = false, bool italic = false) = 0;
+  virtual int get_text_width(const std::string &text, bool bold = false, bool italic = false) = 0;
+  virtual void draw_text(int x, int y, const std::string &text, bool bold = false, bool italic = false) = 0;
   virtual void draw_text_box(const std::string &text, int x, int y, int width, int height, bool bold = false, bool italic = false);
   virtual void draw_rect(int x, int y, int width, int height, uint8_t color = 0) = 0;
   virtual void clear_screen() = 0;

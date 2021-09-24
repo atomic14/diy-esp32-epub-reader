@@ -366,7 +366,7 @@ void RubbishHtmlParser::parse(const char *html, int index, int length)
       index = skipAlphaNum(html, index, length);
       if (index > wordStart)
       {
-        currentTextBlock->words.push_back(new Word(wordStart, index, is_bold, is_italic));
+        currentTextBlock->words.push_back(new Word(std::string(html, wordStart, index - wordStart), is_bold, is_italic));
       }
     }
   }
@@ -394,7 +394,7 @@ void RubbishHtmlParser::layout(Renderer *renderer, Epub *epub)
   // line breaks based on the page width
   for (auto block : blocks)
   {
-    block->layout(m_html, renderer, epub);
+    block->layout(renderer, epub);
     // feed the watchdog
     vTaskDelay(1);
   }

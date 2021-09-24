@@ -30,7 +30,7 @@ public:
   {
     return m_src.empty();
   }
-  void layout(const char *html, Renderer *renderer, Epub *epub)
+  void layout(Renderer *renderer, Epub *epub)
   {
     m_image_path = epub->get_image_path(m_src);
     renderer->get_image_size(m_image_path, &width, &height);
@@ -45,7 +45,7 @@ public:
     // horizontal center
     x_pos = (renderer->get_page_width() - width) / 2;
   }
-  void render(const char *html, Renderer *renderer, int y_pos)
+  void render(Renderer *renderer, int y_pos)
   {
     if (m_image_path.empty())
     {
@@ -54,7 +54,7 @@ public:
     }
     renderer->draw_image(m_image_path, x_pos, y_pos, width, height);
   }
-  virtual void dump(const char *html)
+  virtual void dump()
   {
     printf("ImageBlock: %s\n", m_src.c_str());
   }

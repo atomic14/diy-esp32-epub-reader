@@ -30,19 +30,6 @@ ImageHelper *Renderer::get_image_helper(const std::string &filename)
   return nullptr;
 }
 
-// helper function to get text from the src
-void Renderer::get_text(const char *src, int start_index, int end_index)
-{
-  // make a copy of the string from the src to the temp buffer
-  // TODO handle html entities in the string
-  int index = 0;
-  for (int i = start_index; i < end_index && index < MAX_WORD_LENGTH - 1; i++)
-  {
-    buffer[index++] = src[i];
-  }
-  buffer[index] = 0;
-}
-
 void Renderer::draw_image(const std::string &filename, int x, int y, int width, int height)
 {
   ImageHelper *helper = get_image_helper(filename);
@@ -77,15 +64,15 @@ void Renderer::draw_text_box(const std::string &text, int x, int y, int width, i
   int ypos = 0;
   while (start < length && ypos + get_line_height() < height)
   {
-    while (end < length && get_text_width(text.c_str(), start, end, bold, italic) < width)
+    while (end < length && get_text_width(text.substr(start, end - start), bold, italic) < width)
     {
       end++;
     }
-    if (get_text_width(text.c_str(), start, end, bold, italic) > width)
+    if (get_text_width(text.substr(start, end - start), bold, italic) > width)
     {
       end--;
     }
-    draw_text(x, y + ypos, text.c_str(), start, end, bold, italic);
+    draw_text(x, y + ypos, text.substr(start, end - start), bold, italic);
     ypos += get_line_height();
     start = end;
     end = start + 1;

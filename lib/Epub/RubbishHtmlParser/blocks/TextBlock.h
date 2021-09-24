@@ -11,24 +11,24 @@ class Word
 public:
   bool bold;
   bool italic;
+  std::string text;
   int start;
   int end;
   uint16_t xpos = 0;
   uint16_t width = 0;
-  Word(int start, int end, bool bold = false, bool italic = false)
+  Word(const std::string &text, bool bold = false, bool italic = false)
   {
-    this->start = start;
-    this->end = end;
+    this->text = text;
     this->bold = bold;
     this->italic = italic;
   }
-  void layout(const char *html, Renderer *renderer)
+  void layout(Renderer *renderer)
   {
-    width = renderer->get_text_width(html, start, end, bold, italic);
+    width = renderer->get_text_width(text, bold, italic);
   }
-  void render(const char *html, Renderer *renderer, int y)
+  void render(Renderer *renderer, int y)
   {
-    renderer->draw_text(xpos, y, html, start, end, bold, italic);
+    renderer->draw_text(xpos, y, text, bold, italic);
   }
 };
 
@@ -52,12 +52,12 @@ public:
     return words.empty();
   }
   // given a renderer works out where to break the words into lines
-  void layout(const char *html, Renderer *renderer, Epub *epub)
+  void layout(Renderer *renderer, Epub *epub)
   {
     // make sure all the words have been measured
     for (auto word : words)
     {
-      word->layout(html, renderer);
+      word->layout(renderer);
     }
     int page_width = renderer->get_page_width();
     int space_width = renderer->get_space_width();
@@ -118,7 +118,7 @@ public:
       if (i > n)
       {
         ESP_LOGI("TextBlock", "fallen off the end of the words");
-        dump(html);
+        dump();
 
         for (int x = 0; x < n; x++)
         {
@@ -130,7 +130,7 @@ public:
       if (line_breaks.size() > 1000)
       {
         ESP_LOGE("TextBlock", "too many line breaks");
-        dump(html);
+        dump();
 
         for (int x = 0; x < n; x++)
         {
@@ -166,26 +166,21 @@ public:
       start_word = line_breaks[i];
     }
   }
-  void render(const char *html, Renderer *renderer, int line_break_index, int y_pos)
+  void render(Renderer *renderer, int line_break_index, int y_pos)
   {
     int start = line_break_index == 0 ? 0 : line_breaks[line_break_index - 1];
     int end = line_breaks[line_break_index];
     for (int i = start; i < end; i++)
     {
-      words[i]->render(html, renderer, y_pos);
+      words[i]->render(renderer, y_pos);
     }
   }
   // debug helper - dumps out the contents of the block with line breaks
-  void dump(const char *html)
+  void dump()
   {
     for (auto word : words)
     {
-      printf("##%d#", word->width);
-      for (int i = word->start; i < word->end; i++)
-      {
-        printf("%c", html[i]);
-      }
-      printf("## ");
+      printf("##%d#%s## ", word->width, word->text.c_str());
     }
   }
   virtual BlockType getType()
