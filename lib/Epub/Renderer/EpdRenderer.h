@@ -63,18 +63,18 @@ public:
   {
     epd_deinit();
   }
-  int get_text_width(const std::string &text, bool bold = false, bool italic = false)
+  int get_text_width(const char *text, bool bold = false, bool italic = false)
   {
     int x = 0, y = 0, x1 = 0, y1 = 0, x2 = 0, y2 = 0;
-    epd_get_text_bounds(get_font(bold, italic), text.c_str(), &x, &y, &x1, &y1, &x2, &y2, &m_font_props);
+    epd_get_text_bounds(get_font(bold, italic), text, &x, &y, &x1, &y1, &x2, &y2, &m_font_props);
     return x2 - x1;
   }
-  void draw_text(int x, int y, const std::string &text, bool bold = false, bool italic = false)
+  void draw_text(int x, int y, const char *text, bool bold = false, bool italic = false)
   {
     // text is antialised so contains grey values
     needs_gray_flush = true;
     int ypos = y + get_line_height();
-    epd_write_string(get_font(bold, italic), text.c_str(), &x, &ypos, m_frame_buffer, &m_font_props);
+    epd_write_string(get_font(bold, italic), text, &x, &ypos, m_frame_buffer, &m_font_props);
   }
   void draw_rect(int x, int y, int width, int height, uint8_t color = 0)
   {

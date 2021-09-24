@@ -3,69 +3,114 @@
 #include "../../Renderer/Renderer.h"
 #include <limits.h>
 #include "Block.h"
-// represents a single word in the html
-// to reduce memory use, the word is stored as a reference
-// to the start and end indexes in the html
-class Word
+
+typedef enum
 {
-public:
-  char *text;
-  bool bold;
-  bool italic;
-  uint16_t xpos = 0;
-  uint16_t width = 0;
-  Word(const char *src, int start, int length, bool bold = false, bool italic = false) : bold(bold), italic(italic)
+  BOLD_SPAN = 1,
+  ITALIC_SPAN = 2,
+} SPAN_STYLES;
+
+// TODO - is there any more whitespace we should consider?
+bool is_whitespace(char c)
+{
+  return (c == ' ' || c == '\r' || c == '\n');
+}
+
+// move past anything that should be considered part of a work
+int skip_word(const char *text, int index, int length)
+{
+  while (index < length && !is_whitespace(text[index]))
   {
-    text = new char[length + 1];
-    memcpy(text, src + start, length);
-    text[length] = 0;
+    index++;
   }
-  ~Word()
+  return index;
+}
+
+// skip past any white space characters
+int skip_whitespace(const char *html, int index, int length)
+{
+  while (index < length && is_whitespace(html[index]))
   {
-    delete[] text;
+    index++;
   }
-  void layout(Renderer *renderer)
-  {
-    width = renderer->get_text_width(text, bold, italic);
-  }
-  void render(Renderer *renderer, int y)
-  {
-    renderer->draw_text(xpos, y, text, bold, italic);
-  }
-};
+  return index;
+}
 
 // represents a block of words in the html document
 class TextBlock : public Block
 {
+private:
+  // the spans of text in this block
+  std::vector<const char *> spans;
+  // pointer to each word
+  std::vector<const char *> words;
+  // width of each word
+  std::vector<uint16_t> word_widths;
+  // x position of each word
+  std::vector<uint16_t> word_xpos;
+  // the styles of each word
+  std::vector<uint8_t> word_styles;
+
 public:
-  // the words in the block
-  std::vector<Word *> words;
   // where do we want to break the words into lines
-  std::vector<int> line_breaks;
+  std::vector<uint16_t> line_breaks;
+
+  void add_span(const char *span, bool is_bold, bool is_italic)
+  {
+    // adding a span to text block
+    // make a copy of the text as we'll modify it
+    int length = strlen(span);
+    char *text = new char[length + 1];
+    strcpy(text, span);
+    spans.push_back(text);
+    // work out where each word is in the span
+    int index = 0;
+    while (index < length)
+    {
+      // skip past any whitespace to the start of a word
+      index = skip_whitespace(span, index, length);
+      int word_start = index;
+      // find the end of the word
+      index = skip_word(span, index, length);
+      int word_length = index - word_start;
+      if (word_length > 0)
+      {
+        // null terminate the word
+        text[word_start + word_length] = '\0';
+        // store the information about the word for later
+        words.push_back(text + word_start);
+        // store the style for the word
+        word_styles.push_back((is_bold ? BOLD_SPAN : 0) | (is_italic ? ITALIC_SPAN : 0));
+      }
+    }
+  }
   ~TextBlock()
   {
-    for (auto word : words)
+    for (auto span : spans)
     {
-      delete word;
+      delete[] span;
     }
   }
   bool isEmpty()
   {
-    return words.empty();
+    return spans.empty();
   }
   // given a renderer works out where to break the words into lines
   void layout(Renderer *renderer, Epub *epub)
   {
-    // make sure all the words have been measured
-    for (auto word : words)
+    // measure each word
+    for (int i = 0; i < words.size(); i++)
     {
-      word->layout(renderer);
+      // measure the word
+      int width = renderer->get_text_width(words[i], word_styles[i] & BOLD_SPAN, word_styles[i] & ITALIC_SPAN);
+      word_widths.push_back(width);
     }
+
     int page_width = renderer->get_page_width();
     int space_width = renderer->get_space_width();
 
     // now apply the dynamic programming algorithm to find the best line breaks
-    int n = words.size();
+    int n = word_widths.size();
 
     // DP table in which dp[i] represents cost of line starting with word words[i]
     int dp[n];
@@ -91,7 +136,7 @@ public:
       for (int j = i; j < n; j++)
       {
         // Update the width of the words in current line + the space between two words.
-        currlen += (words[j]->width + space_width);
+        currlen += (word_widths[j] + space_width);
 
         // If we're bigger than the current pagewidth then we can't add more words
         if (currlen > page_width)
@@ -148,7 +193,7 @@ public:
       int total_word_width = 0;
       for (int word_index = start_word; word_index < line_breaks[i]; word_index++)
       {
-        total_word_width += words[word_index]->width;
+        total_word_width += word_widths[word_index];
       }
       float actual_spacing = space_width;
       // don't add space if we are on the last line
@@ -160,13 +205,19 @@ public:
         }
       }
       float xpos = 0;
+      word_xpos.resize(words.size());
       for (int word_index = start_word; word_index < line_breaks[i]; word_index++)
       {
-        words[word_index]->xpos = xpos;
-        xpos += words[word_index]->width + actual_spacing;
+        word_xpos[word_index] = xpos;
+        xpos += word_widths[word_index] + actual_spacing;
       }
       start_word = line_breaks[i];
     }
+    spans.shrink_to_fit();
+    words.shrink_to_fit();
+    word_widths.shrink_to_fit();
+    word_xpos.shrink_to_fit();
+    word_styles.shrink_to_fit();
   }
   void render(Renderer *renderer, int line_break_index, int y_pos)
   {
@@ -174,16 +225,23 @@ public:
     int end = line_breaks[line_break_index];
     for (int i = start; i < end; i++)
     {
-      words[i]->render(renderer, y_pos);
+      // get the style
+      uint8_t style = word_styles[i];
+      // render the word
+      renderer->draw_text(word_xpos[i], y_pos, words[i], style & BOLD_SPAN, style & ITALIC_SPAN);
     }
   }
   // debug helper - dumps out the contents of the block with line breaks
   void dump()
   {
-    for (auto word : words)
+    for (int i = 0; i < words.size(); i++)
     {
-      printf("##%d#%s## ", word->width, word->text);
+      printf("##%d#%s## ", word_widths[i], words[i]);
     }
+  }
+  bool is_empty()
+  {
+    return words.empty();
   }
   virtual BlockType getType()
   {

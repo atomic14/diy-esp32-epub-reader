@@ -25,17 +25,8 @@ private:
   TextBlock *currentTextBlock = nullptr;
   std::vector<Page *> pages;
 
-  // is there any more whitespace we should consider?
-  bool isWhiteSpace(char c)
-  {
-    return (c == ' ' || c == '\r' || c == '\n');
-  }
-  // move past anything that should be considered part of a word
-  int skipAlphaNum(const char *html, int index, int length);
   // start a new text block if needed
   void startNewTextBlock();
-  // skip past any white space characters
-  int skipWhiteSpace(const char *html, int index, int length);
 
 public:
   RubbishHtmlParser(const char *html, int length);

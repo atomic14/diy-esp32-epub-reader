@@ -44,31 +44,5 @@ void test_xml_parser(void)
   auto body = doc.FirstChildElement("html")->FirstChildElement("body");
   TEST_ASSERT_NOT_NULL_MESSAGE(body, "Body element not found");
   body->Accept(new MyVisitor());
-  // auto tag = body->FirstChild();
-  // std::list<tinyxml2::XMLNode *> stack;
-  // while (tag)
-  // {
-  //   printf("%s\n", tag->Value());
-  //   if (!tag->FirstChild())
-  //   {
-  //     auto child = tag->FirstChild();
-  //     printf("Has Childdren '%s'\n", child->Value());
-  //   }
-  //   // {
-  //   //   printf("Got a child");
-  //   //   stack.push_back(tag);
-  //   //   tag = tag->FirstChild();
-  //   // }
-  //   // else
-  //   // {
-  //   tag = tag->NextSibling();
-  //   // }
-  //   // if (!tag && !stack.empty())
-  //   // {
-  //   //   printf("Finished with child");
-  //   //   tag = stack.back();
-  //   //   stack.pop_back();
-  //   // }
-  // }
   printf("Finished XML parse\n");
 }

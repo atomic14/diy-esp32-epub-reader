@@ -64,15 +64,15 @@ void Renderer::draw_text_box(const std::string &text, int x, int y, int width, i
   int ypos = 0;
   while (start < length && ypos + get_line_height() < height)
   {
-    while (end < length && get_text_width(text.substr(start, end - start), bold, italic) < width)
+    while (end < length && get_text_width(text.substr(start, end - start).c_str(), bold, italic) < width)
     {
       end++;
     }
-    if (get_text_width(text.substr(start, end - start), bold, italic) > width)
+    if (get_text_width(text.substr(start, end - start).c_str(), bold, italic) > width)
     {
       end--;
     }
-    draw_text(x, y + ypos, text.substr(start, end - start), bold, italic);
+    draw_text(x, y + ypos, text.substr(start, end - start).c_str(), bold, italic);
     ypos += get_line_height();
     start = end;
     end = start + 1;

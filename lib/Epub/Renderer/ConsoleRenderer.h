@@ -10,11 +10,11 @@ private:
 public:
   ConsoleRenderer() {}
   ~ConsoleRenderer() {}
-  int get_text_width(const std::string &text, bool bold = false, bool italic = false)
+  int get_text_width(const char *text, bool bold = false, bool italic = false)
   {
-    return text.length();
+    return strlen(text);
   }
-  void draw_text(int x, int y, const std::string &text, bool bold = false, bool italic = false)
+  void draw_text(int x, int y, const char *text, bool bold = false, bool italic = false)
   {
     if (y_cursor < y)
     {
@@ -38,8 +38,8 @@ public:
       y_cursor++;
       x_cursor = 0;
     }
-    printf("%s", text.c_str());
-    x_cursor += text.length();
+    printf("%s", text);
+    x_cursor += strlen(text);
   }
   void draw_rect(int x, int y, int width, int height, uint8_t color = 0)
   {

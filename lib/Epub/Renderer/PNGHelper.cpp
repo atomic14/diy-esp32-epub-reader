@@ -82,7 +82,7 @@ bool PNGHelper::render(const std::string &path, Renderer *renderer, int x_pos, i
     this->last_y = -1;
     this->tmp_rgb565_buffer = (uint16_t *)malloc(png.getWidth() * 2);
 
-    png.decode(this, 0);
+    png.decode(this, PNG_FAST_PALETTE);
     png.close();
     free(this->tmp_rgb565_buffer);
     return true;
@@ -95,17 +95,17 @@ bool PNGHelper::render(const std::string &path, Renderer *renderer, int x_pos, i
 }
 void PNGHelper::draw_callback(PNGDRAW *draw)
 {
-  // // get the rgb 565 pixel values
-  png.getLineAsRGB565(draw, tmp_rgb565_buffer, 0, 0);
   // add the grayscale values to the accumulation buffer
   int y = y_pos + draw->y * y_scale;
   if (y != last_y)
   {
+    // get the rgb 565 pixel values
+    png.getLineAsRGB565(draw, tmp_rgb565_buffer, 0, 0);
     for (int x = 0; x < png.getWidth() * x_scale; x++)
     {
       uint8_t r, g, b;
       convert_rgb_565_to_rgb(tmp_rgb565_buffer[int(x / x_scale)], &r, &g, &b);
-      uint32_t gray = (r*38 + g*75 + b*15) >> 7;
+      uint32_t gray = (r * 38 + g * 75 + b * 15) >> 7;
       renderer->draw_pixel(x_pos + x, y, gray);
     }
     last_y = y;

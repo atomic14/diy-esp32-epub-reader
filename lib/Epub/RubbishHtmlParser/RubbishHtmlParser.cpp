@@ -81,7 +81,7 @@ bool RubbishHtmlParser::VisitEnter(const tinyxml2::XMLElement &element, const ti
     if (src)
     {
       // don't leave an empty text block in the list
-      if (currentTextBlock->words.size() == 0)
+      if (currentTextBlock->is_empty())
       {
         blocks.pop_back();
         delete currentTextBlock;
@@ -148,20 +148,10 @@ bool RubbishHtmlParser::VisitExit(const tinyxml2::XMLElement &element)
   return true;
 }
 
-// move past anything that should be considered part of a work
-int RubbishHtmlParser::skipAlphaNum(const char *html, int index, int length)
-{
-  while (index < length && !isWhiteSpace(html[index]) && html[index] != '<')
-  {
-    index++;
-  }
-  return index;
-}
-
 // start a new text block if needed
 void RubbishHtmlParser::startNewTextBlock()
 {
-  if (!currentTextBlock || currentTextBlock->words.size() > 0)
+  if (!currentTextBlock || !currentTextBlock->is_empty())
   {
     if (currentTextBlock)
     {
@@ -170,16 +160,6 @@ void RubbishHtmlParser::startNewTextBlock()
     currentTextBlock = new TextBlock();
     blocks.push_back(currentTextBlock);
   }
-}
-
-// skip past any white space characters
-int RubbishHtmlParser::skipWhiteSpace(const char *html, int index, int length)
-{
-  while (index < length && isWhiteSpace(html[index]))
-  {
-    index++;
-  }
-  return index;
 }
 
 void RubbishHtmlParser::parse(const char *html, int length)
@@ -191,34 +171,7 @@ void RubbishHtmlParser::parse(const char *html, int length)
 
 void RubbishHtmlParser::addText(const char *text, bool is_bold, bool is_italic)
 {
-  int length = strlen(text);
-  int index = 0;
-  // keep track of inline tag depth
-  while (index < length)
-  {
-    // skip past any whitespace
-    index = skipWhiteSpace(text, index, length);
-    // add the word to the current block
-    int wordStart = index;
-    index = skipAlphaNum(text, index, length);
-    if (index > wordStart)
-    {
-      currentTextBlock->words.push_back(new Word(text, wordStart, index - wordStart, is_bold, is_italic));
-    }
-  }
-  if (blocks.back()->isEmpty())
-  {
-    delete blocks.back();
-    blocks.pop_back();
-  }
-  int total_words = 0;
-  for (auto block : blocks)
-  {
-    if (block->getType() == BlockType::TEXT_BLOCK)
-    {
-      total_words += ((TextBlock *)block)->words.size();
-    }
-  }
+  currentTextBlock->add_span(text, is_bold, is_italic);
 }
 
 void RubbishHtmlParser::layout(Renderer *renderer, Epub *epub)

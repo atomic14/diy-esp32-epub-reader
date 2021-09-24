@@ -41,8 +41,10 @@ void EpubReader::parse_and_layout_current_section()
     char *html = epub->get_spine_item_contents(state.current_section);
     ESP_LOGI(TAG, "After read html: %d", esp_get_free_heap_size());
     parser = new RubbishHtmlParser(html, strlen(html));
+    free(html);
     ESP_LOGI(TAG, "After parse: %d", esp_get_free_heap_size());
     parser->layout(renderer, epub);
+    ESP_LOGI(TAG, "After layout: %d", esp_get_free_heap_size());
     state.pages_in_current_section = parser->get_page_count();
   }
 }
