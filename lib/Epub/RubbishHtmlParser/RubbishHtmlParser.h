@@ -3,6 +3,7 @@
 #include <string>
 #include <list>
 #include <vector>
+#include <tinyxml2.h>
 
 class TextBlock;
 class Block;
@@ -12,49 +13,42 @@ class Epub;
 
 // a very stupid xhtml parser - it will probably work for very simple cases
 // but will probably fail for complex ones
-class RubbishHtmlParser
+class RubbishHtmlParser : public tinyxml2::XMLVisitor
 {
 private:
   const char *m_html;
   int m_length;
+  bool is_bold = false;
+  bool is_italic = false;
 
   std::list<Block *> blocks;
   TextBlock *currentTextBlock = nullptr;
   std::vector<Page *> pages;
 
-private:
   // is there any more whitespace we should consider?
   bool isWhiteSpace(char c)
   {
     return (c == ' ' || c == '\r' || c == '\n');
   }
-  // get a tag name
-  void getTagName(const char *html, int length, int index, int &start, int &end);
-  // move past an html tag - basically move forward until we hit '>'
-  int skipToEndOfTagMarker(const char *html, int index, int length);
   // move past anything that should be considered part of a word
   int skipAlphaNum(const char *html, int index, int length);
   // start a new text block if needed
   void startNewTextBlock();
   // skip past any white space characters
   int skipWhiteSpace(const char *html, int index, int length);
-  // find the location of an attribute within a tag
-  bool findAttribute(const char *html, int index, int length, const char *name, int *src_start, int *src_end);
-  // a closing tag will have a '/' character immediately following the '<'
-  bool isClosingTag(const char *html, int index, int length);
-  // self closing tags have a / before we hit the '>'
-  // this assumes that we have already eliminated the possibility of a closing tag
-  bool isSelfClosing(const char *html, int index, int length);
-
-  int processClosingTag(const char *html, int index, int length, bool &is_bold, bool &is_italic);
-  int processSelfClosingTag(const char *html, int index, int length);
-  int processOpeningTag(const char *html, int index, int length, bool &is_bold, bool &is_italic);
 
 public:
   RubbishHtmlParser(const char *html, int length);
   ~RubbishHtmlParser();
 
-  void parse(const char *html, int index, int length);
+  // xml parser callbacks
+  bool VisitEnter(const tinyxml2::XMLElement &element, const tinyxml2::XMLAttribute *firstAttribute);
+  bool Visit(const tinyxml2::XMLText &text);
+  bool VisitExit(const tinyxml2::XMLElement &element);
+  // xml parser callbacks
+
+  void parse(const char *html, int length);
+  void addText(const char *text, bool is_bold, bool is_italic);
   void layout(Renderer *renderer, Epub *epub);
   int get_page_count()
   {

@@ -27,7 +27,7 @@ static const char *TAG = "HTML";
 const char *HEADER_TAGS[] = {"h1", "h2", "h3", "h4", "h5", "h6"};
 const int NUM_HEADER_TAGS = sizeof(HEADER_TAGS) / sizeof(HEADER_TAGS[0]);
 
-const char *BLOCK_TAGS[] = {"p", "li", "div"};
+const char *BLOCK_TAGS[] = {"p", "li", "div", "br"};
 const int NUM_BLOCK_TAGS = sizeof(BLOCK_TAGS) / sizeof(BLOCK_TAGS[0]);
 
 const char *BOLD_TAGS[] = {"b"};
@@ -43,12 +43,11 @@ const char *SKIP_TAGS[] = {"head"};
 const int NUM_SKIP_TAGS = sizeof(SKIP_TAGS) / sizeof(SKIP_TAGS[0]);
 
 // given the start and end of a tag, check to see if it matches a known tag
-bool matches(const char *html, int start, int end, const char *possible_tags[], int possible_tag_count)
+bool matches(const char *tag_name, const char *possible_tags[], int possible_tag_count)
 {
   for (int i = 0; i < possible_tag_count; i++)
   {
-    if (end - start == strlen(possible_tags[i]) &&
-        strncmp(html + start, possible_tags[i], end - start) == 0)
+    if (strcmp(tag_name, possible_tags[i]) == 0)
     {
       return true;
     }
@@ -60,14 +59,8 @@ RubbishHtmlParser::RubbishHtmlParser(const char *html, int length)
 {
   m_html = html;
   m_length = length;
-  int index = 0;
-  // skip to the html tag
-  while (strncmp(html + index, "<html", 5) != 0)
-  {
-    index++;
-  }
   startNewTextBlock();
-  parse(html, index, length);
+  parse(html, length);
 }
 
 RubbishHtmlParser::~RubbishHtmlParser()
@@ -78,27 +71,81 @@ RubbishHtmlParser::~RubbishHtmlParser()
   }
 }
 
-// assuming we are at the start of a tag, work out where the tag name is
-void RubbishHtmlParser::getTagName(const char *html, int index, int length, int &start, int &end)
+bool RubbishHtmlParser::VisitEnter(const tinyxml2::XMLElement &element, const tinyxml2::XMLAttribute *firstAttribute)
 {
-  start = index;
-  end = index;
-  while (end < length && html[end] != ' ' && html[end] != '>')
+  const char *tag_name = element.Name();
+  // we only handle image tags
+  if (matches(tag_name, IMAGE_TAGS, NUM_IMAGE_TAGS))
   {
-    end++;
+    const char *src = element.Attribute("src");
+    if (src)
+    {
+      // don't leave an empty text block in the list
+      if (currentTextBlock->words.size() == 0)
+      {
+        blocks.pop_back();
+        delete currentTextBlock;
+        currentTextBlock = nullptr;
+      }
+      blocks.push_back(new ImageBlock(src));
+      // start a new text block
+      startNewTextBlock();
+    }
+    else
+    {
+      ESP_LOGE(TAG, "Could not find src attribute");
+    }
   }
+  else if (matches(tag_name, SKIP_TAGS, NUM_SKIP_TAGS))
+  {
+    return false;
+  }
+  else if (matches(tag_name, HEADER_TAGS, NUM_HEADER_TAGS))
+  {
+    is_bold = true;
+    startNewTextBlock();
+  }
+  else if (matches(tag_name, BLOCK_TAGS, NUM_BLOCK_TAGS))
+  {
+    startNewTextBlock();
+  }
+  else if (matches(tag_name, BOLD_TAGS, NUM_BOLD_TAGS))
+  {
+    is_bold = true;
+  }
+  else if (matches(tag_name, ITALIC_TAGS, NUM_ITALIC_TAGS))
+  {
+    is_italic = true;
+  }
+  return true;
 }
-
-// move past an html tag - basically move forward until we hit '>'
-int RubbishHtmlParser::skipToEndOfTagMarker(const char *html, int index, int length)
+/// Visit a text node.
+bool RubbishHtmlParser::Visit(const tinyxml2::XMLText &text)
 {
-  // skip past the '<'
-  index++;
-  while (index < length && html[index] != '>')
+  addText(text.Value(), is_bold, is_italic);
+  return true;
+}
+bool RubbishHtmlParser::VisitExit(const tinyxml2::XMLElement &element)
+{
+  const char *tag_name = element.Name();
+  if (matches(tag_name, HEADER_TAGS, NUM_HEADER_TAGS))
   {
-    index++;
+    is_bold = false;
+    startNewTextBlock();
   }
-  return index + 1;
+  else if (matches(tag_name, BLOCK_TAGS, NUM_BLOCK_TAGS))
+  {
+    startNewTextBlock();
+  }
+  else if (matches(tag_name, BOLD_TAGS, NUM_BOLD_TAGS))
+  {
+    is_bold = false;
+  }
+  else if (matches(tag_name, ITALIC_TAGS, NUM_ITALIC_TAGS))
+  {
+    is_italic = false;
+  }
+  return true;
 }
 
 // move past anything that should be considered part of a work
@@ -135,241 +182,28 @@ int RubbishHtmlParser::skipWhiteSpace(const char *html, int index, int length)
   return index;
 }
 
-// find the location of an attribute within a tag
-bool RubbishHtmlParser::findAttribute(const char *html, int index, int length, const char *name, int *src_start, int *src_end)
+void RubbishHtmlParser::parse(const char *html, int length)
 {
-  // attribute name length
-  int name_length = strlen(name);
-  // skip forward until we find the name of the attribute
-  while (index < length - name_length && strncmp(html + index, name, name_length) != 0 && html[index] != '>')
-  {
-    index++;
-  }
-  // did we actually fund the attribute?
-  if (index < length - name_length && strncmp(html + index, name, name_length) == 0)
-  {
-    // skip past the name of the attribute
-    index += name_length;
-    // skip past any white space
-    index = skipWhiteSpace(html, index, length);
-    // skip past the "="
-    index++;
-    // skip past any white space
-    index = skipWhiteSpace(html, index, length);
-    // skip past the "
-    index++;
-    if (index >= length)
-    {
-      return false;
-    }
-    // find the end of the attribute value
-    int start = index;
-    while (index < length && html[index] != '"')
-    {
-      index++;
-    }
-    if (index >= length)
-    {
-      return false;
-    }
-    *src_start = start;
-    *src_end = index;
-    return true;
-  }
-  return false;
+  tinyxml2::XMLDocument doc(false, tinyxml2::COLLAPSE_WHITESPACE);
+  doc.Parse(html, length);
+  doc.Accept(this);
 }
 
-// a closing tag will have a '/' character immediately following the '<'
-bool RubbishHtmlParser::isClosingTag(const char *html, int index, int length)
+void RubbishHtmlParser::addText(const char *text, bool is_bold, bool is_italic)
 {
-  return html[index] == '<' && html[index + 1] == '/';
-}
-
-// self closing tags have a / before we hit the '>'
-bool RubbishHtmlParser::isSelfClosing(const char *html, int index, int length)
-{
-  // is it just a closing tag?
-  if (isClosingTag(html, index, length))
-  {
-    return false;
-  }
-  // do we have a slash before the end of the tag?
-  while (html[index] != '>' && index < length)
-  {
-    if (html[index] == '/')
-    {
-      return true;
-    }
-    index++;
-  }
-  return false;
-}
-
-int RubbishHtmlParser::processClosingTag(const char *html, int index, int length, bool &is_bold, bool &is_italic)
-{
-  // skip past the '</'
-  index += 2;
-  index = skipWhiteSpace(html, index, length);
-  // get the tag name
-  int tag_start = index;
-  int tag_end = index;
-  getTagName(html, index, length, tag_start, tag_end);
-  if (matches(html, tag_start, tag_end, HEADER_TAGS, NUM_HEADER_TAGS))
-  {
-    is_bold = false;
-    startNewTextBlock();
-  }
-  else if (matches(html, tag_start, tag_end, BLOCK_TAGS, NUM_BLOCK_TAGS))
-  {
-    startNewTextBlock();
-  }
-  else if (matches(html, tag_start, tag_end, BOLD_TAGS, NUM_BOLD_TAGS))
-  {
-    is_bold = false;
-  }
-  else if (matches(html, tag_start, tag_end, ITALIC_TAGS, NUM_ITALIC_TAGS))
-  {
-    is_italic = false;
-  }
-  return index;
-}
-
-int RubbishHtmlParser::processSelfClosingTag(const char *html, int index, int length)
-{
-  // skip past the '<'
-  index++;
-  // skip past any white space
-  index = skipWhiteSpace(html, index, length);
-  // get the tag name
-  int tag_start = index;
-  int tag_end = index;
-  getTagName(html, index, length, tag_start, tag_end);
-  // we only handle image tags
-  if (matches(html, tag_start, tag_end, IMAGE_TAGS, NUM_IMAGE_TAGS))
-  {
-    int src_start, src_end;
-    if (findAttribute(html, index, length, "src", &src_start, &src_end))
-    {
-      // don't leave an empty text block in the list
-      if (currentTextBlock->words.size() == 0)
-      {
-        blocks.pop_back();
-        delete currentTextBlock;
-        currentTextBlock = nullptr;
-      }
-      blocks.push_back(new ImageBlock(std::string(html + src_start, src_end - src_start)));
-      // start a new text block
-      startNewTextBlock();
-    }
-    else
-    {
-      ESP_LOGE(TAG, "Could not find src attribute");
-    }
-  }
-  return index;
-}
-
-int RubbishHtmlParser::processOpeningTag(const char *html, int index, int length, bool &is_bold, bool &is_italic)
-{
-  // skip past the '<'
-  index++;
-  index = skipWhiteSpace(html, index, length);
-  // get the tag name
-  int tag_start = index;
-  int tag_end = index;
-  getTagName(html, index, length, tag_start, tag_end);
-  // is this a tag that should be skipped?
-  if (matches(html, tag_start, tag_end, SKIP_TAGS, NUM_SKIP_TAGS))
-  {
-    printf("Hit a skip tag\n");
-    // move forward until we find a matching end tag - we assume that skip tags are not nested
-    while (index < length)
-    {
-      // have we found a closing tag?
-      if (isClosingTag(html, index, length))
-      {
-        // get the closing tag name
-        index += 2;
-        index = skipWhiteSpace(html, index, length);
-        int close_tag_start = index;
-        int close_tag_end = index;
-        getTagName(html, index, length, close_tag_start, close_tag_end);
-        // does it match the opening tag?
-        if (close_tag_end - close_tag_start == tag_end - tag_start &&
-            strncmp(html + close_tag_start, html + tag_start, close_tag_end - close_tag_start) == 0)
-        {
-          printf("found a matching close tag\n");
-          // we found the matching end tag
-          break;
-        }
-      }
-      // keep moving forward
-      index++;
-    }
-    // skip to the end of the closing tag
-    index = skipToEndOfTagMarker(html, index, length);
-  }
-  else if (matches(html, tag_start, tag_end, HEADER_TAGS, NUM_HEADER_TAGS))
-  {
-    is_bold = true;
-    startNewTextBlock();
-  }
-  else if (matches(html, tag_start, tag_end, BLOCK_TAGS, NUM_BLOCK_TAGS))
-  {
-    startNewTextBlock();
-  }
-  else if (matches(html, tag_start, tag_end, BOLD_TAGS, NUM_BOLD_TAGS))
-  {
-    is_bold = true;
-  }
-  else if (matches(html, tag_start, tag_end, ITALIC_TAGS, NUM_ITALIC_TAGS))
-  {
-    is_italic = true;
-  }
-  return index;
-}
-
-void RubbishHtmlParser::parse(const char *html, int index, int length)
-{
-  bool is_bold = false;
-  bool is_italic = false;
-  int count = 0;
+  int length = strlen(text);
+  int index = 0;
   // keep track of inline tag depth
   while (index < length)
   {
-    count++;
-    if (count % 1000 == 0)
-    {
-      vTaskDelay(1);
-    }
     // skip past any whitespace
-    index = skipWhiteSpace(html, index, length);
-    // have we hit a tag?
-    if (html[index] == '<')
+    index = skipWhiteSpace(text, index, length);
+    // add the word to the current block
+    int wordStart = index;
+    index = skipAlphaNum(text, index, length);
+    if (index > wordStart)
     {
-      if (isClosingTag(html, index, length))
-      {
-        index = processClosingTag(html, index, length, is_bold, is_italic);
-      }
-      else if (isSelfClosing(html, index, length))
-      {
-        index = processSelfClosingTag(html, index, length);
-      }
-      else
-      {
-        index = processOpeningTag(html, index, length, is_bold, is_italic);
-      }
-      index = skipToEndOfTagMarker(html, index, length);
-    }
-    else
-    {
-      // add the word to the current block
-      int wordStart = index;
-      index = skipAlphaNum(html, index, length);
-      if (index > wordStart)
-      {
-        currentTextBlock->words.push_back(new Word(html, wordStart, index - wordStart, is_bold, is_italic));
-      }
+      currentTextBlock->words.push_back(new Word(text, wordStart, index - wordStart, is_bold, is_italic));
     }
   }
   if (blocks.back()->isEmpty())
@@ -385,7 +219,6 @@ void RubbishHtmlParser::parse(const char *html, int index, int length)
       total_words += ((TextBlock *)block)->words.size();
     }
   }
-  ESP_LOGI(TAG, "Parsed %d blocks with %d words", blocks.size(), total_words);
 }
 
 void RubbishHtmlParser::layout(Renderer *renderer, Epub *epub)
