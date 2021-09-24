@@ -9,18 +9,13 @@
 class Word
 {
 public:
+  std::string text;
   bool bold;
   bool italic;
-  std::string text;
-  int start;
-  int end;
   uint16_t xpos = 0;
   uint16_t width = 0;
-  Word(const std::string &text, bool bold = false, bool italic = false)
+  Word(const char *src, int start, int length, bool bold = false, bool italic = false) : text(src, start, length), bold(bold), italic(italic)
   {
-    this->text = text;
-    this->bold = bold;
-    this->italic = italic;
   }
   void layout(Renderer *renderer)
   {
