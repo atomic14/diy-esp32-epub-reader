@@ -9,13 +9,20 @@
 class Word
 {
 public:
-  std::string text;
+  char *text;
   bool bold;
   bool italic;
   uint16_t xpos = 0;
   uint16_t width = 0;
-  Word(const char *src, int start, int length, bool bold = false, bool italic = false) : text(src, start, length), bold(bold), italic(italic)
+  Word(const char *src, int start, int length, bool bold = false, bool italic = false) : bold(bold), italic(italic)
   {
+    text = new char[length + 1];
+    memcpy(text, src + start, length);
+    text[length] = 0;
+  }
+  ~Word()
+  {
+    delete[] text;
   }
   void layout(Renderer *renderer)
   {
@@ -175,7 +182,7 @@ public:
   {
     for (auto word : words)
     {
-      printf("##%d#%s## ", word->width, word->text.c_str());
+      printf("##%d#%s## ", word->width, word->text);
     }
   }
   virtual BlockType getType()
