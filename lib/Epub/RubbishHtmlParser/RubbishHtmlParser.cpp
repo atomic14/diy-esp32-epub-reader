@@ -333,10 +333,12 @@ void RubbishHtmlParser::parse(const char *html, int index, int length)
 {
   bool is_bold = false;
   bool is_italic = false;
+  int count = 0;
   // keep track of inline tag depth
   while (index < length)
   {
-    if (index % 1000 == 0)
+    count++;
+    if (count % 1000 == 0)
     {
       vTaskDelay(1);
     }
@@ -366,7 +368,7 @@ void RubbishHtmlParser::parse(const char *html, int index, int length)
       index = skipAlphaNum(html, index, length);
       if (index > wordStart)
       {
-        currentTextBlock->words.push_back(new Word(std::string(html, wordStart, index - wordStart), is_bold, is_italic));
+        currentTextBlock->words.push_back(new Word(html, wordStart, index - wordStart, is_bold, is_italic));
       }
     }
   }
