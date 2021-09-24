@@ -16,8 +16,6 @@ class Epub;
 class RubbishHtmlParser : public tinyxml2::XMLVisitor
 {
 private:
-  const char *m_html;
-  int m_length;
   bool is_bold = false;
   bool is_italic = false;
 

@@ -57,9 +57,6 @@ bool matches(const char *tag_name, const char *possible_tags[], int possible_tag
 
 RubbishHtmlParser::RubbishHtmlParser(const char *html, int length)
 {
-  m_html = html;
-  m_length = length;
-  startNewTextBlock();
   parse(html, length);
 }
 
@@ -164,6 +161,7 @@ void RubbishHtmlParser::startNewTextBlock()
 
 void RubbishHtmlParser::parse(const char *html, int length)
 {
+  startNewTextBlock();
   tinyxml2::XMLDocument doc(false, tinyxml2::COLLAPSE_WHITESPACE);
   doc.Parse(html, length);
   doc.Accept(this);
@@ -229,5 +227,5 @@ void RubbishHtmlParser::layout(Renderer *renderer, Epub *epub)
 void RubbishHtmlParser::render_page(int page_index, Renderer *renderer)
 {
   renderer->clear_screen();
-  pages[page_index]->render(m_html, renderer);
+  pages[page_index]->render(renderer);
 }

@@ -9,13 +9,11 @@
 #include "EpubList/EpubReader.h"
 #include <RubbishHtmlParser/RubbishHtmlParser.h>
 #include "Renderer/EpdRenderer.h"
-#include "Renderer/ConsoleRenderer.h"
-#include <list>
-#include <string.h>
 #include <regular_font.h>
 #include <bold_font.h>
 #include <italic_font.h>
 #include <bold_italic_font.h>
+#include "Renderer/ConsoleRenderer.h"
 #include "controls/Controls.h"
 
 extern "C"
@@ -37,11 +35,6 @@ RTC_DATA_ATTR UIState ui_state = SELECTING_EPUB;
 RTC_DATA_ATTR EpubListState epub_list_state;
 // the sate data for reading an epub
 RTC_DATA_ATTR EpubReaderState epub_reader_state;
-
-// the pins for the buttons
-const gpio_num_t BUTTON_UP_GPIO_NUM = GPIO_NUM_34;     // RTC 4
-const gpio_num_t BUTTON_DOWN_GPIO_NUM = GPIO_NUM_39;   // RTC 3
-const gpio_num_t BUTTON_SELECT_GPIO_NUM = GPIO_NUM_35; // RTC 5
 
 void handleEpub(Renderer *renderer, UIAction action);
 void handleEpubList(Renderer *renderer, UIAction action);
@@ -145,7 +138,7 @@ void main_task(void *param)
   //Renderer *renderer = new ConsoleRenderer();
   ESP_LOGI("main", "Memory after renderer init: %d", esp_get_free_heap_size());
   // initialise the SDCard
-  SDCard *sdcard = new SDCard("/sdcard", PIN_NUM_MISO, PIN_NUM_MOSI, PIN_NUM_CLK, PIN_NUM_CS);
+  SDCard *sdcard = new SDCard("/sdcard", SD_CARD_PIN_NUM_MISO, SD_CARD_PIN_NUM_MOSI, SD_CARD_PIN_NUM_CLK, SD_CARD_PIN_NUM_CS);
   ESP_LOGI("main", "Memory after sdcard init: %d", esp_get_free_heap_size());
   // set the controls up
   Controls *controls = new Controls(BUTTON_UP_GPIO_NUM, BUTTON_DOWN_GPIO_NUM, BUTTON_SELECT_GPIO_NUM, 0);

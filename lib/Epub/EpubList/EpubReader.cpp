@@ -37,6 +37,7 @@ void EpubReader::parse_and_layout_current_section()
 {
   if (!parser)
   {
+    ESP_LOGI(TAG, "Parse and render section %d", state.current_section);
     ESP_LOGI(TAG, "Before read html: %d", esp_get_free_heap_size());
     char *html = epub->get_spine_item_contents(state.current_section);
     ESP_LOGI(TAG, "After read html: %d", esp_get_free_heap_size());
@@ -67,11 +68,12 @@ void EpubReader::prev()
   {
     if (state.current_section > 0)
     {
-      state.current_section--;
-      parse_and_layout_current_section();
-      state.current_page = state.pages_in_current_section - 1;
       delete parser;
       parser = nullptr;
+      state.current_section--;
+      ESP_LOGI(TAG, "Going to previous section %d", state.current_section);
+      parse_and_layout_current_section();
+      state.current_page = state.pages_in_current_section - 1;
       return;
     }
   }
