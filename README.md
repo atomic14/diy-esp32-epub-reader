@@ -8,6 +8,18 @@ It has limited support for formating - the CSS content of the ePub file is not p
 
 I've only included 4 font styles - regular, bold, italic and bold-italic. I've also only generated glyphs for Latin characters and punctuation.
 
+# Why did you build it?
+
+It seemed like a nice challenge - ePub files are not the most friendly format to process on an embedded device. Making it work in a constrained environment is good fun.
+
+# How to get it?
+
+Make sure you clone recursively - the code uses git submodules.
+
+```
+git clone --recursive git@github.com:atomic14/esp32-ereader.git
+```
+
 # What boards does it work on?
 
 I've tested it on the LilyGo EPD47, but it should work on any eInk display provided it has:
@@ -20,9 +32,45 @@ I've tested it on the LilyGo EPD47, but it should work on any eInk display provi
 - An SD Card - you can jury rig an SPI sd card using the instructions here:
 - [Optional] A battery if you want it to be portable
 
-# Why did you build it?
+# Porting to other boards
 
-It seemed like a nice challenge - ePub files are not the most friendly format to process on an embedded device. Making it work in a constrained environment is good fun.
+All the configuration is in `platformio.ini` using pre-processor directives. If you do add a new board then please create a new section in platofmrio.ini with the appropriate pre-processor directives and open a pull request to add it to the project - I'm happy to answer any questions on this.
+
+The important settings are the following:
+
+The first two settings come from the [vroland/epdiy](https://github.com/vroland/epdiy) library and defined the ePaper display that is being used.
+
+```
+; Setup display format and model via build flags
+-DCONFIG_EPD_DISPLAY_TYPE_ED047TC1
+-DCONFIG_EPD_BOARD_REVISION_LILYGO_T5_47
+```
+
+The second three settings are the pins that are used for the buttons. Change these to match your board.
+
+```
+; setup the pins to use for navigation
+-DBUTTON_UP_GPIO_NUM=GPIO_NUM_34
+-DBUTTON_DOWN_GPIO_NUM=GPIO_NUM_39
+-DBUTTON_SELECT_GPIO_NUM=GPIO_NUM_35
+```
+
+There is also a setting to tell the code if the buttons are active high or low.
+
+```
+; buttons are low when pressed
+-DBUTONS_ACTIVE_LEVEL=0
+```
+
+And finaly we have the pins for the SD card. I've got a video on how to hack an SD Card and connect it as a SPI device [here](https://youtu.be/bVru6M862HY)
+
+```
+; setup the pins for the SDCard
+-DSD_CARD_PIN_NUM_MISO=GPIO_NUM_14
+-DSD_CARD_PIN_NUM_MOSI=GPIO_NUM_13
+-DSD_CARD_PIN_NUM_CLK=GPIO_NUM_15
+-DSD_CARD_PIN_NUM_CS=GPIO_NUM_12
+```
 
 # How does it work?
 
@@ -63,7 +111,7 @@ After parsing the HTML we end up with a list of `blocks` containing either text 
 
 ## Laying out a section of the book
 
-With the blocks extracted, we can now layout the sections of the book onto individual pages.
+With the blocks extracted, we can now layout the blocks of the section onto individual pages.
 
 Image blocks are easy - we just need to read the width and height of the image and scale it to fit on the screen. This gives us the height the image will be when it is rendered.
 
