@@ -1,5 +1,0 @@
-// sdcard
-#define PIN_NUM_MISO GPIO_NUM_14
-#define PIN_NUM_CLK GPIO_NUM_15
-#define PIN_NUM_MOSI GPIO_NUM_13
-#define PIN_NUM_CS GPIO_NUM_12
