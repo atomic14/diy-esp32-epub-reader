@@ -42,7 +42,6 @@ public:
   EpdRenderer(const EpdFont *regular_font, const EpdFont *bold_font, const EpdFont *italic_font, const EpdFont *bold_italic_font)
       : m_regular_font(regular_font), m_bold_font(bold_font), m_italic_font(italic_font), m_bold_italic_font(bold_italic_font)
   {
-    // this seems to be needed to power up the SDCard - probably not needed with other boards...
     m_font_props = epd_font_properties_default();
     // fallback to a question mark for character not available in the font
     m_font_props.fallback_glyph = '?';
