@@ -12,6 +12,12 @@ I've only included 4 font styles - regular, bold, italic and bold-italic. I've a
 
 It seemed like a nice challenge - ePub files are not the most friendly format to process on an embedded device. Making it work in a constrained environment is good fun.
 
+# Can you contribute/help?
+
+Yes - please try the project out on any e-paper boards that you have and open up pull requests if you get it working with any fixes.
+
+And if you find bugs, feel free to report (or better yet, fix!) them :)
+
 # How to get it?
 
 Make sure you clone recursively - the code uses git submodules.
@@ -145,4 +151,4 @@ Depending on the images that have been used for the book covers displaying the l
 
 # Improvements:
 
-There's a lot of room for improvement. I'm more than happy for people to contribute to this project.
+There's a lot of room for improvement. This is a very basic e-reader and I'm more than happy for people to contribute to this project.
