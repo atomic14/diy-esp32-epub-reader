@@ -75,13 +75,14 @@ public:
   }
   void show_busy()
   {
-    epd_draw_rotated_image(
+    epd_draw_rotated_transparent_image(
         {.x = (EPD_HEIGHT - m_busy_image_width) / 2,
          .y = (EPD_WIDTH - m_busy_image_height) / 2,
          // don't forget we're rotated...
          .width = m_busy_image_width,
          .height = m_busy_image_height},
-        m_busy_image, m_frame_buffer);
+        m_busy_image, m_frame_buffer,
+        0xE0);
     needs_gray_flush = true;
     flush_display();
   }
