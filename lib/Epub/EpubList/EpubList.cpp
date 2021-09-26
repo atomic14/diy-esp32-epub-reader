@@ -35,6 +35,9 @@ const char *EpubList::get_current_epub_path()
 
 bool EpubList::load(const char *path)
 {
+  renderer->show_busy();
+  // trigger a proper redraw
+  state.previous_rendered_page = -1;
   // list the file
   DIR *dir;
   struct dirent *ent;
@@ -87,7 +90,7 @@ bool EpubList::load(const char *path)
   return true;
 }
 
-void EpubList::render(Renderer *renderer)
+void EpubList::render()
 {
   ESP_LOGI(TAG, "Rendering EPUB list");
   // what page are we on?
@@ -101,6 +104,7 @@ void EpubList::render(Renderer *renderer)
   ESP_LOGI(TAG, "Current page is %d, previous page %d", current_page, state.previous_rendered_page);
   if (current_page != state.previous_rendered_page)
   {
+    renderer->show_busy();
     renderer->clear_screen();
     state.previous_selected_item = -1;
   }

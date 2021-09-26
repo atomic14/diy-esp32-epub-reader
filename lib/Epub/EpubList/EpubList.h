@@ -17,12 +17,13 @@ class EpubList
 private:
   std::vector<Epub *> epubs;
   EpubListState &state;
+  Renderer *renderer;
 
 public:
-  EpubList(EpubListState &state) : state(state) {}
+  EpubList(EpubListState &state, Renderer *renderer) : state(state), renderer(renderer) {}
   bool load(const char *path);
   void next();
   void prev();
   const char *get_current_epub_path();
-  void render(Renderer *renderer);
+  void render();
 };

@@ -15,6 +15,9 @@ private:
   const EpdFont *m_bold_font;
   const EpdFont *m_italic_font;
   const EpdFont *m_bold_italic_font;
+  const uint8_t *m_busy_image;
+  int m_busy_image_width;
+  int m_busy_image_height;
   EpdiyHighlevelState m_hl;
   uint8_t *m_frame_buffer;
   EpdFontProperties m_font_props;
@@ -39,8 +42,16 @@ private:
   }
 
 public:
-  EpdRenderer(const EpdFont *regular_font, const EpdFont *bold_font, const EpdFont *italic_font, const EpdFont *bold_italic_font)
-      : m_regular_font(regular_font), m_bold_font(bold_font), m_italic_font(italic_font), m_bold_italic_font(bold_italic_font)
+  EpdRenderer(
+      const EpdFont *regular_font,
+      const EpdFont *bold_font,
+      const EpdFont *italic_font,
+      const EpdFont *bold_italic_font,
+      const uint8_t *busy_icon,
+      int busy_icon_width,
+      int busy_icon_height)
+      : m_regular_font(regular_font), m_bold_font(bold_font), m_italic_font(italic_font), m_bold_italic_font(bold_italic_font),
+        m_busy_image(busy_icon), m_busy_image_width(busy_icon_width), m_busy_image_height(busy_icon_height)
   {
     m_font_props = epd_font_properties_default();
     // fallback to a question mark for character not available in the font
@@ -61,6 +72,18 @@ public:
   ~EpdRenderer()
   {
     epd_deinit();
+  }
+  void show_busy()
+  {
+    epd_draw_rotated_image(
+        {.x = (EPD_HEIGHT - m_busy_image_width) / 2,
+         .y = (EPD_WIDTH - m_busy_image_height) / 2,
+         // don't forget we're rotated...
+         .width = m_busy_image_width,
+         .height = m_busy_image_height},
+        m_busy_image, m_frame_buffer);
+    needs_gray_flush = true;
+    flush_display();
   }
   int get_text_width(const char *text, bool bold = false, bool italic = false)
   {

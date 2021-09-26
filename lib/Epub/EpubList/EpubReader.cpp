@@ -20,6 +20,7 @@ bool EpubReader::load()
   // do we need to load the epub?
   if (!epub || epub->get_path() != state.epub_path)
   {
+    renderer->show_busy();
     delete epub;
     delete parser;
     parser = nullptr;
@@ -37,6 +38,7 @@ void EpubReader::parse_and_layout_current_section()
 {
   if (!parser)
   {
+    renderer->show_busy();
     ESP_LOGI(TAG, "Parse and render section %d", state.current_section);
     ESP_LOGI(TAG, "Before read html: %d", esp_get_free_heap_size());
     char *html = epub->get_spine_item_contents(state.current_section);
@@ -86,6 +88,7 @@ void EpubReader::render()
   {
     parse_and_layout_current_section();
   }
+  renderer->clear_screen();
   ESP_LOGI(TAG, "rendering page %d of %d", state.current_page, parser->get_page_count());
   parser->render_page(state.current_page, renderer);
   ESP_LOGI(TAG, "rendered page %d of %d", state.current_page, parser->get_page_count());

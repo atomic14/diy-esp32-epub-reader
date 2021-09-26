@@ -13,6 +13,7 @@
 #include <bold_font.h>
 #include <italic_font.h>
 #include <bold_italic_font.h>
+#include <hourglass.h>
 #include "Renderer/ConsoleRenderer.h"
 #include "controls/Controls.h"
 
@@ -39,7 +40,7 @@ RTC_DATA_ATTR EpubReaderState epub_reader_state;
 void handleEpub(Renderer *renderer, UIAction action);
 void handleEpubList(Renderer *renderer, UIAction action);
 
-EpubReader *reader = nullptr;
+static EpubReader *reader = nullptr;
 void handleEpub(Renderer *renderer, UIAction action)
 {
   if (!reader)
@@ -80,7 +81,7 @@ void handleEpubList(Renderer *renderer, UIAction action)
   if (!epubList)
   {
     ESP_LOGI("main", "Loading epub files");
-    epubList = new EpubList(epub_list_state);
+    epubList = new EpubList(epub_list_state, renderer);
     if (epubList->load("/sdcard/"))
     {
       ESP_LOGI("main", "Epub files loaded");
@@ -111,7 +112,7 @@ void handleEpubList(Renderer *renderer, UIAction action)
     // nothing to do
     break;
   }
-  epubList->render(renderer);
+  epubList->render();
 }
 
 void handleUserInteraction(Renderer *renderer, UIAction ui_action)
@@ -134,7 +135,14 @@ void main_task(void *param)
   epd_poweron();
   ESP_LOGI("main", "Memory before renderer init: %d", esp_get_free_heap_size());
   // create the EPD renderer
-  Renderer *renderer = new EpdRenderer(&regular_font, &bold_font, &italic_font, &bold_italic_font);
+  Renderer *renderer = new EpdRenderer(
+      &regular_font,
+      &bold_font,
+      &italic_font,
+      &bold_italic_font,
+      hourglass_data,
+      hourglass_width,
+      hourglass_height);
   //Renderer *renderer = new ConsoleRenderer();
   ESP_LOGI("main", "Memory after renderer init: %d", esp_get_free_heap_size());
   // initialise the SDCard
