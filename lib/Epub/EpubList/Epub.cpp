@@ -125,7 +125,7 @@ std::string Epub::get_image_path(const std::string &image_name)
   FILE *fp = fopen(dst_file.c_str(), "rb");
   if (!fp)
   {
-    ESP_LOGI(TAG, "Extracting image: %s", image_name.c_str());
+    ESP_LOGD(TAG, "Extracting image: %s", image_name.c_str());
     std::string archive_path = "OEBPS/" + image_name;
     ZipFile zip(m_path.c_str());
     bool res = zip.read_file_to_file(archive_path.c_str(), dst_file.c_str());
@@ -137,7 +137,7 @@ std::string Epub::get_image_path(const std::string &image_name)
   else
   {
     fclose(fp);
-    ESP_LOGI(TAG, "Image already extracted: %s", image_name.c_str());
+    ESP_LOGD(TAG, "Image already extracted: %s", image_name.c_str());
   }
   return dst_file;
 }
@@ -151,11 +151,11 @@ char *Epub::get_spine_item_contents(int section)
 {
   if (section < 0 || section >= m_spine.size())
   {
-    ESP_LOGI(TAG, "Invalid section %d", section);
+    ESP_LOGE(TAG, "Invalid section %d", section);
     return nullptr;
   }
   ZipFile zip(m_path.c_str());
-  ESP_LOGI(TAG, "Loading Section: %s", m_spine[section].c_str());
+  ESP_LOGD(TAG, "Loading Section: %s", m_spine[section].c_str());
   std::string archive_path = "OEBPS/" + m_spine[section];
   auto content = (char *)zip.read_file_to_memory(archive_path.c_str());
   if (!content)

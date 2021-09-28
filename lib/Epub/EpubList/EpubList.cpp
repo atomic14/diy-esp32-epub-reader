@@ -4,6 +4,7 @@
 #define vTaskDelay(t)
 #define ESP_LOGE(args...)
 #define ESP_LOGI(args...)
+#define ESP_LOGD(args...)
 #endif
 #include <sys/types.h>
 #include <dirent.h>
@@ -45,6 +46,7 @@ bool EpubList::load(const char *path)
   {
     while ((ent = readdir(dir)) != NULL)
     {
+      ESP_LOGI(TAG, "Found file: %s", ent->d_name);
       // ignore any hidden files starting with "." and any directories
       if (ent->d_name[0] == '.' || ent->d_type == DT_DIR)
       {
@@ -55,7 +57,7 @@ bool EpubList::load(const char *path)
       {
         continue;
       }
-      ESP_LOGI(TAG, "Loading epub %s", ent->d_name);
+      ESP_LOGD(TAG, "Loading epub %s", ent->d_name);
       Epub *epub = new Epub(std::string("/sdcard/") + ent->d_name);
       if (epub->load())
       {
@@ -92,16 +94,16 @@ bool EpubList::load(const char *path)
 
 void EpubList::render()
 {
-  ESP_LOGI(TAG, "Rendering EPUB list");
+  ESP_LOGD(TAG, "Rendering EPUB list");
   // what page are we on?
   int current_page = state.selected_item / EPUBS_PER_PAGE;
   // draw a page of epubs
   int cell_height = renderer->get_page_height() / EPUBS_PER_PAGE;
-  ESP_LOGI(TAG, "Cell height is %d", cell_height);
+  ESP_LOGD(TAG, "Cell height is %d", cell_height);
   int start_index = current_page * EPUBS_PER_PAGE;
   int ypos = 0;
   // starting a fresh page or rendering from scratch?
-  ESP_LOGI(TAG, "Current page is %d, previous page %d", current_page, state.previous_rendered_page);
+  ESP_LOGD(TAG, "Current page is %d, previous page %d", current_page, state.previous_rendered_page);
   if (current_page != state.previous_rendered_page)
   {
     renderer->show_busy();
@@ -113,7 +115,7 @@ void EpubList::render()
     // do we need to draw a new page of items?
     if (current_page != state.previous_rendered_page)
     {
-      ESP_LOGI(TAG, "Rendering item %d", i);
+      ESP_LOGD(TAG, "Rendering item %d", i);
       // draw the cover page
       int image_xpos = PADDING;
       int image_ypos = ypos + PADDING;

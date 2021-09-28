@@ -118,10 +118,8 @@ public:
   }
   void flush_display()
   {
-    ESP_LOGI("EPD", "Flushing display %d", needs_gray_flush);
     epd_hl_update_screen(&m_hl, needs_gray_flush ? MODE_GC16 : MODE_DU, 20);
     needs_gray_flush = false;
-    ESP_LOGI("EPD", "Flushed display");
   }
   virtual void clear_screen()
   {
@@ -155,7 +153,7 @@ public:
     void *compressed = tdefl_compress_mem_to_heap(m_frame_buffer, EPD_WIDTH * EPD_HEIGHT / 2, &compressed_size, 0);
     if (compressed)
     {
-      ESP_LOGI("EPD", "Front buffer compressed size: %d", compressed_size);
+      ESP_LOGD("EPD", "Front buffer compressed size: %d", compressed_size);
       FILE *fp = fopen("/sdcard/front_buffer.z", "wb");
       if (fp)
       {
@@ -172,7 +170,7 @@ public:
     compressed = tdefl_compress_mem_to_heap(m_hl.back_fb, EPD_WIDTH * EPD_HEIGHT / 2, &compressed_size, 0);
     if (compressed)
     {
-      ESP_LOGI("EPD", "Back buffer compressed size: %d", compressed_size);
+      ESP_LOGD("EPD", "Back buffer compressed size: %d", compressed_size);
       FILE *fp = fopen("/sdcard/back_buffer.z", "wb");
       if (fp)
       {

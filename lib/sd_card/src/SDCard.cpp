@@ -17,6 +17,7 @@ static const char *TAG = "SDC";
 
 SDCard::SDCard(const char *mount_point, gpio_num_t miso, gpio_num_t mosi, gpio_num_t clk, gpio_num_t cs)
 {
+  m_host.max_freq_khz = SDMMC_FREQ_26M;
   m_mount_point = mount_point;
   esp_err_t ret;
   // Options for mounting the filesystem.
@@ -68,7 +69,6 @@ SDCard::SDCard(const char *mount_point, gpio_num_t miso, gpio_num_t mosi, gpio_n
     }
     return;
   }
-
   // Card has been initialized, print its properties
   sdmmc_card_print_info(stdout, m_card);
 }
