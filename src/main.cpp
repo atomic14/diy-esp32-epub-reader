@@ -32,22 +32,22 @@ typedef enum
 
 // default to showing the list of epubs to the user
 RTC_DATA_ATTR UIState ui_state = SELECTING_EPUB;
-// the state data for the epub list
-RTC_DATA_ATTR EpubListState epub_list_state;
 // the sate data for reading an epub
 RTC_DATA_ATTR EpubReaderState epub_reader_state;
 
 void handleEpub(Renderer *renderer, UIAction action);
 void handleEpubList(Renderer *renderer, UIAction action);
 
+static EpubList *epub_list = nullptr;
 static EpubReader *reader = nullptr;
+
 void handleEpub(Renderer *renderer, UIAction action)
 {
   if (!reader)
   {
     reader = new EpubReader(epub_reader_state, renderer);
+    reader->load();
   }
-  reader->load();
   switch (action)
   {
   case UP:
@@ -64,7 +64,7 @@ void handleEpub(Renderer *renderer, UIAction action)
     delete reader;
     reader = nullptr;
     // force a redraw
-    epub_list_state.previous_rendered_page = -1;
+    epub_list->set_needs_redraw();
     handleEpubList(renderer, NONE);
     return;
   case NONE:
@@ -74,15 +74,14 @@ void handleEpub(Renderer *renderer, UIAction action)
   reader->render();
 }
 
-static EpubList *epubList = nullptr;
 void handleEpubList(Renderer *renderer, UIAction action)
 {
   // load up the epub list from the filesystem
-  if (!epubList)
+  if (!epub_list)
   {
-    ESP_LOGI("main", "Loading epub files");
-    epubList = new EpubList(epub_list_state, renderer);
-    if (epubList->load("/sdcard/"))
+    ESP_LOGI("main", "Creating epub list");
+    epub_list = new EpubList(renderer);
+    if (epub_list->load("/sdcard/"))
     {
       ESP_LOGI("main", "Epub files loaded");
     }
@@ -91,18 +90,18 @@ void handleEpubList(Renderer *renderer, UIAction action)
   switch (action)
   {
   case UP:
-    epubList->prev();
+    epub_list->prev();
     break;
   case DOWN:
-    epubList->next();
+    epub_list->next();
     break;
   case SELECT:
-    strcpy(epub_reader_state.epub_path, epubList->get_current_epub_path());
+    strcpy(epub_reader_state.epub_path, epub_list->get_current_epub_path());
     epub_reader_state.current_section = 0;
     epub_reader_state.current_page = 0;
+    ESP_LOGI("main", "Selected epub %s", epub_reader_state.epub_path);
     ui_state = READING_EPUB;
     reader = new EpubReader(epub_reader_state, renderer);
-
     renderer->clear_screen();
     renderer->flush_display();
     handleEpub(renderer, NONE);
@@ -112,7 +111,7 @@ void handleEpubList(Renderer *renderer, UIAction action)
     // nothing to do
     break;
   }
-  epubList->render();
+  epub_list->render();
 }
 
 void handleUserInteraction(Renderer *renderer, UIAction ui_action)
@@ -156,6 +155,14 @@ void main_task(void *param)
   {
     // restore the renderer state - it should have been saved when we went to sleep...
     renderer->hydrate();
+    // restore the epub list state - it also should have been saved when went to sleep...
+    epub_list = new EpubList(renderer);
+    if (!epub_list->hydrate())
+    {
+      // if we failed to hydrate the epub list then we need to delete it and start again
+      delete epub_list;
+      epub_list = nullptr;
+    }
 
     UIAction ui_action = controls->get_deep_sleep_action();
     handleUserInteraction(renderer, ui_action);
@@ -190,6 +197,7 @@ void main_task(void *param)
   ESP_LOGI("main", "Saving state");
   // save the state
   renderer->dehydrate();
+  epub_list->dehydrate();
   // turn off the SD Card
   delete sdcard;
   ESP_ERROR_CHECK(esp_sleep_enable_ulp_wakeup());

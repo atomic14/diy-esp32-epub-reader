@@ -207,6 +207,8 @@ public:
     else
     {
       ESP_LOGI("EPD", "No front buffer found");
+      reset();
+      return;
     }
     fp = fopen("/sdcard/back_buffer.z", "rb");
     if (fp)
@@ -226,6 +228,8 @@ public:
     else
     {
       ESP_LOGI("EPD", "No back buffer found");
+      reset();
+      return;
     }
     ESP_LOGI("EPD", "Hydrated EPD");
   };
