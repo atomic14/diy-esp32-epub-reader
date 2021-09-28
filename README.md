@@ -1,4 +1,4 @@
-# ESP32 Based ePub Readers
+# ESP32 Based ePub Reader
 
 What is it? It's a DIY ePub reader for the ESP32.
 
