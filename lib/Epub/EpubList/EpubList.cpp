@@ -46,7 +46,7 @@ bool EpubList::load(const char *path)
   {
     while ((ent = readdir(dir)) != NULL)
     {
-      ESP_LOGI(TAG, "Found file: %s", ent->d_name);
+      ESP_LOGD(TAG, "Found file: %s", ent->d_name);
       // ignore any hidden files starting with "." and any directories
       if (ent->d_name[0] == '.' || ent->d_type == DT_DIR)
       {
