@@ -96,14 +96,16 @@ void handleEpubList(Renderer *renderer, UIAction action)
     epub_list->next();
     break;
   case SELECT:
+    // switch to reading the epub
+    // setup the reader state
+    ESP_LOGI("main", "Selected epub %s", epub_reader_state.epub_path);
     strcpy(epub_reader_state.epub_path, epub_list->get_current_epub_path());
     epub_reader_state.current_section = 0;
     epub_reader_state.current_page = 0;
-    ESP_LOGI("main", "Selected epub %s", epub_reader_state.epub_path);
     ui_state = READING_EPUB;
+    // create the reader and load the book
     reader = new EpubReader(epub_reader_state, renderer);
-    renderer->clear_screen();
-    renderer->flush_display();
+    reader->load();
     handleEpub(renderer, NONE);
     return;
   case NONE:
