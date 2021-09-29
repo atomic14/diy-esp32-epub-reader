@@ -16,6 +16,7 @@
 #include <hourglass.h>
 #include "Renderer/ConsoleRenderer.h"
 #include "controls/Controls.h"
+#include "battery/Battery.h"
 
 extern "C"
 {
@@ -40,6 +41,7 @@ void handleEpubList(Renderer *renderer, UIAction action);
 
 static EpubList *epub_list = nullptr;
 static EpubReader *reader = nullptr;
+static Battery *battery = nullptr;
 
 void handleEpub(Renderer *renderer, UIAction action)
 {
@@ -130,10 +132,33 @@ void handleUserInteraction(Renderer *renderer, UIAction ui_action)
   }
 }
 
+// TODO - add the battery level
+void draw_battery_level(Renderer *renderer, float percentage)
+{
+  // clear the margin so we can draw the battery in the right place
+  renderer->set_margin_top(0);
+  int width = 40;
+  int height = 20;
+  int margin_right = 5;
+  int margin_top = 10;
+  int xpos = renderer->get_page_width() - width - margin_right;
+  int ypos = margin_top;
+  int percent_width = width * percentage / 100;
+  renderer->fill_rect(xpos, ypos, width, height, 255);
+  renderer->fill_rect(xpos + width - percent_width, ypos, percent_width, height, 0);
+  renderer->draw_rect(xpos, ypos, width, height, 0);
+  renderer->fill_rect(xpos - height / 4, ypos + height / 4, height / 4, height / 2, 0);
+  // put the margin back
+  renderer->set_margin_top(35);
+}
+
 void main_task(void *param)
 {
   // need to power on the EDP to get power to the SD Card
   epd_poweron();
+  // TODO - work out where to put this on the screen
+  battery = new Battery(BATTERY_ADC_CHANNEL);
+  ESP_LOGI("main", "Battery %.0f, %.2fv", battery->get_percentage(), battery->get_voltage());
   ESP_LOGI("main", "Memory before renderer init: %d", esp_get_free_heap_size());
   // create the EPD renderer
   Renderer *renderer = new EpdRenderer(
@@ -144,6 +169,8 @@ void main_task(void *param)
       hourglass_data,
       hourglass_width,
       hourglass_height);
+  // make space for the battery
+  renderer->set_margin_top(35);
   //Renderer *renderer = new ConsoleRenderer();
   ESP_LOGI("main", "Memory after renderer init: %d", esp_get_free_heap_size());
   // initialise the SDCard
@@ -176,6 +203,10 @@ void main_task(void *param)
     // make sure the UI is in the right state
     handleUserInteraction(renderer, NONE);
   }
+  // draw the battery level before flushing the screen
+  draw_battery_level(renderer, battery->get_percentage());
+  renderer->flush_display();
+
   // configure the button inputs
   controls->setup_inputs();
   // keep track of when the user last interacted and go to sleep after 30 seconds
@@ -188,6 +219,9 @@ void main_task(void *param)
     {
       last_user_interaction = esp_timer_get_time();
       handleUserInteraction(renderer, ui_action);
+      // draw the battery level before flushing the screen
+      draw_battery_level(renderer, battery->get_percentage());
+      renderer->flush_display();
     }
     else
     {

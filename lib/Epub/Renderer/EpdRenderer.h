@@ -96,7 +96,7 @@ public:
   {
     // text is antialised so contains grey values
     needs_gray_flush = true;
-    int ypos = y + get_line_height();
+    int ypos = y + get_line_height() + margin_top;
     epd_write_string(get_font(bold, italic), text, &x, &ypos, m_frame_buffer, &m_font_props);
   }
   void draw_rect(int x, int y, int width, int height, uint8_t color = 0)
@@ -105,7 +105,15 @@ public:
     {
       needs_gray_flush = true;
     }
-    epd_draw_rect({.x = x, .y = y, .width = width, .height = height}, color, m_frame_buffer);
+    epd_draw_rect({.x = x, .y = y + margin_top, .width = width, .height = height}, color, m_frame_buffer);
+  }
+  virtual void fill_rect(int x, int y, int width, int height, uint8_t color = 0)
+  {
+    if (color != 0 && color != 255)
+    {
+      needs_gray_flush = true;
+    }
+    epd_fill_rect({.x = x, .y = y + margin_top, .width = width, .height = height}, color, m_frame_buffer);
   }
   virtual void draw_pixel(int x, int y, uint8_t color)
   {
@@ -114,7 +122,7 @@ public:
     {
       needs_gray_flush = true;
     }
-    epd_draw_pixel(x, y, corrected_color, m_frame_buffer);
+    epd_draw_pixel(x, y + margin_top, corrected_color, m_frame_buffer);
   }
   void flush_display()
   {
@@ -133,7 +141,7 @@ public:
   virtual int get_page_height()
   {
     // don't forget we are rotated
-    return EPD_WIDTH;
+    return EPD_WIDTH - margin_top;
   }
   virtual int get_space_width()
   {

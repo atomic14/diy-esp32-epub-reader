@@ -136,19 +136,22 @@ void EpubList::render()
   int start_index = current_page * EPUBS_PER_PAGE;
   int ypos = 0;
   // starting a fresh page or rendering from scratch?
-  ESP_LOGD(TAG, "Current page is %d, previous page %d", current_page, state->previous_rendered_page);
-  if (current_page != state->previous_rendered_page)
+  ESP_LOGI(TAG, "Current page is %d, previous page %d, redraw=%d", current_page, state->previous_rendered_page, m_needs_redraw);
+  if (current_page != state->previous_rendered_page || m_needs_redraw)
   {
+    m_needs_redraw = false;
     renderer->show_busy();
     renderer->clear_screen();
     state->previous_selected_item = -1;
+    // trigger a redraw of the items
+    state->previous_rendered_page = -1;
   }
   for (int i = start_index; i < start_index + EPUBS_PER_PAGE && i < state->num_epubs; i++)
   {
     // do we need to draw a new page of items?
     if (current_page != state->previous_rendered_page)
     {
-      ESP_LOGD(TAG, "Rendering item %d", i);
+      ESP_LOGI(TAG, "Rendering item %d", i);
       // draw the cover page
       int image_xpos = PADDING;
       int image_ypos = ypos + PADDING;
@@ -182,5 +185,4 @@ void EpubList::render()
   }
   state->previous_selected_item = state->selected_item;
   state->previous_rendered_page = current_page;
-  renderer->flush_display();
 }
