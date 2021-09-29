@@ -1,5 +1,9 @@
 # ESP32 Based ePub Reader
 
+You can watch a video of the build [here](https://youtu.be/VLiCgB0odOQ)
+
+[![Demo Video](https://img.youtube.com/vi/VLiCgB0odOQ/0.jpg)](https://www.youtube.com/watch?v=VLiCgB0odOQ)
+
 What is it? It's a DIY ePub reader for the ESP32.
 
 It will parse ePub files that can be downloaded from places such as [Project Gutenberg](https://www.gutenberg.org/).
@@ -40,7 +44,7 @@ I've tested it on the LilyGo EPD47, but it should work on any eInk display provi
 
 # Porting to other boards
 
-All the configuration is in `platformio.ini` using pre-processor directives. If you do add a new board then please create a new section in platofmrio.ini with the appropriate pre-processor directives and open a pull request to add it to the project - I'm happy to answer any questions on this.
+All the configuration is in `platformio.ini` using pre-processor directives. If you do add a new board then please create a new section in platofmrio.ini with the appropriate pre-processor directives for your board and open a pull request to add it to the project - I'm happy to answer any questions on this.
 
 The important settings are the following:
 
@@ -68,7 +72,7 @@ There is also a setting to tell the code if the buttons are active high or low.
 -DBUTONS_ACTIVE_LEVEL=0
 ```
 
-And finaly we have the pins for the SD card. I've got a video on how to hack an SD Card and connect it as a SPI device [here](https://youtu.be/bVru6M862HY)
+We have the pins for the SD card. I've got a video on how to hack an SD Card and connect it as a SPI device [here](https://youtu.be/bVru6M862HY)
 
 ```
 ; setup the pins for the SDCard
@@ -76,6 +80,13 @@ And finaly we have the pins for the SD card. I've got a video on how to hack an 
 -DSD_CARD_PIN_NUM_MOSI=GPIO_NUM_13
 -DSD_CARD_PIN_NUM_CLK=GPIO_NUM_15
 -DSD_CARD_PIN_NUM_CS=GPIO_NUM_12
+```
+
+And finally we have the ADC channel that the battery voltage divider is connected to:
+
+```
+; the adc channel that is connected to the battery voltage divider - this is GPIO_NUM_35
+-DBATTERY_ADC_CHANNEL=ADC1_CHANNEL_0
 ```
 
 # How does it work?
