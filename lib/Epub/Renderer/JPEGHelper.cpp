@@ -15,21 +15,16 @@ static const char *TAG = "JPG";
 
 #define POOL_SIZE 32768
 
-bool JPEGHelper::get_size(const std::string &path, int *width, int *height)
+bool JPEGHelper::get_size(const uint8_t *data, size_t data_size, int *width, int *height)
 {
-  ESP_LOGI(TAG, "Getting size of %s", path.c_str());
   void *pool = malloc(POOL_SIZE);
   if (!pool)
   {
     ESP_LOGE(TAG, "Failed to allocate memory for pool");
     return false;
   }
-  fp = fopen(path.c_str(), "rb");
-  if (!fp)
-  {
-    ESP_LOGE(TAG, "File not found: %s", path.c_str());
-    return false;
-  }
+  m_data = data;
+  m_data_pos = 0;
   // decode the jpeg and get its size
   JDEC dec;
   JRESULT res = jd_prepare(&dec, read_jpeg_data, pool, POOL_SIZE, this);
@@ -45,11 +40,11 @@ bool JPEGHelper::get_size(const std::string &path, int *width, int *height)
     return false;
   }
   free(pool);
-  fclose(fp);
-  fp = NULL;
+  m_data = nullptr;
+  m_data_pos = 0;
   return true;
 }
-bool JPEGHelper::render(const std::string &path, Renderer *renderer, int x_pos, int y_pos, int width, int height)
+bool JPEGHelper::render(const uint8_t *data, size_t data_size, Renderer *renderer, int x_pos, int y_pos, int width, int height)
 {
   this->renderer = renderer;
   this->y_pos = y_pos;
@@ -60,13 +55,8 @@ bool JPEGHelper::render(const std::string &path, Renderer *renderer, int x_pos, 
     ESP_LOGE(TAG, "Failed to allocate memory for pool");
     return false;
   }
-  fp = fopen(path.c_str(), "rb");
-  if (!fp)
-  {
-    ESP_LOGE(TAG, "File not found: %s", path.c_str());
-    free(pool);
-    return false;
-  }
+  m_data = data;
+  m_data_pos = 0;
   // decode the jpeg and get its size
   JDEC dec;
   JRESULT res = jd_prepare(&dec, read_jpeg_data, pool, POOL_SIZE, this);
@@ -95,8 +85,8 @@ bool JPEGHelper::render(const std::string &path, Renderer *renderer, int x_pos, 
     ESP_LOGE(TAG, "JPEG Decode failed - %d", res);
   }
   free(pool);
-  fclose(fp);
-  fp = NULL;
+  m_data = nullptr;
+  m_data_pos = 0;
   return res == JDR_OK;
 }
 
@@ -107,20 +97,16 @@ size_t read_jpeg_data(
 )
 {
   JPEGHelper *context = (JPEGHelper *)jdec->device;
-  FILE *fp = context->fp;
-  if (!fp)
+  if (context->m_data == nullptr)
   {
-    ESP_LOGE(TAG, "File is not open");
+    ESP_LOGE(TAG, "No image data");
     return 0;
   }
   if (buff)
   {
-    fread(buff, 1, ndata, fp);
+    memcpy(buff, context->m_data + context->m_data_pos, ndata);
   }
-  else
-  {
-    fseek(fp, ndata, SEEK_CUR);
-  }
+  context->m_data_pos += ndata;
   return ndata;
 }
 

@@ -11,7 +11,7 @@
 #define TAG "ZIP"
 
 // read a file from the zip file allocating the required memory for the data
-const char *ZipFile::read_file_to_memory(const char *filename)
+uint8_t *ZipFile::read_file_to_memory(const char *filename, size_t *size)
 {
   // open up the epub file using miniz
   mz_zip_archive zip_archive;
@@ -40,8 +40,7 @@ const char *ZipFile::read_file_to_memory(const char *filename)
       // ESP_LOGI(TAG, "Extracting %s", file_stat.m_filename);
       // allocate memory for the file
       size_t file_size = file_stat.m_uncomp_size;
-      char *file_data = (char *)malloc(file_size + 1);
-      file_data[file_size] = 0;
+      uint8_t *file_data = (uint8_t *)calloc(file_size + 1, 1);
       if (!file_data)
       {
         ESP_LOGE(TAG, "Failed to allocate memory for %s\n", file_stat.m_filename);
@@ -60,7 +59,11 @@ const char *ZipFile::read_file_to_memory(const char *filename)
       }
       // Close the archive, freeing any resources it was using
       mz_zip_reader_end(&zip_archive);
-      // ESP_LOGI(TAG, "Extracted data");
+      // return the size if required
+      if (size)
+      {
+        *size = file_size;
+      }
       return file_data;
     }
   }

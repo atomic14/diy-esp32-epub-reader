@@ -224,8 +224,8 @@ void RubbishHtmlParser::layout(Renderer *renderer, Epub *epub)
   }
 }
 
-void RubbishHtmlParser::render_page(int page_index, Renderer *renderer)
+void RubbishHtmlParser::render_page(int page_index, Renderer *renderer, Epub *epub)
 {
   renderer->clear_screen();
-  pages[page_index]->render(renderer);
+  pages[page_index]->render(renderer, epub);
 }

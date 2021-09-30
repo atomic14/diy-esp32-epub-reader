@@ -10,7 +10,7 @@ public:
   int y_pos;
   PageElement(int y_pos) : y_pos(y_pos) {}
   virtual ~PageElement() {}
-  virtual void render(Renderer *renderer) = 0;
+  virtual void render(Renderer *renderer, Epub *epub) = 0;
 };
 
 // a line from a block element
@@ -26,7 +26,7 @@ public:
       : PageElement(y_pos), block(block), line_break_index(line_break_index)
   {
   }
-  void render(Renderer *renderer)
+  void render(Renderer *renderer, Epub *epub)
   {
     block->render(renderer, line_break_index, y_pos);
   }
@@ -42,9 +42,9 @@ public:
   PageImage(ImageBlock *block, int y_pos) : PageElement(y_pos), block(block)
   {
   }
-  void render(Renderer *renderer)
+  void render(Renderer *renderer, Epub *epub)
   {
-    block->render(renderer, y_pos);
+    block->render(renderer, epub, y_pos);
   }
 };
 
@@ -54,11 +54,11 @@ class Page
 public:
   // the list of block index and line numbers on this page
   std::vector<PageElement *> elements;
-  void render(Renderer *renderer)
+  void render(Renderer *renderer, Epub *epub)
   {
     for (auto element : elements)
     {
-      element->render(renderer);
+      element->render(renderer, epub);
     }
   }
   ~Page()

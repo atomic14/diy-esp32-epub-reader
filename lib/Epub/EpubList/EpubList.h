@@ -14,7 +14,7 @@ typedef struct
 {
   char path[MAX_PATH_SIZE];
   char title[MAX_TITLE_SIZE];
-  char cover_path[MAX_PATH_SIZE];
+  char cover_item[MAX_PATH_SIZE];
 } EpubListItem;
 
 typedef struct

@@ -30,21 +30,21 @@ ImageHelper *Renderer::get_image_helper(const std::string &filename)
   return nullptr;
 }
 
-void Renderer::draw_image(const std::string &filename, int x, int y, int width, int height)
+void Renderer::draw_image(const std::string &filename, const uint8_t *data, size_t data_size, int x, int y, int width, int height)
 {
   ImageHelper *helper = get_image_helper(filename);
   if (!helper ||
-      !helper->render(filename, this, x, y, width, height))
+      !helper->render(data, data_size, this, x, y, width, height))
   {
     // fall back to drawing a rectangle placeholder
     draw_rect(x + 20, y + 20, width - 40, height - 40);
   }
 }
 
-bool Renderer::get_image_size(const std::string &filename, int *width, int *height)
+bool Renderer::get_image_size(const std::string &filename, const uint8_t *data, size_t data_size, int *width, int *height)
 {
   ImageHelper *helper = get_image_helper(filename);
-  if (helper && helper->get_size(filename, width, height))
+  if (helper && helper->get_size(data, data_size, width, height))
   {
     return true;
   }
