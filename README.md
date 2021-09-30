@@ -40,9 +40,10 @@ I've tested it on the LilyGo EPD47, but it should work on any eInk display provi
   - DOWN - moves down in the list of ePubs or to the next page when reading
   - SELECT - opens the ePub currently selected ePub file or goes back to the ePub list from reading mode
 - An SD Card - you can jury rig an SPI sd card using the instructions here:
+  - You can use SPIFFS instead of an SD Card, but you won't be able to fit many books on it. Make sure to leave around 200-300K of free space in your SPIFFS partition for temporary data.
 - [Optional] A battery if you want it to be portable
 
-There is an experimental option to use SPIFFS instead of an SD card. This will work, but some improvements need to be made to the way images are handled a particular problem is the 32 character limit on filenames and the amount of space available for SPIFFS - I've adjusted the partitions.csv to give as much space as possible to the SPIFFS partition. To use SPIFFS add a preprocessor define to plaformio.ini `-DUSE_SPIFFS`.
+To use SPIFFS instead of an SD Card add a preprocessor define to plaformio.ini `-DUSE_SPIFFS`.
 
 # Porting to other boards
 
