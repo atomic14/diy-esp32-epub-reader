@@ -23,53 +23,50 @@ uint8_t *ZipFile::read_file_to_memory(const char *filename, size_t *size)
     ESP_LOGE(TAG, "Error %s\n", mz_zip_get_error_string(zip_archive.m_last_error));
     return nullptr;
   }
-  // Run through the archive and find the requiested file
-  for (int i = 0; i < (int)mz_zip_reader_get_num_files(&zip_archive); i++)
+  // find the file
+  mz_uint32 file_index = 0;
+  if (!mz_zip_reader_locate_file_v2(&zip_archive, filename, nullptr, 0, &file_index))
   {
-    mz_zip_archive_file_stat file_stat;
-    if (!mz_zip_reader_file_stat(&zip_archive, i, &file_stat))
-    {
-      ESP_LOGE(TAG, "mz_zip_reader_file_stat() failed!\n");
-      ESP_LOGE(TAG, "Error %s\n", mz_zip_get_error_string(zip_archive.m_last_error));
-      mz_zip_reader_end(&zip_archive);
-      return nullptr;
-    }
-    // is this the file we're looking for?
-    if (strcmp(filename, file_stat.m_filename) == 0)
-    {
-      // ESP_LOGI(TAG, "Extracting %s", file_stat.m_filename);
-      // allocate memory for the file
-      size_t file_size = file_stat.m_uncomp_size;
-      uint8_t *file_data = (uint8_t *)calloc(file_size + 1, 1);
-      if (!file_data)
-      {
-        ESP_LOGE(TAG, "Failed to allocate memory for %s\n", file_stat.m_filename);
-        mz_zip_reader_end(&zip_archive);
-        return nullptr;
-      }
-      // read the file
-      status = mz_zip_reader_extract_to_mem(&zip_archive, i, file_data, file_size, 0);
-      if (!status)
-      {
-        ESP_LOGE(TAG, "mz_zip_reader_extract_to_mem() failed!\n");
-        ESP_LOGE(TAG, "Error %s\n", mz_zip_get_error_string(zip_archive.m_last_error));
-        free(file_data);
-        mz_zip_reader_end(&zip_archive);
-        return nullptr;
-      }
-      // Close the archive, freeing any resources it was using
-      mz_zip_reader_end(&zip_archive);
-      // return the size if required
-      if (size)
-      {
-        *size = file_size;
-      }
-      return file_data;
-    }
+    ESP_LOGE(TAG, "Could not find file %s", filename);
+    mz_zip_reader_end(&zip_archive);
+    return nullptr;
   }
-  ESP_LOGE(TAG, "Could not find file %s", filename);
+  // get the file size - we do this all manually so we can add a null terminator to any strings
+  mz_zip_archive_file_stat file_stat;
+  if (!mz_zip_reader_file_stat(&zip_archive, file_index, &file_stat))
+  {
+    ESP_LOGE(TAG, "mz_zip_reader_file_stat() failed!\n");
+    ESP_LOGE(TAG, "Error %s\n", mz_zip_get_error_string(zip_archive.m_last_error));
+    mz_zip_reader_end(&zip_archive);
+    return nullptr;
+  }
+  // allocate memory for the file
+  size_t file_size = file_stat.m_uncomp_size;
+  uint8_t *file_data = (uint8_t *)calloc(file_size + 1, 1);
+  if (!file_data)
+  {
+    ESP_LOGE(TAG, "Failed to allocate memory for %s\n", file_stat.m_filename);
+    mz_zip_reader_end(&zip_archive);
+    return nullptr;
+  }
+  // read the file
+  status = mz_zip_reader_extract_to_mem(&zip_archive, file_index, file_data, file_size, 0);
+  if (!status)
+  {
+    ESP_LOGE(TAG, "mz_zip_reader_extract_to_mem() failed!\n");
+    ESP_LOGE(TAG, "Error %s\n", mz_zip_get_error_string(zip_archive.m_last_error));
+    free(file_data);
+    mz_zip_reader_end(&zip_archive);
+    return nullptr;
+  }
+  // Close the archive, freeing any resources it was using
   mz_zip_reader_end(&zip_archive);
-  return nullptr;
+  // return the size if required
+  if (size)
+  {
+    *size = file_size;
+  }
+  return file_data;
 }
 bool ZipFile::read_file_to_file(const char *filename, const char *dest)
 {

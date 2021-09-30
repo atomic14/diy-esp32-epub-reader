@@ -76,12 +76,13 @@ bool EpubList::load(const char *path)
       delete epub;
     }
     closedir(dir);
-    // std::sort(state->epub_list,
-    //           state->epub_list + state->num_epubs,
-    //           [](const EpubListItem &a, const EpubListItem &b)
-    //           {
-    //             return strcmp(a.title, b.title);
-    //           });
+    std::sort(
+        state->epub_list,
+        state->epub_list + state->num_epubs,
+        [](const EpubListItem &a, const EpubListItem &b)
+        {
+          return strcmp(a.title, b.title) < 0;
+        });
   }
   else
   {
