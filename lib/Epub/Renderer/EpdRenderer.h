@@ -162,7 +162,7 @@ public:
     if (compressed)
     {
       ESP_LOGD("EPD", "Front buffer compressed size: %d", compressed_size);
-      FILE *fp = fopen("/sdcard/front_buffer.z", "wb");
+      FILE *fp = fopen("/fs/front_buffer.z", "wb");
       if (fp)
       {
         fwrite(compressed, 1, compressed_size, fp);
@@ -179,7 +179,7 @@ public:
     if (compressed)
     {
       ESP_LOGD("EPD", "Back buffer compressed size: %d", compressed_size);
-      FILE *fp = fopen("/sdcard/back_buffer.z", "wb");
+      FILE *fp = fopen("/fs/back_buffer.z", "wb");
       if (fp)
       {
         fwrite(compressed, 1, compressed_size, fp);
@@ -197,7 +197,7 @@ public:
   {
     ESP_LOGI("EPD", "Hydrating EPD");
     // load the two buffers - the front and the back buffers
-    FILE *fp = fopen("/sdcard/front_buffer.z", "rb");
+    FILE *fp = fopen("/fs/front_buffer.z", "rb");
     if (fp)
     {
       fseek(fp, 0, SEEK_END);
@@ -218,7 +218,7 @@ public:
       reset();
       return;
     }
-    fp = fopen("/sdcard/back_buffer.z", "rb");
+    fp = fopen("/fs/back_buffer.z", "rb");
     if (fp)
     {
       fseek(fp, 0, SEEK_END);

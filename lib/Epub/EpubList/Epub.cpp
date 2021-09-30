@@ -120,8 +120,17 @@ const std::string Epub::get_cover_image_filename()
 
 std::string Epub::get_image_path(const std::string &image_name)
 {
+  // to support spiffs with the limt of 32 chars for filename we need to
+  // shorten the image name - Gutenberg has a long prefix
+  // e.g. "@public@vhost@g@gutenberg@html@files@14838@14838-h@images@peter12.jpg"
+  // we need to shorten it to "peter12.jpg"
+
+  // extract from the last "@" character to the end
+  size_t lastindex = image_name.find_last_of("@");
+  std::string image_path = image_name.substr(lastindex + 1);
+
   // check to see if the file exists
-  std::string dst_file = m_extract_path + "/" + image_name;
+  std::string dst_file = m_extract_path + "/" + image_path;
   FILE *fp = fopen(dst_file.c_str(), "rb");
   if (!fp)
   {

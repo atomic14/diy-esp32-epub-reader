@@ -42,6 +42,8 @@ I've tested it on the LilyGo EPD47, but it should work on any eInk display provi
 - An SD Card - you can jury rig an SPI sd card using the instructions here:
 - [Optional] A battery if you want it to be portable
 
+There is an experimental option to use SPIFFS instead of an SD card. This will work, but some improvements need to be made to the way images are handled a particular problem is the 32 character limit on filenames and the amount of space available for SPIFFS - I've adjusted the partitions.csv to give as much space as possible to the SPIFFS partition. To use SPIFFS add a preprocessor define to plaformio.ini `-DUSE_SPIFFS`.
+
 # Porting to other boards
 
 All the configuration is in `platformio.ini` using pre-processor directives. If you do add a new board then please create a new section in platofmrio.ini with the appropriate pre-processor directives for your board and open a pull request to add it to the project - I'm happy to answer any questions on this.
@@ -87,6 +89,13 @@ And finally we have the ADC channel that the battery voltage divider is connecte
 ```
 ; the adc channel that is connected to the battery voltage divider - this is GPIO_NUM_35
 -DBATTERY_ADC_CHANNEL=ADC1_CHANNEL_0
+```
+
+To enable the use of SPIFFS
+
+```
+; enable the use of SPIFFS
+-DUSE_SPIFFS
 ```
 
 # How does it work?

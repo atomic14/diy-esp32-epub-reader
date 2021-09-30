@@ -61,7 +61,7 @@ bool EpubList::load(const char *path)
         continue;
       }
       ESP_LOGD(TAG, "Loading epub %s", ent->d_name);
-      Epub *epub = new Epub(std::string("/sdcard/") + ent->d_name);
+      Epub *epub = new Epub(std::string("/fs/") + ent->d_name);
       if (epub->load())
       {
         strncpy(state->epub_list[state->num_epubs].title, epub->get_title().c_str(), MAX_TITLE_SIZE);
@@ -104,7 +104,7 @@ bool EpubList::load(const char *path)
 void EpubList::dehydrate()
 {
   ESP_LOGI(TAG, "Dehydrating epub list");
-  FILE *fp = fopen("/sdcard/.epublist", "wb");
+  FILE *fp = fopen("/fs/.epublist", "wb");
   fwrite(state, sizeof(EpubListState), 1, fp);
   fclose(fp);
   ESP_LOGI(TAG, "Dehydrated epub list");
@@ -113,7 +113,7 @@ void EpubList::dehydrate()
 bool EpubList::hydrate()
 {
   ESP_LOGI(TAG, "Hydrating epub list");
-  FILE *fp = fopen("/sdcard/.epublist", "rb");
+  FILE *fp = fopen("/fs/.epublist", "rb");
   if (fp)
   {
     fread(state, sizeof(EpubListState), 1, fp);

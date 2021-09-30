@@ -38,16 +38,27 @@ void *myOpen(const char *filename, int32_t *size)
 void myClose(void *handle)
 {
   ESP_LOGI(TAG, "Closing file");
-  fclose((FILE *)handle);
+  if (handle)
+  {
+    fclose((FILE *)handle);
+  }
 }
 
 int32_t myRead(PNGFILE *png_file, uint8_t *buffer, int32_t length)
 {
+  if (png_file->fHandle == NULL)
+  {
+    return 0;
+  }
   return fread(buffer, 1, length, (FILE *)(png_file->fHandle));
 }
 
 int32_t mySeek(PNGFILE *png_file, int32_t position)
 {
+  if (png_file->fHandle == NULL)
+  {
+    return 0;
+  }
   return fseek((FILE *)(png_file->fHandle), position, SEEK_SET);
 }
 
