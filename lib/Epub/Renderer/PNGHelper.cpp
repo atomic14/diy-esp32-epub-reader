@@ -20,52 +20,9 @@ void convert_rgb_565_to_rgb(uint16_t rgb565, uint8_t *r, uint8_t *g, uint8_t *b)
   *b = (rgb565 & 0x1F) << 3;
 }
 
-void *myOpen(const char *filename, int32_t *size)
+bool PNGHelper::get_size(const uint8_t *data, size_t data_size, int *width, int *height)
 {
-  ESP_LOGI(TAG, "Attempting to open %s\n", filename);
-  FILE *fp = fopen(filename, "rb");
-  if (fp == NULL)
-  {
-    ESP_LOGE(TAG, "Failed to open %s\n", filename);
-    return NULL;
-  }
-  fseek(fp, 0, SEEK_END);
-  *size = ftell(fp);
-  rewind(fp);
-  ESP_LOGI(TAG, "Opened %s, size %d\n", filename, *size);
-  return fp;
-}
-void myClose(void *handle)
-{
-  ESP_LOGI(TAG, "Closing file");
-  if (handle)
-  {
-    fclose((FILE *)handle);
-  }
-}
-
-int32_t myRead(PNGFILE *png_file, uint8_t *buffer, int32_t length)
-{
-  if (png_file->fHandle == NULL)
-  {
-    return 0;
-  }
-  return fread(buffer, 1, length, (FILE *)(png_file->fHandle));
-}
-
-int32_t mySeek(PNGFILE *png_file, int32_t position)
-{
-  if (png_file->fHandle == NULL)
-  {
-    return 0;
-  }
-  return fseek((FILE *)(png_file->fHandle), position, SEEK_SET);
-}
-
-bool PNGHelper::get_size(const std::string &path, int *width, int *height)
-{
-  ESP_LOGI("IMG", "Getting size of %s", m_filename.c_str());
-  int rc = png.open(path.c_str(), myOpen, myClose, myRead, mySeek, NULL);
+  int rc = png.openRAM(const_cast<uint8_t *>(data), data_size, NULL);
   if (rc == PNG_SUCCESS)
   {
     ESP_LOGI(TAG, "image specs: (%d x %d), %d bpp, pixel type: %d", png.getWidth(), png.getHeight(), png.getBpp(), png.getPixelType());
@@ -76,16 +33,16 @@ bool PNGHelper::get_size(const std::string &path, int *width, int *height)
   }
   else
   {
-    ESP_LOGE(TAG, "failed to open %s %d", m_filename.c_str(), rc);
+    ESP_LOGE(TAG, "failed to open png %d", rc);
     return false;
   }
 }
-bool PNGHelper::render(const std::string &path, Renderer *renderer, int x_pos, int y_pos, int width, int height)
+bool PNGHelper::render(const uint8_t *data, size_t data_size, Renderer *renderer, int x_pos, int y_pos, int width, int height)
 {
   this->renderer = renderer;
   this->y_pos = y_pos;
   this->x_pos = x_pos;
-  int rc = png.open(path.c_str(), myOpen, myClose, myRead, mySeek, png_draw_callback);
+  int rc = png.openRAM(const_cast<uint8_t *>(data), data_size, png_draw_callback);
   if (rc == PNG_SUCCESS)
   {
     this->x_scale = std::min(1.0f, float(width) / float(png.getWidth()));
@@ -100,7 +57,7 @@ bool PNGHelper::render(const std::string &path, Renderer *renderer, int x_pos, i
   }
   else
   {
-    ESP_LOGE(TAG, "failed to open %s %d", m_filename.c_str(), rc);
+    ESP_LOGE(TAG, "failed to parse png %d", rc);
     return false;
   }
 }

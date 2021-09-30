@@ -19,8 +19,8 @@ protected:
 
 public:
   virtual ~Renderer();
-  virtual void draw_image(const std::string &filename, int x, int y, int width, int height);
-  virtual bool get_image_size(const std::string &filename, int *width, int *height);
+  virtual void draw_image(const std::string &filename, const uint8_t *data, size_t data_size, int x, int y, int width, int height);
+  virtual bool get_image_size(const std::string &filename, const uint8_t *data, size_t data_size, int *width, int *height);
   virtual void draw_pixel(int x, int y, uint8_t color) = 0;
   virtual int get_text_width(const char *text, bool bold = false, bool italic = false) = 0;
   virtual void draw_text(int x, int y, const char *text, bool bold = false, bool italic = false) = 0;

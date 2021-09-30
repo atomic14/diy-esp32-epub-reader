@@ -47,5 +47,5 @@ public:
   {
     return blocks;
   }
-  void render_page(int page_index, Renderer *renderer);
+  void render_page(int page_index, Renderer *renderer, Epub *epub);
 };

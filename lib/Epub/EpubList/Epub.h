@@ -9,11 +9,9 @@ private:
   // the title read from the EPUB meta data
   std::string m_title;
   // the cover image
-  std::string m_cover_image_name;
+  std::string m_cover_image_item;
   // where is the EPUBfile?
   std::string m_path;
-  // folder to store the extracted files (we pull out the images to disk)
-  std::string m_extract_path;
   // the spine of the EPUB file
   std::vector<std::string> m_spine;
 
@@ -23,8 +21,8 @@ public:
   bool load();
   const std::string &get_path() const { return m_path; }
   const std::string &get_title();
-  const std::string get_cover_image_filename();
-  std::string get_image_path(const std::string &image_name);
+  const std::string &get_cover_image_item();
+  uint8_t *get_item_contents(const std::string &item_href, size_t *size = nullptr);
+  char *get_spine_item_contents(int spine_index);
   int get_spine_items_count();
-  char *get_spine_item_contents(int section);
 };

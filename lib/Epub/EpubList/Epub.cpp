@@ -15,17 +15,8 @@
 
 static const char *TAG = "EPUB";
 
-Epub::Epub(const std::string &path)
+Epub::Epub(const std::string &path) : m_path(path)
 {
-  m_path = path;
-  size_t lastindex = m_path.find_last_of(".");
-  m_extract_path = m_path.substr(0, lastindex);
-  // create the extract path if it does not exist
-  struct stat m_file_info;
-  if (stat(m_extract_path.c_str(), &m_file_info) == -1)
-  {
-    mkdir(m_extract_path.c_str(), 0700);
-  }
 }
 
 // load in the meta data for the epub file
@@ -82,7 +73,7 @@ bool Epub::load()
     // grab the cover image
     if (item_id == cover_item)
     {
-      m_cover_image_name = href;
+      m_cover_image_item = href;
     }
     items[item_id] = href;
     item = item->NextSiblingElement("item");
@@ -113,42 +104,9 @@ const std::string &Epub::get_title()
   return m_title;
 }
 
-const std::string Epub::get_cover_image_filename()
+const std::string &Epub::get_cover_image_item()
 {
-  return get_image_path(m_cover_image_name);
-}
-
-std::string Epub::get_image_path(const std::string &image_name)
-{
-  // to support spiffs with the limt of 32 chars for filename we need to
-  // shorten the image name - Gutenberg has a long prefix
-  // e.g. "@public@vhost@g@gutenberg@html@files@14838@14838-h@images@peter12.jpg"
-  // we need to shorten it to "peter12.jpg"
-
-  // extract from the last "@" character to the end
-  size_t lastindex = image_name.find_last_of("@");
-  std::string image_path = image_name.substr(lastindex + 1);
-
-  // check to see if the file exists
-  std::string dst_file = m_extract_path + "/" + image_path;
-  FILE *fp = fopen(dst_file.c_str(), "rb");
-  if (!fp)
-  {
-    ESP_LOGD(TAG, "Extracting image: %s", image_name.c_str());
-    std::string archive_path = "OEBPS/" + image_name;
-    ZipFile zip(m_path.c_str());
-    bool res = zip.read_file_to_file(archive_path.c_str(), dst_file.c_str());
-    if (!res)
-    {
-      ESP_LOGE(TAG, "Failed to extract image: %s", image_name.c_str());
-    }
-  }
-  else
-  {
-    fclose(fp);
-    ESP_LOGD(TAG, "Image already extracted: %s", image_name.c_str());
-  }
-  return dst_file;
+  return m_cover_image_item;
 }
 
 int Epub::get_spine_items_count()
@@ -156,21 +114,26 @@ int Epub::get_spine_items_count()
   return m_spine.size();
 }
 
-char *Epub::get_spine_item_contents(int section)
+uint8_t *Epub::get_item_contents(const std::string &item_href, size_t *size)
 {
-  if (section < 0 || section >= m_spine.size())
-  {
-    ESP_LOGE(TAG, "Invalid section %d", section);
-    return nullptr;
-  }
   ZipFile zip(m_path.c_str());
-  ESP_LOGD(TAG, "Loading Section: %s", m_spine[section].c_str());
-  std::string archive_path = "OEBPS/" + m_spine[section];
-  auto content = (char *)zip.read_file_to_memory(archive_path.c_str());
+  std::string archive_path = std::string("OEBPS/") + item_href;
+  auto content = zip.read_file_to_memory(archive_path.c_str(), size);
   if (!content)
   {
     ESP_LOGE(TAG, "Failed to read section");
     return nullptr;
   }
   return content;
+}
+
+char *Epub::get_spine_item_contents(int spine_index)
+{
+  if (spine_index < 0 || spine_index >= m_spine.size())
+  {
+    ESP_LOGE(TAG, "Invalid spine_index %d", spine_index);
+    return nullptr;
+  }
+  ESP_LOGD(TAG, "Loading Section: %s", m_spine[spine_index].c_str());
+  return (char *)get_item_contents(m_spine[spine_index].c_str());
 }
