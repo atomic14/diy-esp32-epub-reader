@@ -4,6 +4,7 @@
 #include <esp_log.h>
 #include "config.h"
 #include "SDCard.h"
+#include "SPIFFS.h"
 #include "EpubList/Epub.h"
 #include "EpubList/EpubList.h"
 #include "EpubList/EpubReader.h"
@@ -83,7 +84,7 @@ void handleEpubList(Renderer *renderer, UIAction action)
   {
     ESP_LOGI("main", "Creating epub list");
     epub_list = new EpubList(renderer);
-    if (epub_list->load("/sdcard/"))
+    if (epub_list->load("/fs/"))
     {
       ESP_LOGI("main", "Epub files loaded");
     }
@@ -173,8 +174,15 @@ void main_task(void *param)
   renderer->set_margin_top(35);
   //Renderer *renderer = new ConsoleRenderer();
   ESP_LOGI("main", "Memory after renderer init: %d", esp_get_free_heap_size());
+#ifdef USE_SPIFFS
+  ESP_LOGI("main", "Using SPIFFS");
+  // create the file system
+  SPIFFS *spiffs = new SPIFFS("/fs");
+#else
+  ESP_LOGI("main", "Using SDCard");
   // initialise the SDCard
-  SDCard *sdcard = new SDCard("/sdcard", SD_CARD_PIN_NUM_MISO, SD_CARD_PIN_NUM_MOSI, SD_CARD_PIN_NUM_CLK, SD_CARD_PIN_NUM_CS);
+  SDCard *sdcard = new SDCard("/fs", SD_CARD_PIN_NUM_MISO, SD_CARD_PIN_NUM_MOSI, SD_CARD_PIN_NUM_CLK, SD_CARD_PIN_NUM_CS);
+#endif
   ESP_LOGI("main", "Memory after sdcard init: %d", esp_get_free_heap_size());
   // set the controls up
   Controls *controls = new Controls(BUTTON_UP_GPIO_NUM, BUTTON_DOWN_GPIO_NUM, BUTTON_SELECT_GPIO_NUM, 0);
@@ -234,8 +242,12 @@ void main_task(void *param)
   // save the state
   renderer->dehydrate();
   epub_list->dehydrate();
-  // turn off the SD Card
+// turn off the SD Card
+#ifdef USE_SPIFFS
+  delete spiffs;
+#else
   delete sdcard;
+#endif
   ESP_ERROR_CHECK(esp_sleep_enable_ulp_wakeup());
   ESP_LOGI("main", "Entering deep sleep");
   epd_poweroff();

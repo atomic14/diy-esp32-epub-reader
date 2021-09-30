@@ -40,7 +40,10 @@ I've tested it on the LilyGo EPD47, but it should work on any eInk display provi
   - DOWN - moves down in the list of ePubs or to the next page when reading
   - SELECT - opens the ePub currently selected ePub file or goes back to the ePub list from reading mode
 - An SD Card - you can jury rig an SPI sd card using the instructions here:
+  - You can use SPIFFS instead of an SD Card, but you won't be able to fit many books on it. Make sure to leave around 200-300K of free space in your SPIFFS partition for temporary data.
 - [Optional] A battery if you want it to be portable
+
+To use SPIFFS instead of an SD Card add a preprocessor define to plaformio.ini `-DUSE_SPIFFS`.
 
 # Porting to other boards
 
@@ -87,6 +90,13 @@ And finally we have the ADC channel that the battery voltage divider is connecte
 ```
 ; the adc channel that is connected to the battery voltage divider - this is GPIO_NUM_35
 -DBATTERY_ADC_CHANNEL=ADC1_CHANNEL_0
+```
+
+To enable the use of SPIFFS
+
+```
+; enable the use of SPIFFS
+-DUSE_SPIFFS
 ```
 
 # How does it work?
