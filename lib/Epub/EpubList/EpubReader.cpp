@@ -89,7 +89,6 @@ void EpubReader::render()
   {
     parse_and_layout_current_section();
   }
-  renderer->clear_screen();
   ESP_LOGD(TAG, "rendering page %d of %d", state.current_page, parser->get_page_count());
   parser->render_page(state.current_page, renderer, epub);
   ESP_LOGD(TAG, "rendered page %d of %d", state.current_page, parser->get_page_count());
