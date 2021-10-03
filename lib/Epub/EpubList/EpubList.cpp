@@ -105,21 +105,34 @@ bool EpubList::load(const char *path)
 void EpubList::dehydrate()
 {
   ESP_LOGI(TAG, "Dehydrating epub list");
-  FILE *fp = fopen("/fs/.epublist", "wb");
-  fwrite(state, sizeof(EpubListState), 1, fp);
-  fclose(fp);
-  ESP_LOGI(TAG, "Dehydrated epub list");
+  FILE *fp = fopen("/fs/.epublist", "w");
+  if (fp)
+  {
+    int written = fwrite(state, sizeof(EpubListState), 1, fp);
+    if (written == 0)
+    {
+      ESP_LOGI(TAG, "Failed to write epub list state - trying again");
+      // try again?
+      written = fwrite(state, sizeof(EpubListState), 1, fp);
+    }
+    fclose(fp);
+    ESP_LOGI(TAG, "Dehydrated epub list %d", written);
+  }
+  else
+  {
+    ESP_LOGE(TAG, "Failed to dehydrate epub list");
+  }
 }
 
 bool EpubList::hydrate()
 {
   ESP_LOGI(TAG, "Hydrating epub list");
-  FILE *fp = fopen("/fs/.epublist", "rb");
+  FILE *fp = fopen("/fs/.epublist", "r");
   if (fp)
   {
-    fread(state, sizeof(EpubListState), 1, fp);
+    int read = fread(state, sizeof(EpubListState), 1, fp);
     fclose(fp);
-    ESP_LOGI(TAG, "Hydrated epub list");
+    ESP_LOGI(TAG, "Hydrated epub list %d", read);
     return true;
   }
   ESP_LOGE(TAG, "Failed to hydrate");

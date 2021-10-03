@@ -157,33 +157,47 @@ public:
   {
     ESP_LOGI("EPD", "Dehydrating EPD");
     // save the two buffers - the front and the back buffers
-    size_t compressed_size = 0;
-    void *compressed = tdefl_compress_mem_to_heap(m_frame_buffer, EPD_WIDTH * EPD_HEIGHT / 2, &compressed_size, 0);
-    if (compressed)
+    size_t front_buffer_compressed_size = 0;
+    void *front_buffer_compressed = tdefl_compress_mem_to_heap(m_frame_buffer, EPD_WIDTH * EPD_HEIGHT / 2, &front_buffer_compressed_size, 0);
+    if (front_buffer_compressed)
     {
-      ESP_LOGD("EPD", "Front buffer compressed size: %d", compressed_size);
-      FILE *fp = fopen("/fs/front_buffer.z", "wb");
-      if (fp)
+      ESP_LOGI("EPD", "Front buffer compressed size: %d", front_buffer_compressed_size);
+      FILE *front_fp = fopen("/fs/front_buffer.z", "w");
+      if (front_fp)
       {
-        fwrite(compressed, 1, compressed_size, fp);
-        fclose(fp);
+        int written = fwrite(front_buffer_compressed, 1, front_buffer_compressed_size, front_fp);
+        if (written == 0)
+        {
+          // try again?
+          ESP_LOGI("EPD", "Retrying front buffer save");
+          written = fwrite(front_buffer_compressed, 1, front_buffer_compressed_size, front_fp);
+        }
+        fclose(front_fp);
+        ESP_LOGI("EPD", "Front buffer saved %d", written);
       }
-      free(compressed);
+      free(front_buffer_compressed);
     }
     else
     {
       ESP_LOGE("EPD", "Failed to compress front buffer");
     }
-    compressed_size = 0;
-    compressed = tdefl_compress_mem_to_heap(m_hl.back_fb, EPD_WIDTH * EPD_HEIGHT / 2, &compressed_size, 0);
-    if (compressed)
+    size_t back_buffer_compressed_size = 0;
+    void *back_buffer_compressed = tdefl_compress_mem_to_heap(m_hl.back_fb, EPD_WIDTH * EPD_HEIGHT / 2, &back_buffer_compressed_size, 0);
+    if (back_buffer_compressed)
     {
-      ESP_LOGD("EPD", "Back buffer compressed size: %d", compressed_size);
-      FILE *fp = fopen("/fs/back_buffer.z", "wb");
-      if (fp)
+      ESP_LOGI("EPD", "Back buffer compressed size: %d", back_buffer_compressed_size);
+      FILE *back_fp = fopen("/fs/back_buffer.z", "w");
+      if (back_fp)
       {
-        fwrite(compressed, 1, compressed_size, fp);
-        fclose(fp);
+        int written = fwrite(back_buffer_compressed, 1, back_buffer_compressed_size, back_fp);
+        if (written == 0)
+        {
+          // try again?
+          ESP_LOGI("EPD", "Retrying back buffer save");
+          written = fwrite(back_buffer_compressed, 1, back_buffer_compressed_size, back_fp);
+        }
+        fclose(back_fp);
+        ESP_LOGI("EPD", "Back buffer saved %d", written);
       }
     }
     else
@@ -197,18 +211,27 @@ public:
   {
     ESP_LOGI("EPD", "Hydrating EPD");
     // load the two buffers - the front and the back buffers
-    FILE *fp = fopen("/fs/front_buffer.z", "rb");
+    FILE *fp = fopen("/fs/front_buffer.z", "r");
     if (fp)
     {
       fseek(fp, 0, SEEK_END);
       size_t compressed_size = ftell(fp);
+      ESP_LOGI("EPD", "Front buffer compressed size: %d", compressed_size);
       fseek(fp, 0, SEEK_SET);
       void *compressed = malloc(compressed_size);
       if (compressed)
       {
         fread(compressed, 1, compressed_size, fp);
-        tinfl_decompress_mem_to_mem(m_hl.front_fb, EPD_HEIGHT * EPD_WIDTH / 2, compressed, compressed_size, 0);
+        int result = tinfl_decompress_mem_to_mem(m_hl.front_fb, EPD_HEIGHT * EPD_WIDTH / 2, compressed, compressed_size, 0);
+        if (result == TINFL_DECOMPRESS_MEM_TO_MEM_FAILED)
+        {
+          ESP_LOGE("EPD", "Failed to decompress front buffer");
+        }
         free(compressed);
+      }
+      else
+      {
+        ESP_LOGE("EPD", "Failed to allocate memory for front buffer");
       }
       fclose(fp);
     }
@@ -218,18 +241,27 @@ public:
       reset();
       return;
     }
-    fp = fopen("/fs/back_buffer.z", "rb");
+    fp = fopen("/fs/back_buffer.z", "r");
     if (fp)
     {
       fseek(fp, 0, SEEK_END);
       size_t compressed_size = ftell(fp);
       fseek(fp, 0, SEEK_SET);
+      ESP_LOGI("EPD", "Back buffer compressed size: %d", compressed_size);
       void *compressed = malloc(compressed_size);
       if (compressed)
       {
         fread(compressed, 1, compressed_size, fp);
-        tinfl_decompress_mem_to_mem(m_hl.back_fb, EPD_HEIGHT * EPD_WIDTH / 2, compressed, compressed_size, 0);
+        int result = tinfl_decompress_mem_to_mem(m_hl.back_fb, EPD_HEIGHT * EPD_WIDTH / 2, compressed, compressed_size, 0);
+        if (result == TINFL_DECOMPRESS_MEM_TO_MEM_FAILED)
+        {
+          ESP_LOGE("EPD", "Failed to decompress back buffer");
+        }
         free(compressed);
+      }
+      else
+      {
+        ESP_LOGE("EPD", "Failed to allocate memory for back buffer");
       }
       fclose(fp);
     }

@@ -227,5 +227,6 @@ void RubbishHtmlParser::layout(Renderer *renderer, Epub *epub)
 void RubbishHtmlParser::render_page(int page_index, Renderer *renderer, Epub *epub)
 {
   renderer->clear_screen();
+  // renderer->fill_rect(0, 0, renderer->get_page_width(), renderer->get_page_height(), 0xFF);
   pages[page_index]->render(renderer, epub);
 }
