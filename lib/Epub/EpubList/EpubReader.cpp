@@ -42,9 +42,11 @@ void EpubReader::parse_and_layout_current_section()
     renderer->show_busy();
     ESP_LOGD(TAG, "Parse and render section %d", state.current_section);
     ESP_LOGD(TAG, "Before read html: %d", esp_get_free_heap_size());
-    char *html = epub->get_spine_item_contents(state.current_section);
+    std::string item = epub->get_spine_item(state.current_section);
+    std::string base_path = item.substr(0, item.find_last_of('/') + 1);
+    char *html = reinterpret_cast<char *>(epub->get_item_contents(item));
     ESP_LOGD(TAG, "After read html: %d", esp_get_free_heap_size());
-    parser = new RubbishHtmlParser(html, strlen(html));
+    parser = new RubbishHtmlParser(html, strlen(html), base_path);
     free(html);
     ESP_LOGD(TAG, "After parse: %d", esp_get_free_heap_size());
     parser->layout(renderer, epub);

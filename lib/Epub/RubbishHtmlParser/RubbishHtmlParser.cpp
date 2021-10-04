@@ -55,8 +55,9 @@ bool matches(const char *tag_name, const char *possible_tags[], int possible_tag
   return false;
 }
 
-RubbishHtmlParser::RubbishHtmlParser(const char *html, int length)
+RubbishHtmlParser::RubbishHtmlParser(const char *html, int length, const std::string &base_path)
 {
+  m_base_path = base_path;
   parse(html, length);
 }
 
@@ -84,7 +85,7 @@ bool RubbishHtmlParser::VisitEnter(const tinyxml2::XMLElement &element, const ti
         delete currentTextBlock;
         currentTextBlock = nullptr;
       }
-      blocks.push_back(new ImageBlock(src));
+      blocks.push_back(new ImageBlock(m_base_path + src));
       // start a new text block
       startNewTextBlock();
     }

@@ -4,9 +4,18 @@
 #ifndef UNIT_TEST
 #include <esp_log.h>
 #else
-#define ESP_LOGI(args...)
-#define ESP_LOGE(args...)
-#define ESP_LOGD(args...)
+#define ESP_LOGI(tag, args...) \
+  printf(args);                \
+  printf("\n");
+#define ESP_LOGE(tag, args...) \
+  printf(args);                \
+  printf("\n");
+#define ESP_LOGD(tag, args...) \
+  printf(args);                \
+  printf("\n");
+#define ESP_LOGW(tag, args...) \
+  printf(args);                \
+  printf("\n");
 #endif
 #include <map>
 #include "tinyxml2.h"
@@ -113,12 +122,15 @@ bool Epub::load()
   }
   m_title = title->GetText();
   auto cover = metadata->FirstChildElement("meta");
+  while (cover && cover->Attribute("name") && strcmp(cover->Attribute("name"), "cover") != 0)
+  {
+    cover = cover->NextSiblingElement("meta");
+  }
   if (!cover)
   {
-    ESP_LOGE(TAG, "Missing cover");
-    return false;
+    ESP_LOGW(TAG, "Missing cover");
   }
-  auto cover_item = cover->Attribute("content");
+  auto cover_item = cover ? cover->Attribute("content") : nullptr;
   // read the manifest and spine
   // the manifest gives us the names of the files
   // the spine gives us the order of the files
@@ -135,9 +147,9 @@ bool Epub::load()
   while (item)
   {
     std::string item_id = item->Attribute("id");
-    std::string href = item->Attribute("href");
+    std::string href = m_base_path + item->Attribute("href");
     // grab the cover image
-    if (item_id == cover_item)
+    if (cover_item && item_id == cover_item)
     {
       m_cover_image_item = href;
     }
@@ -180,10 +192,57 @@ int Epub::get_spine_items_count()
   return m_spine.size();
 }
 
+std::string normalise_path(const std::string &path)
+{
+  std::vector<std::string> components;
+  std::string component;
+  for (auto c : path)
+  {
+    if (c == '/')
+    {
+      if (!component.empty())
+      {
+        if (component == "..")
+        {
+          if (!components.empty())
+          {
+            components.pop_back();
+          }
+        }
+        else
+        {
+          components.push_back(component);
+        }
+        component.clear();
+      }
+    }
+    else
+    {
+      component += c;
+    }
+  }
+  if (!component.empty())
+  {
+    components.push_back(component);
+  }
+  std::string result;
+  for (auto &component : components)
+  {
+    if (result.size() > 0)
+    {
+      result += "/";
+    }
+    result += component;
+  }
+  return result;
+}
+
 uint8_t *Epub::get_item_contents(const std::string &item_href, size_t *size)
 {
   ZipFile zip(m_path.c_str());
-  auto content = zip.read_file_to_memory((m_base_path + item_href).c_str(), size);
+  std::string path = normalise_path(item_href);
+  ESP_LOGI(TAG, "Reading item %s", path.c_str());
+  auto content = zip.read_file_to_memory(path.c_str(), size);
   if (!content)
   {
     ESP_LOGE(TAG, "Failed to read item");
@@ -192,13 +251,7 @@ uint8_t *Epub::get_item_contents(const std::string &item_href, size_t *size)
   return content;
 }
 
-char *Epub::get_spine_item_contents(int spine_index)
+std::string &Epub::get_spine_item(int spine_index)
 {
-  if (spine_index < 0 || spine_index >= m_spine.size())
-  {
-    ESP_LOGE(TAG, "Invalid spine_index %d", spine_index);
-    return nullptr;
-  }
-  ESP_LOGD(TAG, "Loading Section: %s", m_spine[spine_index].c_str());
-  return (char *)get_item_contents(m_spine[spine_index].c_str());
+  return m_spine[spine_index];
 }

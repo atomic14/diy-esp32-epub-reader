@@ -5,17 +5,17 @@
 #ifndef UNIT_TEST
 #include <esp_log.h>
 #else
-#define ESP_LOGE(args...)
 #define ESP_LOGI(args...)
+#define ESP_LOGE(args...)
+#define ESP_LOGD(args...)
+#define ESP_LOGW(args...)
 #endif
 
 class ImageBlock : public Block
 {
-private:
+public:
   // the src attribute from the image element
   std::string m_src;
-
-public:
   int y_pos;
   int x_pos;
   int width;

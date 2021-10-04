@@ -23,11 +23,13 @@ private:
   TextBlock *currentTextBlock = nullptr;
   std::vector<Page *> pages;
 
+  std::string m_base_path;
+
   // start a new text block if needed
   void startNewTextBlock();
 
 public:
-  RubbishHtmlParser(const char *html, int length);
+  RubbishHtmlParser(const char *html, int length, const std::string &base_path);
   ~RubbishHtmlParser();
 
   // xml parser callbacks
