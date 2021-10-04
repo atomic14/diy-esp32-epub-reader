@@ -64,9 +64,8 @@ bool EpubList::load(const char *path)
       Epub *epub = new Epub(std::string("/fs/") + ent->d_name);
       if (epub->load())
       {
-        strncpy(state->epub_list[state->num_epubs].title, epub->get_title().c_str(), MAX_TITLE_SIZE);
         strncpy(state->epub_list[state->num_epubs].path, epub->get_path().c_str(), MAX_PATH_SIZE);
-        strncpy(state->epub_list[state->num_epubs].cover_item, epub->get_cover_image_item().c_str(), MAX_PATH_SIZE);
+        strncpy(state->epub_list[state->num_epubs].title, epub->get_title().c_str(), MAX_TITLE_SIZE);
         state->num_epubs++;
       }
       else
@@ -174,15 +173,15 @@ void EpubList::render()
       int image_height = cell_height - PADDING * 2;
       int image_width = 2 * image_height / 3;
       size_t image_data_size = 0;
-      uint8_t *image_data = epub->get_item_contents(state->epub_list[i].cover_item, &image_data_size);
-      renderer->draw_image(state->epub_list[i].cover_item, image_data, image_data_size, image_xpos, image_ypos, image_width, image_height);
+      uint8_t *image_data = epub->get_item_contents(epub->get_cover_image_item(), &image_data_size);
+      renderer->draw_image(epub->get_cover_image_item(), image_data, image_data_size, image_xpos, image_ypos, image_width, image_height);
       free(image_data);
       // draw the title
       int text_xpos = image_xpos + image_width + PADDING;
       int text_ypos = ypos + PADDING;
       int text_width = renderer->get_page_width() - (text_xpos + PADDING);
       int text_height = cell_height - PADDING * 2;
-      renderer->draw_text_box(state->epub_list[i].title, text_xpos, text_ypos, text_width, text_height);
+      renderer->draw_text_box(epub->get_title(), text_xpos, text_ypos, text_width, text_height);
       delete epub;
     }
     // clear the selection box around the previous selected item

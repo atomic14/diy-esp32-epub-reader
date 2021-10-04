@@ -1,8 +1,11 @@
 #include <unity.h>
 #include <string.h>
-#include <RubbishHtmlParser/RubbishHtmlParser.h>
 #include <RubbishHtmlParser/blocks/Block.h>
+#include <RubbishHtmlParser/RubbishHtmlParser.h>
+#include <RubbishHtmlParser/blocks/ImageBlock.h>
 #include <Renderer/Renderer.h>
+#include <EpubList/Epub.h>
+#include <iterator>
 
 class TestRenderer : public Renderer
 {
@@ -39,10 +42,28 @@ void test_parser(void)
       "<p>Some more text</p>"
       "<div>A block of text</div>"
       "<h2>A sub heading</h2>"
+      "<img src=\"test.png\" />"
       "<p>Bananas!</p>"
       "</body>"
       "</html>";
-  RubbishHtmlParser parser(html, strlen(html));
-  parser.layout(new TestRenderer(), nullptr);
-  TEST_ASSERT_EQUAL(7, parser.get_blocks().size());
+  {
+    RubbishHtmlParser parser(html, strlen(html), "");
+    parser.layout(new TestRenderer(), new Epub("test"));
+    TEST_ASSERT_EQUAL(8, parser.get_blocks().size());
+    auto iterator = parser.get_blocks().begin();
+    std::advance(iterator, 5);
+    Block *img_block = *iterator;
+    TEST_ASSERT_EQUAL(BlockType::IMAGE_BLOCK, img_block->getType());
+    TEST_ASSERT_EQUAL_STRING("test.png", reinterpret_cast<ImageBlock *>(img_block)->m_src.c_str());
+  }
+  {
+    RubbishHtmlParser parser(html, strlen(html), "HTML/");
+    parser.layout(new TestRenderer(), new Epub("test"));
+    TEST_ASSERT_EQUAL(8, parser.get_blocks().size());
+    auto iterator = parser.get_blocks().begin();
+    std::advance(iterator, 5);
+    Block *img_block = *iterator;
+    TEST_ASSERT_EQUAL(BlockType::IMAGE_BLOCK, img_block->getType());
+    TEST_ASSERT_EQUAL_STRING("HTML/test.png", reinterpret_cast<ImageBlock *>(img_block)->m_src.c_str());
+  }
 }

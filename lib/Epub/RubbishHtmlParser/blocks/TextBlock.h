@@ -3,6 +3,14 @@
 #include "../../Renderer/Renderer.h"
 #include <limits.h>
 #include "Block.h"
+#ifndef UNIT_TEST
+#include <esp_log.h>
+#else
+#define ESP_LOGI(args...)
+#define ESP_LOGE(args...)
+#define ESP_LOGD(args...)
+#define ESP_LOGW(args...)
+#endif
 
 typedef enum
 {
@@ -11,13 +19,13 @@ typedef enum
 } SPAN_STYLES;
 
 // TODO - is there any more whitespace we should consider?
-bool is_whitespace(char c)
+static bool is_whitespace(char c)
 {
   return (c == ' ' || c == '\r' || c == '\n');
 }
 
 // move past anything that should be considered part of a work
-int skip_word(const char *text, int index, int length)
+static int skip_word(const char *text, int index, int length)
 {
   while (index < length && !is_whitespace(text[index]))
   {
@@ -27,7 +35,7 @@ int skip_word(const char *text, int index, int length)
 }
 
 // skip past any white space characters
-int skip_whitespace(const char *html, int index, int length)
+static int skip_whitespace(const char *html, int index, int length)
 {
   while (index < length && is_whitespace(html[index]))
   {

@@ -25,11 +25,12 @@ private:
 public:
   Epub(const std::string &path);
   ~Epub() {}
+  std::string &get_base_path() { return m_base_path; }
   bool load();
   const std::string &get_path() const { return m_path; }
   const std::string &get_title();
   const std::string &get_cover_image_item();
   uint8_t *get_item_contents(const std::string &item_href, size_t *size = nullptr);
-  char *get_spine_item_contents(int spine_index);
+  std::string &get_spine_item(int spine_index);
   int get_spine_items_count();
 };
