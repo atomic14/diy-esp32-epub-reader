@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+class ZipFile;
+
 class Epub
 {
 private:
@@ -14,6 +16,11 @@ private:
   std::string m_path;
   // the spine of the EPUB file
   std::vector<std::string> m_spine;
+  // the base path for items in the EPUB file
+  std::string m_base_path;
+
+  // find the path for the content.opf file
+  bool find_content_opf_file(ZipFile &zip, std::string &content_opf_file);
 
 public:
   Epub(const std::string &path);

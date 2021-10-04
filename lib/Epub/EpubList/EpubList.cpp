@@ -167,6 +167,7 @@ void EpubList::render()
     {
       ESP_LOGI(TAG, "Rendering item %d", i);
       Epub *epub = new Epub(state->epub_list[i].path);
+      epub->load();
       // draw the cover page
       int image_xpos = PADDING;
       int image_ypos = ypos + PADDING;

@@ -12,12 +12,13 @@ public:
   virtual void draw_pixel(int x, int y, uint8_t color) {}
   virtual int get_text_width(const char *text, bool bold = false, bool italic = false)
   {
-    printf("Measuring text: %s\n", text);
     return strlen(text);
   }
   virtual void draw_text(int x, int y, const char *text, bool bold = false, bool italic = false) {}
   virtual void draw_text_box(const std::string &text, int x, int y, int width, int height, bool bold = false, bool italic = false) {}
   virtual void draw_rect(int x, int y, int width, int height, uint8_t color = 0){};
+  virtual void fill_rect(int x, int y, int width, int height, uint8_t color = 0){};
+  virtual void show_busy() {}
   virtual void clear_screen() {}
   virtual int get_page_width() { return 100; }
   virtual int get_page_height() { return 100; }
@@ -43,5 +44,5 @@ void test_parser(void)
       "</html>";
   RubbishHtmlParser parser(html, strlen(html));
   parser.layout(new TestRenderer(), nullptr);
-  TEST_ASSERT_EQUAL(6, parser.get_blocks().size());
+  TEST_ASSERT_EQUAL(7, parser.get_blocks().size());
 }

@@ -15,6 +15,57 @@
 
 static const char *TAG = "EPUB";
 
+bool Epub::find_content_opf_file(ZipFile &zip, std::string &content_opf_file)
+{
+  // open up the meta data to find where the content.opf file lives
+  char *meta_info = (char *)zip.read_file_to_memory("META-INF/container.xml");
+  if (!meta_info)
+  {
+    ESP_LOGE(TAG, "Could not find META-INF/container.xml");
+    return false;
+  }
+  // parse the meta data
+  tinyxml2::XMLDocument meta_data_doc;
+  auto result = meta_data_doc.Parse(meta_info);
+  // finished with the data as it's been parsed
+  free(meta_info);
+  if (result != tinyxml2::XML_SUCCESS)
+  {
+    ESP_LOGE(TAG, "Could not parse META-INF/container.xml");
+    return false;
+  }
+  auto container = meta_data_doc.FirstChildElement("container");
+  if (!container)
+  {
+    ESP_LOGE(TAG, "Could not find container element in META-INF/container.xml");
+    return false;
+  }
+  auto rootfiles = container->FirstChildElement("rootfiles");
+  if (!rootfiles)
+  {
+    ESP_LOGE(TAG, "Could not find rootfiles element in META-INF/container.xml");
+    return false;
+  }
+  // find the root file that has the media-type="application/oebps-package+xml"
+  auto rootfile = rootfiles->FirstChildElement("rootfile");
+  while (rootfile)
+  {
+    const char *media_type = rootfile->Attribute("media-type");
+    if (media_type && strcmp(media_type, "application/oebps-package+xml") == 0)
+    {
+      const char *full_path = rootfile->Attribute("full-path");
+      if (full_path)
+      {
+        content_opf_file = full_path;
+        return true;
+      }
+    }
+    rootfile = rootfile->NextSiblingElement("rootfile");
+  }
+  ESP_LOGE(TAG, "Could not get path to content.opf file");
+  return false;
+}
+
 Epub::Epub(const std::string &path) : m_path(path)
 {
 }
@@ -23,15 +74,30 @@ Epub::Epub(const std::string &path) : m_path(path)
 bool Epub::load()
 {
   ZipFile zip(m_path.c_str());
-  const char *contents = (const char *)zip.read_file_to_memory("OEBPS/content.opf");
+  std::string content_opf_file;
+  if (!find_content_opf_file(zip, content_opf_file))
+  {
+    return false;
+  }
+  // get the base path for the content
+  m_base_path = content_opf_file.substr(0, content_opf_file.find_last_of('/') + 1);
+  // read in the content.opf file and parse it
+  char *contents = (char *)zip.read_file_to_memory(content_opf_file.c_str());
   // parse the contents
   tinyxml2::XMLDocument doc;
   auto result = doc.Parse(contents);
+  free(contents);
   if (result != tinyxml2::XML_SUCCESS)
   {
     ESP_LOGE(TAG, "Error parsing content.opf - %s", doc.ErrorIDToName(result));
+    return false;
   }
   auto package = doc.FirstChildElement("package");
+  if (!package)
+  {
+    ESP_LOGE(TAG, "Could not find package element in content.opf");
+    return false;
+  }
   // get the metadata - title and cover image
   auto metadata = package->FirstChildElement("metadata");
   if (!metadata)
@@ -117,11 +183,10 @@ int Epub::get_spine_items_count()
 uint8_t *Epub::get_item_contents(const std::string &item_href, size_t *size)
 {
   ZipFile zip(m_path.c_str());
-  std::string archive_path = std::string("OEBPS/") + item_href;
-  auto content = zip.read_file_to_memory(archive_path.c_str(), size);
+  auto content = zip.read_file_to_memory((m_base_path + item_href).c_str(), size);
   if (!content)
   {
-    ESP_LOGE(TAG, "Failed to read section");
+    ESP_LOGE(TAG, "Failed to read item");
     return nullptr;
   }
   return content;

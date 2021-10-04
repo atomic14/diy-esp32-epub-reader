@@ -43,7 +43,17 @@ I've tested it on the LilyGo EPD47, but it should work on any eInk display provi
   - You can use SPIFFS instead of an SD Card, but you won't be able to fit many books on it. Make sure to leave around 200-300K of free space in your SPIFFS partition for temporary data.
 - [Optional] A battery if you want it to be portable
 
+# SPIFFS support
+
 To use SPIFFS instead of an SD Card add a preprocessor define to plaformio.ini `-DUSE_SPIFFS`.
+
+To upload the filesystem do:
+
+```
+pio run -t uploadfs
+```
+
+There some issues with SPIFFS which cause some problems - particularly with persisting the state of the display when going into deep sleep.
 
 # Porting to other boards
 
