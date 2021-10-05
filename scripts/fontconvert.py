@@ -27,6 +27,12 @@ parser.add_argument(
     action="append",
     help="Additional code point intervals to export as min,max. This argument can be repeated.",
 )
+parser.add_argument(
+    "--two-color",
+    dest="two_color",
+    action="store_true",
+    help="Ouput the bitmaps with only two colors - this lets you update with MODE_DU",
+)
 args = parser.parse_args()
 
 GlyphProps = namedtuple(
@@ -47,6 +53,7 @@ font_stack = [freetype.Face(f) for f in args.fontstack]
 compress = args.compress
 size = args.size
 font_name = args.name
+two_color = args.two_color
 
 # inclusive unicode code point intervals
 # must not overlap and be in ascending order
@@ -137,9 +144,15 @@ for i_start, i_end in intervals:
             y = i / bitmap.width
             x = i % bitmap.width
             if x % 2 == 0:
-                px = v >> 4
+                if two_color:
+                    px = 0xF if v > 128 else 0
+                else:
+                    px = v >> 4
             else:
-                px = px | (v & 0xF0)
+                if two_color:
+                    px = px | (0xF0 if v > 128 else 0)
+                else:
+                    px = px | (v & 0xF0)
                 pixels.append(px)
                 px = 0
             # eol

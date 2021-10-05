@@ -94,8 +94,8 @@ public:
   }
   void draw_text(int x, int y, const char *text, bool bold = false, bool italic = false)
   {
-    // text is antialised so contains grey values
-    needs_gray_flush = true;
+    // if using antialised text then set to gray next flush
+    // needs_gray_flush = true;
     int ypos = y + get_line_height() + margin_top;
     epd_write_string(get_font(bold, italic), text, &x, &ypos, m_frame_buffer, &m_font_props);
   }
