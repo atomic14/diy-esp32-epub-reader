@@ -189,7 +189,7 @@ void EpubList::render()
     {
       for (int i = 0; i < 5; i++)
       {
-        renderer->draw_rect(PADDING / 2 + i, ypos + PADDING / 2 + i, renderer->get_page_width() - PADDING - 2 * i, cell_height - PADDING - 2 * i, 255);
+        renderer->draw_rect(i, ypos + PADDING / 2 + i, renderer->get_page_width() - 2 * i, cell_height - PADDING - 2 * i, 255);
       }
     }
     // draw the selection box around the current selection
@@ -197,7 +197,7 @@ void EpubList::render()
     {
       for (int i = 0; i < 5; i++)
       {
-        renderer->draw_rect(PADDING / 2 + i, ypos + PADDING / 2 + i, renderer->get_page_width() - PADDING - 2 * i, cell_height - PADDING - 2 * i, 0);
+        renderer->draw_rect(i, ypos + PADDING / 2 + i, renderer->get_page_width() - 2 * i, cell_height - PADDING - 2 * i, 0);
       }
     }
     ypos += cell_height;

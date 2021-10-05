@@ -172,6 +172,9 @@ void main_task(void *param)
       hourglass_height);
   // make space for the battery
   renderer->set_margin_top(35);
+  // page margins
+  renderer->set_margin_left(10);
+  renderer->set_margin_right(10);
   //Renderer *renderer = new ConsoleRenderer();
   ESP_LOGI("main", "Memory after renderer init: %d", esp_get_free_heap_size());
 #ifdef USE_SPIFFS
