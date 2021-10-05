@@ -1,6 +1,6 @@
 [submodule "lib/epdiy/epdiy"]
 	path = lib/epdiy/epdiy
-	url = https://github.com/atomic14/epdiy.git
+	url = https://github.com/vroland/epdiy.git
 	ignore = untracked
 [submodule "lib/png/PNGdec"]
 	path = lib/png/PNGdec
