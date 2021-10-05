@@ -5,3 +5,6 @@
 [submodule "lib/png/PNGdec"]
 	path = lib/png/PNGdec
 	url = https://github.com/atomic14/PNGdec.git
+[submodule "lib/touch"]
+	path = lib/touch
+	url = https://github.com/martinberlin/FT6X36-IDF.git
