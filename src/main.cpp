@@ -20,6 +20,9 @@
 #include "battery/Battery.h"
 #include "L58Touch.cpp"
 
+// INTGPIO is touch interrupt, goes HI when it detects a touch, which coordinates are read by I2C
+L58Touch ts(CONFIG_TOUCH_INT);
+
 extern "C"
 {
   void app_main();
@@ -261,8 +264,41 @@ void main_task(void *param)
   esp_deep_sleep_start();
 }
 
+uint16_t t_counter = 0;
+
+void touchEvent(TPoint p, TEvent e)
+{
+  #if defined(CONFIG_FT6X36_DEBUG) && CONFIG_FT6X36_DEBUG==1
+    ++t_counter;
+    ets_printf("e %x %d  ",e,t_counter); // Working
+  #endif
+
+  std::string eventName = "";
+  switch (e)
+  {
+  case TEvent::Tap:
+    eventName = "tap";
+    break;
+  
+  default:
+    eventName = "UNKNOWN";
+    break;
+  }
+
+  printf("X: %d Y: %d E: %s\n", p.x, p.y, eventName.c_str());
+}
+
 void app_main()
 {
+  // Instantiate touch. Important pass here the 3 required variables including display width and height
+  ts.begin(EPD_WIDTH, EPD_HEIGHT);
+  ts.setRotation(1);
+  ts.registerTouchHandler(touchEvent);
+
   ESP_LOGI("main", "Memory before main task start %d", esp_get_free_heap_size());
   xTaskCreatePinnedToCore(main_task, "main_task", 32768, NULL, 1, NULL, 1);
+  
+  for (;;) {
+    ts.loop();
+  }
 }
