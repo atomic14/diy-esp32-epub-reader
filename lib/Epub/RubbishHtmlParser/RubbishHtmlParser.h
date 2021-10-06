@@ -4,9 +4,8 @@
 #include <list>
 #include <vector>
 #include <tinyxml2.h>
+#include "blocks/TextBlock.h"
 
-class TextBlock;
-class Block;
 class Page;
 class Renderer;
 class Epub;
@@ -26,7 +25,7 @@ private:
   std::string m_base_path;
 
   // start a new text block if needed
-  void startNewTextBlock();
+  void startNewTextBlock(BLOCK_STYLE style);
 
 public:
   RubbishHtmlParser(const char *html, int length, const std::string &base_path);

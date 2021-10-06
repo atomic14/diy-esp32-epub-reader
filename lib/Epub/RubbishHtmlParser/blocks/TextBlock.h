@@ -16,7 +16,15 @@ typedef enum
 {
   BOLD_SPAN = 1,
   ITALIC_SPAN = 2,
-} SPAN_STYLES;
+} SPAN_STYLE;
+
+typedef enum
+{
+  JUSTIFIED = 0,
+  LEFT_ALIGN = 1,
+  CENTER_ALIGN = 2,
+  RIGHT_ALIGN = 3,
+} BLOCK_STYLE;
 
 // TODO - is there any more whitespace we should consider?
 static bool is_whitespace(char c)
@@ -59,6 +67,9 @@ private:
   // the styles of each word
   std::vector<uint8_t> word_styles;
 
+  // the style of the block - left, center, right aligned
+  BLOCK_STYLE style;
+
 public:
   // where do we want to break the words into lines
   std::vector<uint16_t> line_breaks;
@@ -92,12 +103,23 @@ public:
       }
     }
   }
+  TextBlock(BLOCK_STYLE style) : style(style)
+  {
+  }
   ~TextBlock()
   {
     for (auto span : spans)
     {
       delete[] span;
     }
+  }
+  void set_style(BLOCK_STYLE style)
+  {
+    this->style = style;
+  }
+  BLOCK_STYLE get_style()
+  {
+    return style;
   }
   bool isEmpty()
   {
@@ -203,16 +225,26 @@ public:
       {
         total_word_width += word_widths[word_index];
       }
+      float spare_space = page_width - total_word_width;
       float actual_spacing = space_width;
-      // don't add space if we are on the last line
-      if (i != line_breaks.size() - 1)
+      int number_words = line_breaks[i] - start_word;
+      // don't add space if we are on the last line and we are not justified text
+      if (i != line_breaks.size() - 1 && style == JUSTIFIED)
       {
-        if (line_breaks[i] - start_word > 2)
+        if (line_breaks[i] - start_word > 1)
         {
-          actual_spacing = float(page_width - total_word_width) / float(line_breaks[i] - start_word - 1);
+          actual_spacing = spare_space / float(number_words - 1);
         }
       }
       float xpos = 0;
+      if (style == RIGHT_ALIGN)
+      {
+        xpos = spare_space - (number_words - 1) * space_width;
+      }
+      if (style == CENTER_ALIGN)
+      {
+        xpos = (spare_space - (number_words - 1) * space_width) / 2;
+      }
       word_xpos.resize(words.size());
       for (int word_index = start_word; word_index < line_breaks[i]; word_index++)
       {
