@@ -18,6 +18,7 @@
 #include "Renderer/ConsoleRenderer.h"
 #include "controls/Controls.h"
 #include "battery/Battery.h"
+#include "L58Touch.cpp"
 
 extern "C"
 {
