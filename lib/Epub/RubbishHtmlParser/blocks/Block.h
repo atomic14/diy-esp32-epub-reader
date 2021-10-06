@@ -14,7 +14,7 @@ class Block
 {
 public:
   virtual ~Block() {}
-  virtual void layout(Renderer *renderer, Epub *epub) = 0;
+  virtual void layout(Renderer *renderer, Epub *epub, int max_width = -1) = 0;
   virtual void dump() = 0;
   virtual BlockType getType() = 0;
   virtual bool isEmpty() = 0;

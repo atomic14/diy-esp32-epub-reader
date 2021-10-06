@@ -28,7 +28,7 @@ public:
   }
   void render(Renderer *renderer, Epub *epub)
   {
-    block->render(renderer, line_break_index, y_pos);
+    block->render(renderer, line_break_index, 0, y_pos);
   }
 };
 

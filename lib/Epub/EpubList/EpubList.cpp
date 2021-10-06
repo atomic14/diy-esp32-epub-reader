@@ -13,6 +13,7 @@
 #include "EpubList.h"
 #include "Epub.h"
 #include "Renderer/Renderer.h"
+#include "../RubbishHtmlParser/blocks/TextBlock.h"
 
 static const char *TAG = "PUBLIST";
 
@@ -152,7 +153,19 @@ void EpubList::render()
       int text_ypos = ypos + PADDING;
       int text_width = renderer->get_page_width() - (text_xpos + PADDING);
       int text_height = cell_height - PADDING * 2;
-      renderer->draw_text_box(epub->get_title(), text_xpos, text_ypos, text_width, text_height);
+      // use the text block to layout the title
+      TextBlock *title_block = new TextBlock(LEFT_ALIGN);
+      title_block->add_span(state->epub_list[i].title, false, false);
+      title_block->layout(renderer, epub, text_width);
+      for (int i = 0; i < title_block->line_breaks.size(); i++)
+      {
+        if (i * renderer->get_line_height() > text_height)
+        {
+          break;
+        }
+        title_block->render(renderer, i, text_xpos, text_ypos + i * renderer->get_line_height());
+      }
+      delete title_block;
       delete epub;
     }
     // clear the selection box around the previous selected item
