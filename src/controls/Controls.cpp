@@ -55,12 +55,12 @@ bool Controls::did_wake_from_deep_sleep()
   auto wake_cause = esp_sleep_get_wakeup_cause();
   // if our controls are active low then we must have been woken by the ULP
   // as that's the only mechanism available for active low buttons
-  if (active_level == 0)
+  if (active_level == 0 && wake_cause == ESP_SLEEP_WAKEUP_ULP)
   {
     ESP_LOGI("Controls", "ULP Wakeup");
-    return wake_cause == ESP_SLEEP_WAKEUP_ULP;
+    return true;
   }
-  if (wake_cause == ESP_SLEEP_WAKEUP_EXT1)
+  if (active_level == 1 && wake_cause == ESP_SLEEP_WAKEUP_EXT1)
   {
     ESP_LOGI("Controls", "EXT1 Wakeup");
     return true;
