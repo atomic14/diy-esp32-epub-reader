@@ -26,6 +26,9 @@ std::string eventName = "";
 auto eventX = 0;
 auto eventY = 0;
 bool tapFlag = false;
+// Touch UI simple buttons
+uint8_t ui_button_width = 120;
+uint8_t ui_button_height = 34;
 
 extern "C"
 {
@@ -164,6 +167,22 @@ void draw_battery_level(Renderer *renderer, float voltage, float percentage)
   renderer->set_margin_top(35);
 }
 
+void draw_touch_ui(Renderer *renderer) {
+  renderer->set_margin_top(0);
+  uint16_t x_offset = 10;
+  renderer->fill_rect(x_offset, 1, ui_button_width, ui_button_height, 150);
+  // Maybe filled triangle will be nicer
+  renderer->draw_text(x_offset+50, -7, "^");
+  x_offset = ui_button_width + 30;
+  renderer->fill_rect(x_offset, 1, ui_button_width, ui_button_height, 150);
+  renderer->draw_text(x_offset+50, -16, "v");
+  x_offset = ui_button_width*2 + 60;
+  //printf("3rd x:%d w:%d h%d\n", x_offset, ui_button_width, ui_button_height);
+  renderer->fill_rect(x_offset, 1, ui_button_width, ui_button_height, 100);
+  renderer->fill_rect(x_offset+(ui_button_width/2)-2, 15, 10, 10, 50);
+  renderer->set_margin_top(35);
+}
+
 void main_task(void *param)
 {
   // need to power on the EDP to get power to the SD Card
@@ -187,8 +206,9 @@ void main_task(void *param)
   renderer->set_margin_left(10);
   renderer->set_margin_right(10);
   #ifdef USE_TOUCH
-    renderer->set_margin_bottom(20);
+    renderer->set_margin_bottom(30);
   #endif
+
   //Renderer *renderer = new ConsoleRenderer();
   ESP_LOGI("main", "Memory after renderer init: %d", esp_get_free_heap_size());
 #ifdef USE_SPIFFS
@@ -230,6 +250,7 @@ void main_task(void *param)
   }
   // draw the battery level before flushing the screen
   draw_battery_level(renderer, battery->get_voltage(), battery->get_percentage());
+  draw_touch_ui(renderer);
   renderer->flush_display();
 
   // configure the button inputs
@@ -246,9 +267,16 @@ void main_task(void *param)
     #ifdef USE_TOUCH
       // Touch event detected: Override ui_action
       if (tapFlag) {
-        printf("Tap X:%d Y:%d\n", eventX, eventY);
-        ui_action = SELECT;
+        //printf("Tap X:%d Y:%d\n", eventX, eventY);
+        if (eventX>=10 && eventX<=10+ui_button_width && eventY<40) {
+           ui_action = UP;
+        } else if (eventX>=150 && eventX<=150+ui_button_width && eventY<40) {
+           ui_action = DOWN;
+        } else if (eventX>=300 && eventX<=300+ui_button_width && eventY<40) {
+           ui_action = SELECT;
+        } 
         tapFlag = false;
+        vTaskDelay(pdMS_TO_TICKS(100));
       }
     #endif
 
@@ -258,6 +286,7 @@ void main_task(void *param)
       handleUserInteraction(renderer, ui_action);
       // draw the battery level before flushing the screen
       draw_battery_level(renderer, battery->get_voltage(), battery->get_percentage());
+      draw_touch_ui(renderer);
       renderer->flush_display();
     }
     else
@@ -293,6 +322,7 @@ void touchEvent(TPoint p, TEvent e)
   eventX = p.x;
   eventY = p.y;
   tapFlag = true;
+  printf("T x:%d y:%d\n",p.x,p.y);
   }
 }
 
@@ -300,9 +330,9 @@ void app_main()
 {
   #ifdef USE_TOUCH
     /** Instantiate touch. Important inject here the display width and height size in pixels
-        setRotation(1)     90 degrees rotated: Portrait mode */
+        setRotation(3)     Portrait mode */
     ts.begin(EPD_WIDTH, EPD_HEIGHT);
-    ts.setRotation(1);
+    ts.setRotation(3);
     ts.registerTouchHandler(touchEvent);
   #endif
 
