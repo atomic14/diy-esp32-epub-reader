@@ -49,6 +49,8 @@ typedef enum
 RTC_DATA_ATTR UIState ui_state = SELECTING_EPUB;
 // the sate data for reading an epub
 RTC_DATA_ATTR EpubReaderState epub_reader_state;
+// the state data for the epub list
+RTC_DATA_ATTR EpubListState epub_list_state;
 
 void handleEpub(Renderer *renderer, UIAction action);
 void handleEpubList(Renderer *renderer, UIAction action);
@@ -80,6 +82,10 @@ void handleEpub(Renderer *renderer, UIAction action)
     delete reader;
     reader = nullptr;
     // force a redraw
+    if (!epub_list)
+    {
+      epub_list = new EpubList(renderer, &epub_list_state);
+    }
     epub_list->set_needs_redraw();
     handleEpubList(renderer, NONE);
     return;
@@ -96,7 +102,7 @@ void handleEpubList(Renderer *renderer, UIAction action)
   if (!epub_list)
   {
     ESP_LOGI("main", "Creating epub list");
-    epub_list = new EpubList(renderer);
+    epub_list = new EpubList(renderer, &epub_list_state);
     if (epub_list->load("/fs/"))
     {
       ESP_LOGI("main", "Epub files loaded");
@@ -190,6 +196,11 @@ void draw_touch_ui(Renderer *renderer) {
 
 void main_task(void *param)
 {
+  // dump out the epub list state
+  ESP_LOGI("main", "epub list state num_epubs=%d", epub_list_state.num_epubs);
+  ESP_LOGI("main", "epub list state is_loaded=%d", epub_list_state.is_loaded);
+  ESP_LOGI("main", "epub list state selected_item=%d", epub_list_state.selected_item);
+
   // need to power on the EDP to get power to the SD Card
   epd_poweron();
   // TODO - work out where to put this on the screen
@@ -234,15 +245,6 @@ void main_task(void *param)
   {
     // restore the renderer state - it should have been saved when we went to sleep...
     renderer->hydrate();
-    // restore the epub list state - it also should have been saved when went to sleep...
-    epub_list = new EpubList(renderer);
-    if (!epub_list->hydrate())
-    {
-      // if we failed to hydrate the epub list then we need to delete it and start again
-      delete epub_list;
-      epub_list = nullptr;
-    }
-
     UIAction ui_action = controls->get_deep_sleep_action();
     handleUserInteraction(renderer, ui_action);
   }
@@ -306,10 +308,9 @@ void main_task(void *param)
   }
 
   ESP_LOGI("main", "Saving state");
-  // save the state
+  // save the state of the renderer
   renderer->dehydrate();
-  epub_list->dehydrate();
-// turn off the SD Card
+  // turn off the SD Card
 #ifdef USE_SPIFFS
   delete spiffs;
 #else

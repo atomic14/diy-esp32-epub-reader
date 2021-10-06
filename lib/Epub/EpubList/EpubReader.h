@@ -4,6 +4,7 @@ class Epub;
 class Renderer;
 class RubbishHtmlParser;
 
+// this state data is saved as RTC_DATA and injected in - this means that we don't lose our place when going in to deep sleep
 typedef struct
 {
   char epub_path[256];

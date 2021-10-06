@@ -37,7 +37,10 @@ const char *EpubList::get_current_epub_path()
 bool EpubList::load(const char *path)
 {
   if (state->is_loaded)
+  {
+    ESP_LOGI(TAG, "Already loaded books");
     return true;
+  }
   renderer->show_busy();
   // trigger a proper redraw
   state->previous_rendered_page = -1;
@@ -67,6 +70,11 @@ bool EpubList::load(const char *path)
         strncpy(state->epub_list[state->num_epubs].path, epub->get_path().c_str(), MAX_PATH_SIZE);
         strncpy(state->epub_list[state->num_epubs].title, epub->get_title().c_str(), MAX_TITLE_SIZE);
         state->num_epubs++;
+        if (state->num_epubs == MAX_EPUB_LIST_SIZE)
+        {
+          ESP_LOGE(TAG, "Too many epubs, max is %d", MAX_EPUB_LIST_SIZE);
+          break;
+        }
       }
       else
       {
@@ -99,43 +107,6 @@ bool EpubList::load(const char *path)
   }
   state->is_loaded = true;
   return true;
-}
-
-void EpubList::dehydrate()
-{
-  ESP_LOGI(TAG, "Dehydrating epub list");
-  FILE *fp = fopen("/fs/.epublist", "w");
-  if (fp)
-  {
-    int written = fwrite(state, sizeof(EpubListState), 1, fp);
-    if (written == 0)
-    {
-      ESP_LOGI(TAG, "Failed to write epub list state - trying again");
-      // try again?
-      written = fwrite(state, sizeof(EpubListState), 1, fp);
-    }
-    fclose(fp);
-    ESP_LOGI(TAG, "Dehydrated epub list %d", written);
-  }
-  else
-  {
-    ESP_LOGE(TAG, "Failed to dehydrate epub list");
-  }
-}
-
-bool EpubList::hydrate()
-{
-  ESP_LOGI(TAG, "Hydrating epub list");
-  FILE *fp = fopen("/fs/.epublist", "r");
-  if (fp)
-  {
-    int read = fread(state, sizeof(EpubListState), 1, fp);
-    fclose(fp);
-    ESP_LOGI(TAG, "Hydrated epub list %d", read);
-    return true;
-  }
-  ESP_LOGE(TAG, "Failed to hydrate");
-  return false;
 }
 
 void EpubList::render()
