@@ -16,6 +16,9 @@ private:
 
 protected:
   int margin_top = 0;
+  int margin_bottom = 0;
+  int margin_left = 0;
+  int margin_right = 0;
 
 public:
   virtual ~Renderer();
@@ -34,8 +37,11 @@ public:
   virtual int get_page_height() = 0;
   virtual int get_space_width() = 0;
   virtual int get_line_height() = 0;
-  // set the top margin
+  // set margins
   void set_margin_top(int margin_top) { this->margin_top = margin_top; }
+  void set_margin_bottom(int margin_bottom) { this->margin_bottom = margin_bottom; }
+  void set_margin_left(int margin_left) { this->margin_left = margin_left; }
+  void set_margin_right(int margin_right) { this->margin_right = margin_right; }
   // deep sleep helper - persist any state to disk that may be needed on wake
   virtual void dehydrate(){};
   // deep sleep helper - retrieve any state from disk after wake

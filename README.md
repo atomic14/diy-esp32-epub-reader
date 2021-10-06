@@ -174,6 +174,10 @@ The code will go to sleep after 30 seconds of inactivity. The current state of t
 
 For wake up there are two options, ULP for buttons that are active low and EXT1 for buttons that are active high. I've got a good video on deep sleep here if you are interested in this kind of thing: [ESP32 Deep Dive into Deep Sleep](https://www.youtube.com/watch?v=YOjgZUg_skU)
 
+## Fonts
+
+You can generate different fonts by modifying the code in `scripts/generate_fonts.sh` this is a slightly modified script from the [epdiy](https://github.com/vroland/epdiy) repository that lets you output the font data in only two colors which lets us update the screen considerably faster.
+
 # How well does it work?
 
 Surprisingly, it works pretty well. Layout is reasonable, but there are a lot of improvements that could be made. The code makes no attempt to break pages at suitable places - there are hints that can be extracted from the XHTML files and there are also CSS files that could be used.

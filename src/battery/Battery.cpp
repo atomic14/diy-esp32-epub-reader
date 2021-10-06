@@ -17,10 +17,9 @@ float Battery::get_voltage()
   return voltage;
 }
 
-// see here for inspiration: https://github.com/G6EJD/ESP32-e-Paper-Weather-Display/issues/146
 float Battery::get_percentage()
 {
-  auto voltage = get_voltage();
+  auto voltage = get_voltage() / 1000.0f;
   if (voltage >= 4.20)
   {
     return 100;
@@ -29,5 +28,6 @@ float Battery::get_percentage()
   {
     return 0;
   }
+  // see here for inspiration: https://github.com/G6EJD/ESP32-e-Paper-Weather-Display/issues/146
   return 2836.9625 * pow(voltage, 4) - 43987.4889 * pow(voltage, 3) + 255233.8134 * pow(voltage, 2) - 656689.7123 * voltage + 632041.7303;
 }

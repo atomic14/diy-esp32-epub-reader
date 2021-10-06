@@ -134,7 +134,7 @@ void handleUserInteraction(Renderer *renderer, UIAction ui_action)
 }
 
 // TODO - add the battery level
-void draw_battery_level(Renderer *renderer, float percentage)
+void draw_battery_level(Renderer *renderer, float voltage, float percentage)
 {
   // clear the margin so we can draw the battery in the right place
   renderer->set_margin_top(0);
@@ -148,7 +148,7 @@ void draw_battery_level(Renderer *renderer, float percentage)
   renderer->fill_rect(xpos, ypos, width, height, 255);
   renderer->fill_rect(xpos + width - percent_width, ypos, percent_width, height, 0);
   renderer->draw_rect(xpos, ypos, width, height, 0);
-  renderer->fill_rect(xpos - height / 4, ypos + height / 4, height / 4, height / 2, 0);
+  renderer->fill_rect(xpos - 4, ypos + height / 4, 4, height / 2, 0);
   // put the margin back
   renderer->set_margin_top(35);
 }
@@ -172,6 +172,9 @@ void main_task(void *param)
       hourglass_height);
   // make space for the battery
   renderer->set_margin_top(35);
+  // page margins
+  renderer->set_margin_left(10);
+  renderer->set_margin_right(10);
   //Renderer *renderer = new ConsoleRenderer();
   ESP_LOGI("main", "Memory after renderer init: %d", esp_get_free_heap_size());
 #ifdef USE_SPIFFS
@@ -212,7 +215,7 @@ void main_task(void *param)
     handleUserInteraction(renderer, NONE);
   }
   // draw the battery level before flushing the screen
-  draw_battery_level(renderer, battery->get_percentage());
+  draw_battery_level(renderer, battery->get_voltage(), battery->get_percentage());
   renderer->flush_display();
 
   // configure the button inputs
@@ -228,7 +231,7 @@ void main_task(void *param)
       last_user_interaction = esp_timer_get_time();
       handleUserInteraction(renderer, ui_action);
       // draw the battery level before flushing the screen
-      draw_battery_level(renderer, battery->get_percentage());
+      draw_battery_level(renderer, battery->get_voltage(), battery->get_percentage());
       renderer->flush_display();
     }
     else
