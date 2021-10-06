@@ -25,6 +25,8 @@ L58Touch ts(CONFIG_TOUCH_INT);
 std::string eventName = "";
 auto eventX = 0;
 auto eventY = 0;
+auto lastX = 0;
+auto lastY = 0;
 bool tapFlag = false;
 // Touch UI simple buttons
 uint8_t ui_button_width = 120;
@@ -170,16 +172,19 @@ void draw_battery_level(Renderer *renderer, float voltage, float percentage)
 void draw_touch_ui(Renderer *renderer) {
   renderer->set_margin_top(0);
   uint16_t x_offset = 10;
-  renderer->fill_rect(x_offset, 1, ui_button_width, ui_button_height, 150);
-  // Maybe filled triangle will be nicer
-  renderer->draw_text(x_offset+50, -7, "^");
+  uint16_t x_triangle = x_offset+70;
+  renderer->draw_rect(x_offset, 1, ui_button_width, ui_button_height, 0);
+  renderer->draw_triangle(x_triangle, 6, x_triangle-5, 20, x_triangle+5, 20, 0);
+
   x_offset = ui_button_width + 30;
-  renderer->fill_rect(x_offset, 1, ui_button_width, ui_button_height, 150);
-  renderer->draw_text(x_offset+50, -16, "v");
+  x_triangle = x_offset+70;
+  renderer->draw_rect(x_offset, 1, ui_button_width, ui_button_height, 0);
+  renderer->draw_triangle(x_triangle, 20, x_triangle-5, 6, x_triangle+5, 6, 0);
+  
   x_offset = ui_button_width*2 + 60;
   //printf("3rd x:%d w:%d h%d\n", x_offset, ui_button_width, ui_button_height);
-  renderer->fill_rect(x_offset, 1, ui_button_width, ui_button_height, 100);
-  renderer->fill_rect(x_offset+(ui_button_width/2)-2, 15, 10, 10, 50);
+  renderer->draw_rect(x_offset, 1, ui_button_width, ui_button_height, 0);
+  renderer->fill_circle(x_offset+(ui_button_width/2)+9, 15, 5, 0);
   renderer->set_margin_top(35);
 }
 
@@ -266,21 +271,24 @@ void main_task(void *param)
 
     #ifdef USE_TOUCH
       // Touch event detected: Override ui_action
-      if (tapFlag) {
-        //printf("Tap X:%d Y:%d\n", eventX, eventY);
-        if (eventX>=10 && eventX<=10+ui_button_width && eventY<40) {
+      if (tapFlag && !(lastX==eventX && lastY==eventY)) {
+        // Note: Not always works overriding the ui_action here although Tap is detected fine
+        if (eventX>=10 && eventX<=10+ui_button_width && eventY<60) {
            ui_action = UP;
-        } else if (eventX>=150 && eventX<=150+ui_button_width && eventY<40) {
+        } else if (eventX>=150 && eventX<=150+ui_button_width && eventY<60) {
            ui_action = DOWN;
-        } else if (eventX>=300 && eventX<=300+ui_button_width && eventY<40) {
+        } else if (eventX>=300 && eventX<=300+ui_button_width && eventY<60) {
            ui_action = SELECT;
-        } 
+        }
+        printf("Tap X:%d Y:%d Action:%d\n", eventX, eventY, ui_action);
+        // Avoid repeated touchs FIX this to make it better
+        lastX = eventX;
+        lastY = eventY;
         tapFlag = false;
-        vTaskDelay(pdMS_TO_TICKS(100));
       }
-    #endif
+    #endif 
 
-    if (ui_action != NONE)
+      if (ui_action != NONE)
     {
       last_user_interaction = esp_timer_get_time();
       handleUserInteraction(renderer, ui_action);
@@ -294,6 +302,7 @@ void main_task(void *param)
       // wait for the user to do something
       vTaskDelay(pdMS_TO_TICKS(50));
     }
+    
   }
 
   ESP_LOGI("main", "Saving state");
@@ -322,7 +331,7 @@ void touchEvent(TPoint p, TEvent e)
   eventX = p.x;
   eventY = p.y;
   tapFlag = true;
-  printf("T x:%d y:%d\n",p.x,p.y);
+  //printf("T x:%d y:%d\n",p.x,p.y);
   }
 }
 
