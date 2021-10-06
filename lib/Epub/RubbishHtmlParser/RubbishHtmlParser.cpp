@@ -39,7 +39,7 @@ const int NUM_ITALIC_TAGS = sizeof(ITALIC_TAGS) / sizeof(ITALIC_TAGS[0]);
 const char *IMAGE_TAGS[] = {"img"};
 const int NUM_IMAGE_TAGS = sizeof(IMAGE_TAGS) / sizeof(IMAGE_TAGS[0]);
 
-const char *SKIP_TAGS[] = {"head"};
+const char *SKIP_TAGS[] = {"head", "table"};
 const int NUM_SKIP_TAGS = sizeof(SKIP_TAGS) / sizeof(SKIP_TAGS[0]);
 
 // given the start and end of a tag, check to see if it matches a known tag
