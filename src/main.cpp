@@ -22,6 +22,10 @@
 
 // INTGPIO is touch interrupt, goes HI when it detects a touch, which coordinates are read by I2C
 L58Touch ts(CONFIG_TOUCH_INT);
+std::string eventName = "";
+auto eventX = 0;
+auto eventY = 0;
+bool tapFlag = false;
 
 extern "C"
 {
@@ -93,6 +97,8 @@ void handleEpubList(Renderer *renderer, UIAction action)
       ESP_LOGI("main", "Epub files loaded");
     }
   }
+
+  
   // work out what the user wante us to do
   switch (action)
   {
@@ -125,6 +131,7 @@ void handleEpubList(Renderer *renderer, UIAction action)
 
 void handleUserInteraction(Renderer *renderer, UIAction ui_action)
 {
+
   switch (ui_state)
   {
   case READING_EPUB:
@@ -179,6 +186,9 @@ void main_task(void *param)
   // page margins
   renderer->set_margin_left(10);
   renderer->set_margin_right(10);
+  #ifdef USE_TOUCH
+    renderer->set_margin_bottom(20);
+  #endif
   //Renderer *renderer = new ConsoleRenderer();
   ESP_LOGI("main", "Memory after renderer init: %d", esp_get_free_heap_size());
 #ifdef USE_SPIFFS
@@ -224,12 +234,24 @@ void main_task(void *param)
 
   // configure the button inputs
   controls->setup_inputs();
+
+
   // keep track of when the user last interacted and go to sleep after 30 seconds
   int64_t last_user_interaction = esp_timer_get_time();
-  while (esp_timer_get_time() - last_user_interaction < 30 * 1000 * 1000)
+  while (esp_timer_get_time() - last_user_interaction < 120 * 1000 * 1000)
   {
     // check for user interaction
     UIAction ui_action = controls->get_action();
+
+    #ifdef USE_TOUCH
+      // Touch event detected: Override ui_action
+      if (tapFlag) {
+        printf("Tap X:%d Y:%d\n", eventX, eventY);
+        ui_action = SELECT;
+        tapFlag = false;
+      }
+    #endif
+
     if (ui_action != NONE)
     {
       last_user_interaction = esp_timer_get_time();
@@ -264,36 +286,25 @@ void main_task(void *param)
   esp_deep_sleep_start();
 }
 
-uint16_t t_counter = 0;
 
 void touchEvent(TPoint p, TEvent e)
 {
-  #if defined(CONFIG_FT6X36_DEBUG) && CONFIG_FT6X36_DEBUG==1
-    ++t_counter;
-    ets_printf("e %x %d  ",e,t_counter); // Working
-  #endif
-
-  std::string eventName = "";
-  switch (e)
-  {
-  case TEvent::Tap:
-    eventName = "tap";
-    break;
-  
-  default:
-    eventName = "UNKNOWN";
-    break;
+  if (e == TEvent::Tap) {
+  eventX = p.x;
+  eventY = p.y;
+  tapFlag = true;
   }
-
-  printf("X: %d Y: %d E: %s\n", p.x, p.y, eventName.c_str());
 }
 
 void app_main()
 {
-  // Instantiate touch. Important pass here the 3 required variables including display width and height
-  ts.begin(EPD_WIDTH, EPD_HEIGHT);
-  ts.setRotation(1);
-  ts.registerTouchHandler(touchEvent);
+  #ifdef USE_TOUCH
+    /** Instantiate touch. Important inject here the display width and height size in pixels
+        setRotation(1)     90 degrees rotated: Portrait mode */
+    ts.begin(EPD_WIDTH, EPD_HEIGHT);
+    ts.setRotation(1);
+    ts.registerTouchHandler(touchEvent);
+  #endif
 
   ESP_LOGI("main", "Memory before main task start %d", esp_get_free_heap_size());
   xTaskCreatePinnedToCore(main_task, "main_task", 32768, NULL, 1, NULL, 1);
