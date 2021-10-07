@@ -39,7 +39,7 @@ const int NUM_ITALIC_TAGS = sizeof(ITALIC_TAGS) / sizeof(ITALIC_TAGS[0]);
 const char *IMAGE_TAGS[] = {"img"};
 const int NUM_IMAGE_TAGS = sizeof(IMAGE_TAGS) / sizeof(IMAGE_TAGS[0]);
 
-const char *SKIP_TAGS[] = {"head"};
+const char *SKIP_TAGS[] = {"head", "table"};
 const int NUM_SKIP_TAGS = sizeof(SKIP_TAGS) / sizeof(SKIP_TAGS[0]);
 
 // given the start and end of a tag, check to see if it matches a known tag
@@ -79,6 +79,7 @@ bool RubbishHtmlParser::VisitEnter(const tinyxml2::XMLElement &element, const ti
     if (src)
     {
       // don't leave an empty text block in the list
+      BLOCK_STYLE style = currentTextBlock->get_style();
       if (currentTextBlock->is_empty())
       {
         blocks.pop_back();
@@ -86,8 +87,8 @@ bool RubbishHtmlParser::VisitEnter(const tinyxml2::XMLElement &element, const ti
         currentTextBlock = nullptr;
       }
       blocks.push_back(new ImageBlock(m_base_path + src));
-      // start a new text block
-      startNewTextBlock();
+      // start a new text block - with the same style as before
+      startNewTextBlock(style);
     }
     else
     {
@@ -101,11 +102,18 @@ bool RubbishHtmlParser::VisitEnter(const tinyxml2::XMLElement &element, const ti
   else if (matches(tag_name, HEADER_TAGS, NUM_HEADER_TAGS))
   {
     is_bold = true;
-    startNewTextBlock();
+    startNewTextBlock(CENTER_ALIGN);
   }
   else if (matches(tag_name, BLOCK_TAGS, NUM_BLOCK_TAGS))
   {
-    startNewTextBlock();
+    if (strcmp(tag_name, "br") == 0)
+    {
+      startNewTextBlock(currentTextBlock->get_style());
+    }
+    else
+    {
+      startNewTextBlock(JUSTIFIED);
+    }
   }
   else if (matches(tag_name, BOLD_TAGS, NUM_BOLD_TAGS))
   {
@@ -129,11 +137,10 @@ bool RubbishHtmlParser::VisitExit(const tinyxml2::XMLElement &element)
   if (matches(tag_name, HEADER_TAGS, NUM_HEADER_TAGS))
   {
     is_bold = false;
-    startNewTextBlock();
   }
   else if (matches(tag_name, BLOCK_TAGS, NUM_BLOCK_TAGS))
   {
-    startNewTextBlock();
+    // nothing to do
   }
   else if (matches(tag_name, BOLD_TAGS, NUM_BOLD_TAGS))
   {
@@ -147,22 +154,28 @@ bool RubbishHtmlParser::VisitExit(const tinyxml2::XMLElement &element)
 }
 
 // start a new text block if needed
-void RubbishHtmlParser::startNewTextBlock()
+void RubbishHtmlParser::startNewTextBlock(BLOCK_STYLE style)
 {
-  if (!currentTextBlock || !currentTextBlock->is_empty())
+  if (currentTextBlock)
   {
-    if (currentTextBlock)
+    // already have a text block running and it is empty - just reuse it
+    if (currentTextBlock->is_empty())
+    {
+      currentTextBlock->set_style(style);
+      return;
+    }
+    else
     {
       currentTextBlock->finish();
     }
-    currentTextBlock = new TextBlock();
-    blocks.push_back(currentTextBlock);
   }
+  currentTextBlock = new TextBlock(style);
+  blocks.push_back(currentTextBlock);
 }
 
 void RubbishHtmlParser::parse(const char *html, int length)
 {
-  startNewTextBlock();
+  startNewTextBlock(JUSTIFIED);
   tinyxml2::XMLDocument doc(false, tinyxml2::COLLAPSE_WHITESPACE);
   doc.Parse(html, length);
   doc.Accept(this);
@@ -208,8 +221,8 @@ void RubbishHtmlParser::layout(Renderer *renderer, Epub *epub)
         pages.back()->elements.push_back(new PageLine(textBlock, line_break_index, y));
         y += line_height;
       }
-      // add an extra line between blocks
-      y += line_height;
+      // add some extra line between blocks
+      y += line_height * 0.5;
     }
     if (block->getType() == BlockType::IMAGE_BLOCK)
     {

@@ -28,7 +28,7 @@ public:
   {
     return m_src.empty();
   }
-  void layout(Renderer *renderer, Epub *epub)
+  void layout(Renderer *renderer, Epub *epub, int max_width = -1)
   {
     size_t image_data_size = 0;
     uint8_t *image_data = epub->get_item_contents(m_src, &image_data_size);
@@ -36,7 +36,7 @@ public:
     if (width > renderer->get_page_width() || height > renderer->get_page_height())
     {
       float scale = std::min(
-          float(renderer->get_page_width()) / float(width),
+          float(max_width != -1 ? max_width : renderer->get_page_width()) / float(width),
           float(renderer->get_page_height()) / float(height));
       width *= scale;
       height *= scale;

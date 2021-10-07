@@ -12,7 +12,7 @@ private:
   ImageHelper *png_helper = nullptr;
   ImageHelper *jpeg_helper = nullptr;
 
-  ImageHelper *get_image_helper(const std::string &filename);
+  ImageHelper *get_image_helper(const std::string &filename, const uint8_t *data, size_t data_size);
 
 protected:
   int margin_top = 0;

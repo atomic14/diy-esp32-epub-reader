@@ -1,6 +1,7 @@
 #include "Renderer.h"
 #include "JPEGHelper.h"
 #include "PNGHelper.h"
+#include <esp_log.h>
 
 Renderer::~Renderer()
 {
@@ -8,10 +9,11 @@ Renderer::~Renderer()
   delete jpeg_helper;
 }
 
-ImageHelper *Renderer::get_image_helper(const std::string &filename)
+ImageHelper *Renderer::get_image_helper(const std::string &filename, const uint8_t *data, size_t data_size)
 {
   if (filename.find(".jpg") != std::string::npos ||
-      filename.find(".jpeg") != std::string::npos)
+      filename.find(".jpeg") != std::string::npos ||
+      (data_size > 3 && data[0] == 0xFF && data[1] == 0xD8 && data[2] == 0xFF))
   {
     if (!jpeg_helper)
     {
@@ -19,7 +21,7 @@ ImageHelper *Renderer::get_image_helper(const std::string &filename)
     }
     return jpeg_helper;
   }
-  if (filename.find(".png") != std::string::npos)
+  if ((filename.find(".png") != std::string::npos) || (data_size > 4 && data[0] == 0x89 && data[1] == 'P' && data[2] == 'N' && data[3] == 'G'))
   {
     if (!png_helper)
     {
@@ -32,7 +34,7 @@ ImageHelper *Renderer::get_image_helper(const std::string &filename)
 
 void Renderer::draw_image(const std::string &filename, const uint8_t *data, size_t data_size, int x, int y, int width, int height)
 {
-  ImageHelper *helper = get_image_helper(filename);
+  ImageHelper *helper = get_image_helper(filename, data, data_size);
   if (!helper ||
       !helper->render(data, data_size, this, x, y, width, height))
   {
@@ -43,7 +45,7 @@ void Renderer::draw_image(const std::string &filename, const uint8_t *data, size
 
 bool Renderer::get_image_size(const std::string &filename, const uint8_t *data, size_t data_size, int *width, int *height)
 {
-  ImageHelper *helper = get_image_helper(filename);
+  ImageHelper *helper = get_image_helper(filename, data, data_size);
   if (helper && helper->get_size(data, data_size, width, height))
   {
     return true;
