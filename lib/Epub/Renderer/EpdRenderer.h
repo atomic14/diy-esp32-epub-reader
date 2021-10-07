@@ -122,6 +122,10 @@ public:
     needs_gray(color);
     epd_fill_circle(x, y, r, color, m_frame_buffer);
   }
+  virtual void fill_triangle(int x0, int y0, int x1, int y1, int x2, int y2, uint8_t color) {
+    needs_gray(color);
+    epd_fill_triangle(x0, y0, x1, y1, x2, y2, color, m_frame_buffer);
+  }
   virtual void draw_triangle(int x0, int y0, int x1, int y1, int x2, int y2, uint8_t color) {
     needs_gray(color);
     epd_draw_triangle(x0, y0, x1, y1, x2, y2, color, m_frame_buffer);
@@ -131,6 +135,10 @@ public:
     uint8_t corrected_color = gamma_curve[color];
     needs_gray(corrected_color);
     epd_draw_pixel(x + margin_left, y + margin_top, corrected_color, m_frame_buffer);
+  }
+  virtual void draw_circle(int x, int y, int r, uint8_t color = 0) {
+    needs_gray(color);
+    epd_draw_circle(x, y, r, color, m_frame_buffer);
   }
   void flush_display()
   {

@@ -30,6 +30,9 @@ public:
   virtual void draw_text_box(const std::string &text, int x, int y, int width, int height, bool bold = false, bool italic = false);
   virtual void draw_rect(int x, int y, int width, int height, uint8_t color = 0) = 0;
   virtual void draw_triangle(int x0, int y0, int x1, int y1, int x2, int y2, uint8_t color) = 0;
+  virtual void draw_circle(int x, int y, int r, uint8_t color = 0) = 0;
+  
+  virtual void fill_triangle(int x0, int y0, int x1, int y1, int x2, int y2, uint8_t color) = 0;
   virtual void fill_rect(int x, int y, int width, int height, uint8_t color = 0) = 0;
   virtual void fill_circle(int x, int y, int r, uint8_t color = 0) = 0;
   virtual void needs_gray(uint8_t color) = 0;
