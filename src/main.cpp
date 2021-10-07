@@ -22,13 +22,12 @@
 
 // INTGPIO is touch interrupt, goes HI when it detects a touch, which coordinates are read by I2C
 L58Touch ts(CONFIG_TOUCH_INT);
-std::string eventName = "";
 auto eventX = 0;
 auto eventY = 0;
 auto lastX = 0;
 auto lastY = 0;
 bool tapFlag = false;
-// Touch UI simple buttons
+// Touch UI buttons (Top left and activated only when USE_TOUCH is defined)
 uint8_t ui_button_width = 120;
 uint8_t ui_button_height = 34;
 
