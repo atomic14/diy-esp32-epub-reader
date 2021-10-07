@@ -27,11 +27,16 @@ void touchHandler(TPoint p, TEvent e)
     // for now we'll just alow one touch event - we could use this to queue up taps at some point
     if (uxQueueMessagesWaiting(touchQueue) == 0)
     {
+      ESP_LOGI("TOUCH", "Queuing touch event %d,%d", p.x, p.y);
       TouchEvent event = {
           .eventX = p.x,
           .eventY = p.y,
       };
       xQueueSend(touchQueue, &event, 0);
+    }
+    else
+    {
+      ESP_LOGI("TOUCH", "Touch queue is full");
     }
   }
 }
@@ -79,15 +84,16 @@ UIAction TouchControls::get_action()
   TouchEvent event;
   if (xQueueReceive(touchQueue, &event, 0))
   {
-    if (event.eventX >= 10 && event.eventX <= 10 + ui_button_width && event.eventY < 60)
+    ESP_LOGI("TOUCH", "Received touch event %d,%d", event.eventX, event.eventY);
+    if (event.eventX >= 10 && event.eventX <= 10 + ui_button_width && event.eventY < 100)
     {
       action = DOWN;
     }
-    else if (event.eventX >= 150 && event.eventX <= 150 + ui_button_width && event.eventY < 60)
+    else if (event.eventX >= 150 && event.eventX <= 150 + ui_button_width && event.eventY < 100)
     {
       action = UP;
     }
-    else if (event.eventX >= 300 && event.eventX <= 300 + ui_button_width && event.eventY < 60)
+    else if (event.eventX >= 300 && event.eventX <= 300 + ui_button_width && event.eventY < 100)
     {
       action = SELECT;
     }
