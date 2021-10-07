@@ -1,12 +1,6 @@
 #pragma once
 
-typedef enum
-{
-  NONE,
-  UP,
-  DOWN,
-  SELECT
-} UIAction;
+#include "Actions.h"
 
 class Controls
 {

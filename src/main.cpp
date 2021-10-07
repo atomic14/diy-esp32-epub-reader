@@ -17,19 +17,15 @@
 #include <hourglass.h>
 #include "Renderer/ConsoleRenderer.h"
 #include "controls/Controls.h"
+#include "controls/TouchControls.h"
 #include "battery/Battery.h"
-#include "L58Touch.cpp"
 
-// INTGPIO is touch interrupt, goes HI when it detects a touch, which coordinates are read by I2C
-L58Touch ts(CONFIG_TOUCH_INT);
-auto eventX = 0;
-auto eventY = 0;
-auto lastX = 0;
-auto lastY = 0;
-bool tapFlag = false;
-// Touch UI buttons (Top left and activated only when USE_TOUCH is defined)
-uint8_t ui_button_width = 120;
-uint8_t ui_button_height = 34;
+// The SD Card shares the same GPIO pins as the touch controller so you must use SPIFFS
+#ifdef USE_TOUCH
+#ifndef USE_SPIFFS
+#error "USE_SPIFFS must be defined if USE_TOUCH is defined"
+#endif
+#endif
 
 extern "C"
 {
@@ -171,26 +167,6 @@ void draw_battery_level(Renderer *renderer, float voltage, float percentage)
   renderer->set_margin_top(35);
 }
 
-void draw_touch_ui(Renderer *renderer) {
-  renderer->set_margin_top(0);
-  uint16_t x_offset = 10;
-  uint16_t x_triangle = x_offset+70;
-  // DOWN
-  renderer->draw_rect(x_offset, 1, ui_button_width, ui_button_height, 0);
-  renderer->draw_triangle(x_triangle, 20, x_triangle-5, 6, x_triangle+5, 6, 0);
-  // UP
-  x_offset = ui_button_width + 30;
-  x_triangle = x_offset+70;
-  renderer->draw_rect(x_offset, 1, ui_button_width, ui_button_height, 0);
-  renderer->draw_triangle(x_triangle, 6, x_triangle-5, 20, x_triangle+5, 20, 0);
-  // SELECT
-  x_offset = ui_button_width*2 + 60;
-  renderer->draw_rect(x_offset, 1, ui_button_width, ui_button_height, 0);
-  renderer->fill_circle(x_offset+(ui_button_width/2)+9, 15, 5, 0);
-  renderer->set_margin_top(35);
-  //printf("3rd x:%d w:%d h%d\n", x_offset, ui_button_width, ui_button_height);
-}
-
 void main_task(void *param)
 {
   // dump out the epub list state
@@ -231,8 +207,10 @@ void main_task(void *param)
 #endif
   ESP_LOGI("main", "Memory after sdcard init: %d", esp_get_free_heap_size());
   // set the controls up
+  ESP_LOGI("main", "Setting up controls");
   Controls *controls = new Controls(BUTTON_UP_GPIO_NUM, BUTTON_DOWN_GPIO_NUM, BUTTON_SELECT_GPIO_NUM, 0);
-
+  TouchControls *touch_controls = new TouchControls(EPD_WIDTH, EPD_HEIGHT, 3);
+  ESP_LOGI("main", "Controls configured");
   // work out if we were woken from deep sleep
   if (controls->did_wake_from_deep_sleep())
   {
@@ -250,14 +228,11 @@ void main_task(void *param)
   }
   // draw the battery level before flushing the screen
   draw_battery_level(renderer, battery->get_voltage(), battery->get_percentage());
-  #ifdef USE_TOUCH
-    draw_touch_ui(renderer);
-  #endif
+  touch_controls->render(renderer);
   renderer->flush_display();
 
   // configure the button inputs
   controls->setup_inputs();
-
 
   // keep track of when the user last interacted and go to sleep after 30 seconds
   int64_t last_user_interaction = esp_timer_get_time();
@@ -265,35 +240,18 @@ void main_task(void *param)
   {
     // check for user interaction
     UIAction ui_action = controls->get_action();
+    if (ui_action == NONE)
+    {
+      ui_action = touch_controls->get_action();
+    }
 
-    #ifdef USE_TOUCH
-      // Touch event detected: Override ui_action
-      if (tapFlag && !(lastX==eventX && lastY==eventY)) {
-        // Note: Not always works overriding the ui_action here although Tap is detected fine
-        if (eventX>=10 && eventX<=10+ui_button_width && eventY<60) {
-           ui_action = DOWN;
-        } else if (eventX>=150 && eventX<=150+ui_button_width && eventY<60) {
-           ui_action = UP;
-        } else if (eventX>=300 && eventX<=300+ui_button_width && eventY<60) {
-           ui_action = SELECT;
-        }
-        printf("Tap X:%d Y:%d Action:%d\n", eventX, eventY, ui_action);
-        // Avoid repeated touchs FIX this to make it better
-        lastX = eventX;
-        lastY = eventY;
-        tapFlag = false;
-      }
-    #endif 
-
-      if (ui_action != NONE)
+    if (ui_action != NONE)
     {
       last_user_interaction = esp_timer_get_time();
       handleUserInteraction(renderer, ui_action);
       // draw the battery level before flushing the screen
       draw_battery_level(renderer, battery->get_voltage(), battery->get_percentage());
-      #ifdef USE_TOUCH
-        draw_touch_ui(renderer);
-      #endif
+      touch_controls->render(renderer);
       renderer->flush_display();
     }
     else
@@ -321,30 +279,12 @@ void main_task(void *param)
   esp_deep_sleep_start();
 }
 
-
-void touchEvent(TPoint p, TEvent e)
-{
-  if (e == TEvent::Tap) {
-  eventX = p.x;
-  eventY = p.y;
-  tapFlag = true;
-  }
-}
-
 void app_main()
 {
-  #ifdef USE_TOUCH
-    /** Instantiate touch. Important inject here the display width and height size in pixels
-        setRotation(3)     Portrait mode */
-    ts.begin(EPD_WIDTH, EPD_HEIGHT);
-    ts.setRotation(3);
-    ts.registerTouchHandler(touchEvent);
-  #endif
-
   ESP_LOGI("main", "Memory before main task start %d", esp_get_free_heap_size());
   xTaskCreatePinnedToCore(main_task, "main_task", 32768, NULL, 1, NULL, 1);
-  
-  for (;;) {
-    ts.loop();
+  while (true)
+  {
+    vTaskDelay(pdMS_TO_TICKS(1000));
   }
 }
