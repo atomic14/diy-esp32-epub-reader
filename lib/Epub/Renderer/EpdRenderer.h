@@ -86,6 +86,14 @@ public:
     needs_gray_flush = true;
     flush_display();
   }
+
+  void needs_gray(uint8_t color) {
+    if (color != 0 && color != 255)
+    {
+      needs_gray_flush = true;
+    }
+  }
+
   int get_text_width(const char *text, bool bold = false, bool italic = false)
   {
     int x = 0, y = 0, x1 = 0, y1 = 0, x2 = 0, y2 = 0;
@@ -102,28 +110,35 @@ public:
   }
   void draw_rect(int x, int y, int width, int height, uint8_t color = 0)
   {
-    if (color != 0 && color != 255)
-    {
-      needs_gray_flush = true;
-    }
+    needs_gray(color);
     epd_draw_rect({.x = x + margin_left, .y = y + margin_top, .width = width, .height = height}, color, m_frame_buffer);
   }
   virtual void fill_rect(int x, int y, int width, int height, uint8_t color = 0)
   {
-    if (color != 0 && color != 255)
-    {
-      needs_gray_flush = true;
-    }
+    needs_gray(color);
     epd_fill_rect({.x = x + margin_left, .y = y + margin_top, .width = width, .height = height}, color, m_frame_buffer);
+  }
+  virtual void fill_circle(int x, int y, int r, uint8_t color = 0) {
+    needs_gray(color);
+    epd_fill_circle(x, y, r, color, m_frame_buffer);
+  }
+  virtual void fill_triangle(int x0, int y0, int x1, int y1, int x2, int y2, uint8_t color) {
+    needs_gray(color);
+    epd_fill_triangle(x0, y0, x1, y1, x2, y2, color, m_frame_buffer);
+  }
+  virtual void draw_triangle(int x0, int y0, int x1, int y1, int x2, int y2, uint8_t color) {
+    needs_gray(color);
+    epd_draw_triangle(x0, y0, x1, y1, x2, y2, color, m_frame_buffer);
   }
   virtual void draw_pixel(int x, int y, uint8_t color)
   {
     uint8_t corrected_color = gamma_curve[color];
-    if (corrected_color != 0 && corrected_color != 255)
-    {
-      needs_gray_flush = true;
-    }
+    needs_gray(corrected_color);
     epd_draw_pixel(x + margin_left, y + margin_top, corrected_color, m_frame_buffer);
+  }
+  virtual void draw_circle(int x, int y, int r, uint8_t color = 0) {
+    needs_gray(color);
+    epd_draw_circle(x, y, r, color, m_frame_buffer);
   }
   void flush_display()
   {

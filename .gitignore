@@ -5,3 +5,4 @@
 .vscode/ipch
 venv
 .DS_Store
+build
