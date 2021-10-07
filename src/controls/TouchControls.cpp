@@ -2,6 +2,12 @@
 #include "TouchControls.h"
 #include <Renderer/Renderer.h>
 
+typedef struct
+{
+  int eventX;
+  int eventY;
+} TouchEvent;
+
 void touchTask(void *param)
 {
   TouchControls *controls = (TouchControls *)param;
@@ -12,29 +18,34 @@ void touchTask(void *param)
   }
 }
 
-// this is a bit of a nasty hack
-static TouchControls *instance = nullptr;
+QueueHandle_t touchQueue = nullptr;
 
 void touchHandler(TPoint p, TEvent e)
 {
-  if (e == TEvent::Tap && instance)
+  if (e == TEvent::Tap && touchQueue)
   {
-    instance->eventX = p.x;
-    instance->eventY = p.y;
-    instance->tapFlag = true;
+    // for now we'll just alow one touch event - we could use this to queue up taps at some point
+    if (uxQueueMessagesWaiting(touchQueue) == 0)
+    {
+      TouchEvent event = {
+          .eventX = p.x,
+          .eventY = p.y,
+      };
+      xQueueSend(touchQueue, &event, 0);
+    }
   }
 }
 
 TouchControls::TouchControls(int width, int height, int rotation)
 {
 #ifdef USE_TOUCH
-  instance = this;
   this->ts = new L58Touch(CONFIG_TOUCH_INT);
   /** Instantiate touch. Important inject here the display width and height size in pixels
         setRotation(3)     Portrait mode */
   ts->begin(width, height);
   ts->setRotation(rotation);
   ts->registerTouchHandler(touchHandler);
+  touchQueue = xQueueCreate(1, sizeof(TouchEvent));
   xTaskCreate(touchTask, "touchTask", 4096, this, 0, NULL);
 #endif
 }
@@ -65,27 +76,22 @@ UIAction TouchControls::get_action()
 {
   UIAction action = NONE;
 #ifdef USE_TOUCH
-  // Touch event detected: Override ui_action
-  if (tapFlag && !(lastX == eventX && lastY == eventY))
+  TouchEvent event;
+  if (xQueueReceive(touchQueue, &event, 0))
   {
-    // Note: Not always works overriding the ui_action here although Tap is detected fine
-    if (eventX >= 10 && eventX <= 10 + ui_button_width && eventY < 60)
+    if (event.eventX >= 10 && event.eventX <= 10 + ui_button_width && event.eventY < 60)
     {
       action = DOWN;
     }
-    else if (eventX >= 150 && eventX <= 150 + ui_button_width && eventY < 60)
+    else if (event.eventX >= 150 && event.eventX <= 150 + ui_button_width && event.eventY < 60)
     {
       action = UP;
     }
-    else if (eventX >= 300 && eventX <= 300 + ui_button_width && eventY < 60)
+    else if (event.eventX >= 300 && event.eventX <= 300 + ui_button_width && event.eventY < 60)
     {
       action = SELECT;
     }
   }
-  // Avoid repeated touchs FIX this to make it better
-  lastX = eventX;
-  lastY = eventY;
-  tapFlag = false;
 #endif
   return action;
 }
