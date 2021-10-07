@@ -107,8 +107,6 @@ void handleEpubList(Renderer *renderer, UIAction action)
       ESP_LOGI("main", "Epub files loaded");
     }
   }
-
-  
   // work out what the user wante us to do
   switch (action)
   {
@@ -141,7 +139,6 @@ void handleEpubList(Renderer *renderer, UIAction action)
 
 void handleUserInteraction(Renderer *renderer, UIAction ui_action)
 {
-
   switch (ui_state)
   {
   case READING_EPUB:
@@ -221,11 +218,7 @@ void main_task(void *param)
   // page margins
   renderer->set_margin_left(10);
   renderer->set_margin_right(10);
-  #ifdef USE_TOUCH
-    renderer->set_margin_bottom(30);
-  #endif
 
-  //Renderer *renderer = new ConsoleRenderer();
   ESP_LOGI("main", "Memory after renderer init: %d", esp_get_free_heap_size());
 #ifdef USE_SPIFFS
   ESP_LOGI("main", "Using SPIFFS");
@@ -308,7 +301,6 @@ void main_task(void *param)
       // wait for the user to do something
       vTaskDelay(pdMS_TO_TICKS(50));
     }
-    
   }
 
   ESP_LOGI("main", "Saving state");
@@ -336,7 +328,6 @@ void touchEvent(TPoint p, TEvent e)
   eventX = p.x;
   eventY = p.y;
   tapFlag = true;
-  //printf("T x:%d y:%d\n",p.x,p.y);
   }
 }
 
