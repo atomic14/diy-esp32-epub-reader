@@ -1,7 +1,6 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <esp_sleep.h>
-#include <esp_log.h>
 #include "config.h"
 #include "SDCard.h"
 #include "SPIFFS.h"
@@ -19,7 +18,13 @@
 #include "controls/Controls.h"
 #include "controls/TouchControls.h"
 #include "battery/Battery.h"
-
+#ifdef LOG_ENABLED
+  // Reference: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/log.html
+  #define LOG_LOCAL_LEVEL ESP_LOG_INFO
+  #else
+  #define LOG_LOCAL_LEVEL ESP_LOG_NONE
+#endif
+#include <esp_log.h>
 // The SD Card shares the same GPIO pins as the touch controller so you must use SPIFFS
 #ifdef USE_TOUCH
 #ifndef USE_SPIFFS
@@ -281,6 +286,13 @@ void main_task(void *param)
 
 void app_main()
 {
+  // Logging control
+  esp_log_level_set("main", LOG_LOCAL_LEVEL);
+  esp_log_level_set("EPUB", LOG_LOCAL_LEVEL);
+  esp_log_level_set("PUBLIST", LOG_LOCAL_LEVEL);
+  esp_log_level_set("ZIP", LOG_LOCAL_LEVEL);
+  esp_log_level_set("JPG", LOG_LOCAL_LEVEL);
+  esp_log_level_set("TOUCH", LOG_LOCAL_LEVEL);
   ESP_LOGI("main", "Memory before main task start %d", esp_get_free_heap_size());
   xTaskCreatePinnedToCore(main_task, "main_task", 32768, NULL, 1, NULL, 1);
   while (true)

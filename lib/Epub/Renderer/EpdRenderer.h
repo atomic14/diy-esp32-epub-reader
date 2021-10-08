@@ -147,7 +147,6 @@ public:
   }
   void flush_area(EpdRect area)
   {
-    printf("flush_area call");
     epd_hl_update_area(&m_hl, MODE_DU, temperature, area);
   }
 
