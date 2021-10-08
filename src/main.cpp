@@ -19,10 +19,10 @@
 #include "controls/TouchControls.h"
 #include "battery/Battery.h"
 #ifdef LOG_ENABLED
-  // Reference: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/log.html
-  #define LOG_LOCAL_LEVEL ESP_LOG_INFO
-  #else
-  #define LOG_LOCAL_LEVEL ESP_LOG_NONE
+// Reference: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/log.html
+#define LOG_LOCAL_LEVEL ESP_LOG_INFO
+#else
+#define LOG_LOCAL_LEVEL ESP_LOG_NONE
 #endif
 #include <esp_log.h>
 // The SD Card shares the same GPIO pins as the touch controller so you must use SPIFFS
@@ -248,6 +248,10 @@ void main_task(void *param)
     if (ui_action == NONE)
     {
       ui_action = touch_controls->get_action(renderer);
+    }
+    else
+    {
+      ESP_LOGI("main", "User action %d", ui_action);
     }
 
     if (ui_action != NONE)

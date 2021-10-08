@@ -76,11 +76,10 @@ public:
   void show_busy()
   {
     EpdRect image_area = {.x = (EPD_HEIGHT - m_busy_image_width) / 2,
-         .y = (EPD_WIDTH - m_busy_image_height) / 2,
-         // don't forget we're rotated...
-         .width = m_busy_image_width,
-         .height = m_busy_image_height
-    };
+                          .y = (EPD_WIDTH - m_busy_image_height) / 2,
+                          // don't forget we're rotated...
+                          .width = m_busy_image_width,
+                          .height = m_busy_image_height};
     epd_draw_rotated_transparent_image(
         image_area,
         m_busy_image, m_frame_buffer,
@@ -89,7 +88,8 @@ public:
     flush_area(image_area);
   }
 
-  void needs_gray(uint8_t color) {
+  void needs_gray(uint8_t color)
+  {
     if (color != 0 && color != 255)
     {
       needs_gray_flush = true;
@@ -120,15 +120,18 @@ public:
     needs_gray(color);
     epd_fill_rect({.x = x + margin_left, .y = y + margin_top, .width = width, .height = height}, color, m_frame_buffer);
   }
-  virtual void fill_circle(int x, int y, int r, uint8_t color = 0) {
+  virtual void fill_circle(int x, int y, int r, uint8_t color = 0)
+  {
     needs_gray(color);
     epd_fill_circle(x, y, r, color, m_frame_buffer);
   }
-  virtual void fill_triangle(int x0, int y0, int x1, int y1, int x2, int y2, uint8_t color) {
+  virtual void fill_triangle(int x0, int y0, int x1, int y1, int x2, int y2, uint8_t color)
+  {
     needs_gray(color);
     epd_fill_triangle(x0, y0, x1, y1, x2, y2, color, m_frame_buffer);
   }
-  virtual void draw_triangle(int x0, int y0, int x1, int y1, int x2, int y2, uint8_t color) {
+  virtual void draw_triangle(int x0, int y0, int x1, int y1, int x2, int y2, uint8_t color)
+  {
     needs_gray(color);
     epd_draw_triangle(x0, y0, x1, y1, x2, y2, color, m_frame_buffer);
   }
@@ -138,7 +141,8 @@ public:
     needs_gray(corrected_color);
     epd_draw_pixel(x + margin_left, y + margin_top, corrected_color, m_frame_buffer);
   }
-  virtual void draw_circle(int x, int y, int r, uint8_t color = 0) {
+  virtual void draw_circle(int x, int y, int r, uint8_t color = 0)
+  {
     needs_gray(color);
     epd_draw_circle(x, y, r, color, m_frame_buffer);
   }
