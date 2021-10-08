@@ -95,6 +95,18 @@ We have the pins for the SD card. I've got a video on how to hack an SD Card and
 -DSD_CARD_PIN_NUM_CS=GPIO_NUM_12
 ```
 
+Optional Touch interface (Defaults to Lilygo EPD47)
+```
+  ; Touch configuration
+  -D CONFIG_TOUCH_SDA=15
+  -D CONFIG_TOUCH_SDL=14
+  -D CONFIG_TOUCH_INT=13
+  -D CONFIG_I2C_MASTER_FREQUENCY=50000
+  -D CONFIG_FT6X36_DEBUG=0
+  ; Uncomment USE_TOUCH define to activate it
+  -DUSE_TOUCH
+```
+
 And finally we have the ADC channel that the battery voltage divider is connected to:
 
 ```
