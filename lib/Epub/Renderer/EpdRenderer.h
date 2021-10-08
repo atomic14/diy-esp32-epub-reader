@@ -75,16 +75,18 @@ public:
   }
   void show_busy()
   {
-    epd_draw_rotated_transparent_image(
-        {.x = (EPD_HEIGHT - m_busy_image_width) / 2,
+    EpdRect image_area = {.x = (EPD_HEIGHT - m_busy_image_width) / 2,
          .y = (EPD_WIDTH - m_busy_image_height) / 2,
          // don't forget we're rotated...
          .width = m_busy_image_width,
-         .height = m_busy_image_height},
+         .height = m_busy_image_height
+    };
+    epd_draw_rotated_transparent_image(
+        image_area,
         m_busy_image, m_frame_buffer,
         0xE0);
     needs_gray_flush = true;
-    flush_display();
+    flush_area(image_area);
   }
 
   void needs_gray(uint8_t color) {

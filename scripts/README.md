@@ -7,3 +7,9 @@ This assumes that you have python3 installed.
 ```
 
 On windows you will need WSL installed (windows subsystem linux).
+
+# Images
+
+The **imgconvert.py** script needs the following python module installed
+
+    pip install Pillow
