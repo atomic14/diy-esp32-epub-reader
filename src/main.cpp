@@ -242,7 +242,7 @@ void main_task(void *param)
     UIAction ui_action = controls->get_action();
     if (ui_action == NONE)
     {
-      ui_action = touch_controls->get_action();
+      ui_action = touch_controls->get_action(renderer);
     }
 
     if (ui_action != NONE)

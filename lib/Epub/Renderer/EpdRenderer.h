@@ -142,9 +142,15 @@ public:
   }
   void flush_display()
   {
-    epd_hl_update_screen(&m_hl, needs_gray_flush ? MODE_GC16 : MODE_DU, 20);
+    epd_hl_update_screen(&m_hl, needs_gray_flush ? MODE_GC16 : MODE_DU, temperature);
     needs_gray_flush = false;
   }
+  void flush_area(EpdRect area)
+  {
+    printf("flush_area call");
+    epd_hl_update_area(&m_hl, MODE_DU, temperature, area);
+  }
+
   virtual void clear_screen()
   {
     epd_hl_set_all_white(&m_hl);
@@ -237,6 +243,7 @@ public:
           else
           {
             success = true;
+            ESP_LOGI("EPD", "Success decompressing %d bytes", size);
           }
           free(compressed);
         }
@@ -247,7 +254,7 @@ public:
       }
       else
       {
-        ESP_LOGE("EPD", "No data to restor");
+        ESP_LOGE("EPD", "No data to restore");
       }
       fclose(fp);
     }
@@ -275,6 +282,6 @@ public:
   };
   virtual void reset()
   {
-    epd_fullclear(&m_hl, 20);
+    epd_fullclear(&m_hl, temperature);
   };
 };

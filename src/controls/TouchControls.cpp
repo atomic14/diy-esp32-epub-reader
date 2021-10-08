@@ -1,6 +1,7 @@
 #include "L58Touch.cpp"
 #include "TouchControls.h"
 #include <Renderer/Renderer.h>
+#include "epd_driver/include/epd_driver.h"
 
 typedef struct
 {
@@ -49,6 +50,7 @@ TouchControls::TouchControls(int width, int height, int rotation)
         setRotation(3)     Portrait mode */
   ts->begin(width, height);
   ts->setRotation(rotation);
+  ts->setTapThreshold(50);
   ts->registerTouchHandler(touchHandler);
   touchQueue = xQueueCreate(1, sizeof(TouchEvent));
   xTaskCreate(touchTask, "touchTask", 4096, this, 0, NULL);
@@ -72,12 +74,67 @@ void TouchControls::render(Renderer *renderer)
   // SELECT
   x_offset = ui_button_width * 2 + 60;
   renderer->draw_rect(x_offset, 1, ui_button_width, ui_button_height, 0);
-  renderer->fill_circle(x_offset + (ui_button_width / 2) + 9, 15, 5, 0);
+  renderer->draw_circle(x_offset + (ui_button_width / 2) + 9, 15, 5, 0);
   renderer->set_margin_top(35);
 #endif
 }
 
-UIAction TouchControls::get_action()
+void TouchControls::renderPressedState(Renderer *renderer, UIAction action, bool state) {
+  #ifdef USE_TOUCH
+  renderer->set_margin_top(0);
+  switch (action)
+  {
+  case DOWN: {
+    EpdRect box = {
+      .x = 75,
+      .y = 6,
+      .width = 10,
+      .height = 15
+    };
+    if (state) {
+      renderer->fill_triangle(80, 20, 75, 6, 85, 6, 0);
+    } else {
+      renderer->fill_triangle(81, 19, 76, 7, 86, 7, 255);
+    }
+    renderer->flush_area(box);
+    break;
+    }
+  case UP: {
+    EpdRect box = {
+      .x = 195,
+      .y = 225,
+      .width = 10,
+      .height = 15
+    };
+    if (state) {
+      renderer->fill_triangle(220, 6, 220 - 5, 20, 220 + 5, 20, 0);
+    } else {
+      renderer->fill_triangle(221, 7, 221 - 5, 19, 221 + 5, 19, 255);
+    }
+    renderer->flush_area(box);
+    }
+    break;
+  case SELECT: {
+    uint16_t x_circle = (ui_button_width * 2 + 60) + (ui_button_width / 2) + 9;
+    EpdRect box = {
+      .x = x_circle-3,
+      .y = 12,
+      .width = 6,
+      .height = 6
+    };
+    renderer->fill_circle(x_circle, 15, 5, 0);
+    renderer->flush_area(box);
+    renderPressedState(renderer, last_action, false);
+    }
+    break;
+  case NONE:
+    break;
+  }
+  renderer->set_margin_top(35);
+  #endif
+}
+
+UIAction TouchControls::get_action(Renderer *renderer)
 {
   UIAction action = NONE;
 #ifdef USE_TOUCH
@@ -88,15 +145,19 @@ UIAction TouchControls::get_action()
     if (event.eventX >= 10 && event.eventX <= 10 + ui_button_width && event.eventY < 100)
     {
       action = DOWN;
+      renderPressedState(renderer, UP, false);
     }
     else if (event.eventX >= 150 && event.eventX <= 150 + ui_button_width && event.eventY < 100)
     {
       action = UP;
+      renderPressedState(renderer, DOWN, false);
     }
     else if (event.eventX >= 300 && event.eventX <= 300 + ui_button_width && event.eventY < 100)
     {
       action = SELECT;
     }
+    renderPressedState(renderer, action);
+    last_action = action;
   }
 #endif
   return action;
