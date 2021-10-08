@@ -75,16 +75,18 @@ public:
   }
   void show_busy()
   {
-    epd_draw_rotated_transparent_image(
-        {.x = (EPD_HEIGHT - m_busy_image_width) / 2,
+    EpdRect image_area = {.x = (EPD_HEIGHT - m_busy_image_width) / 2,
          .y = (EPD_WIDTH - m_busy_image_height) / 2,
          // don't forget we're rotated...
          .width = m_busy_image_width,
-         .height = m_busy_image_height},
+         .height = m_busy_image_height
+    };
+    epd_draw_rotated_transparent_image(
+        image_area,
         m_busy_image, m_frame_buffer,
         0xE0);
     needs_gray_flush = true;
-    flush_display();
+    flush_area(image_area);
   }
 
   void needs_gray(uint8_t color) {
@@ -142,9 +144,14 @@ public:
   }
   void flush_display()
   {
-    epd_hl_update_screen(&m_hl, needs_gray_flush ? MODE_GC16 : MODE_DU, 20);
+    epd_hl_update_screen(&m_hl, needs_gray_flush ? MODE_GC16 : MODE_DU, temperature);
     needs_gray_flush = false;
   }
+  void flush_area(EpdRect area)
+  {
+    epd_hl_update_area(&m_hl, MODE_DU, temperature, area);
+  }
+
   virtual void clear_screen()
   {
     epd_hl_set_all_white(&m_hl);
@@ -237,6 +244,7 @@ public:
           else
           {
             success = true;
+            ESP_LOGI("EPD", "Success decompressing %d bytes", size);
           }
           free(compressed);
         }
@@ -247,7 +255,7 @@ public:
       }
       else
       {
-        ESP_LOGE("EPD", "No data to restor");
+        ESP_LOGE("EPD", "No data to restore");
       }
       fclose(fp);
     }
@@ -275,6 +283,6 @@ public:
   };
   virtual void reset()
   {
-    epd_fullclear(&m_hl, 20);
+    epd_fullclear(&m_hl, temperature);
   };
 };

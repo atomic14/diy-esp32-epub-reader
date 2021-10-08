@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include "epd_driver/include/epd_driver.h"
 
 class ImageHelper;
 
@@ -39,6 +40,8 @@ public:
   virtual void show_busy() = 0;
   virtual void clear_screen() = 0;
   virtual void flush_display(){};
+  virtual void flush_area(EpdRect area){};
+
   virtual int get_page_width() = 0;
   virtual int get_page_height() = 0;
   virtual int get_space_width() = 0;
@@ -54,4 +57,6 @@ public:
   virtual void hydrate(){};
   // really really clear the screen
   virtual void reset(){};
+  
+  uint8_t temperature = 20;
 };
