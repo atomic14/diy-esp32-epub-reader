@@ -1,7 +1,7 @@
 #include "L58Touch.cpp"
 #include "TouchControls.h"
 #include <Renderer/Renderer.h>
-#include "epd_driver/include/epd_driver.h"
+#include "epd_driver.h"
 
 typedef struct
 {

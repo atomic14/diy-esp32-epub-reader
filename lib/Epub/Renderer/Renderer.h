@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "epd_driver/include/epd_driver.h"
+#include "epd_driver.h"
 
 class ImageHelper;
 

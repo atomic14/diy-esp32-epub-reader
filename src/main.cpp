@@ -239,7 +239,7 @@ void main_task(void *param)
   // configure the button inputs
   controls->setup_inputs();
 
-  // keep track of when the user last interacted and go to sleep after 30 seconds
+  // keep track of when the user last interacted and go to sleep after  seconds
   int64_t last_user_interaction = esp_timer_get_time();
   while (esp_timer_get_time() - last_user_interaction < 120 * 1000 * 1000)
   {

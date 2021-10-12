@@ -4,3 +4,6 @@
 [submodule "lib/touch"]
 	path = lib/touch
 	url = https://github.com/martinberlin/FT6X36-IDF.git
+[submodule "lib/epdiy"]
+	path = lib/epdiy
+	url = https://github.com/martinberlin/epdiy-rotation.git
