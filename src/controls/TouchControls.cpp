@@ -134,6 +134,7 @@ void TouchControls::renderPressedState(Renderer *renderer, UIAction action, bool
     renderPressedState(renderer, last_action, false);
   }
   break;
+  case LAST_INTERACTION:
   case NONE:
     break;
   }
@@ -162,6 +163,9 @@ UIAction TouchControls::get_action(Renderer *renderer)
     else if (event.eventX >= 300 && event.eventX <= 300 + ui_button_width && event.eventY < 100)
     {
       action = SELECT;
+    } else {
+      // Touched anywhere but not the buttons
+      action = LAST_INTERACTION;
     }
     renderPressedState(renderer, action);
     last_action = action;

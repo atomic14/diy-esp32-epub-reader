@@ -5,5 +5,6 @@ typedef enum
   NONE,
   UP,
   DOWN,
-  SELECT
+  SELECT,
+  LAST_INTERACTION
 } UIAction;

@@ -20,9 +20,9 @@
 #include "battery/Battery.h"
 #ifdef LOG_ENABLED
 // Reference: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/log.html
-#define LOG_LOCAL_LEVEL ESP_LOG_INFO
+#define LOG_LEVEL ESP_LOG_INFO
 #else
-#define LOG_LOCAL_LEVEL ESP_LOG_NONE
+#define LOG_LEVEL ESP_LOG_NONE
 #endif
 #include <esp_log.h>
 // The SD Card shares the same GPIO pins as the touch controller so you must use SPIFFS
@@ -31,7 +31,7 @@
 #error "USE_SPIFFS must be defined if USE_TOUCH is defined"
 #endif
 #endif
-
+int64_t last_user_interaction;
 extern "C"
 {
   void app_main();
@@ -108,7 +108,7 @@ void handleEpubList(Renderer *renderer, UIAction action)
       ESP_LOGI("main", "Epub files loaded");
     }
   }
-  // work out what the user wante us to do
+  // work out what the user wants us to do
   switch (action)
   {
   case UP:
@@ -239,8 +239,7 @@ void main_task(void *param)
   // configure the button inputs
   controls->setup_inputs();
 
-  // keep track of when the user last interacted and go to sleep after  seconds
-  int64_t last_user_interaction = esp_timer_get_time();
+  // keep track of when the user last interacted and go to sleep after N seconds
   while (esp_timer_get_time() - last_user_interaction < 120 * 1000 * 1000)
   {
     // check for user interaction
@@ -256,6 +255,7 @@ void main_task(void *param)
 
     if (ui_action != NONE)
     {
+      //printf("action:%d\n", ui_action);
       last_user_interaction = esp_timer_get_time();
       handleUserInteraction(renderer, ui_action);
       // draw the battery level before flushing the screen
@@ -291,16 +291,15 @@ void main_task(void *param)
 void app_main()
 {
   // Logging control
-  esp_log_level_set("main", LOG_LOCAL_LEVEL);
-  esp_log_level_set("EPUB", LOG_LOCAL_LEVEL);
-  esp_log_level_set("PUBLIST", LOG_LOCAL_LEVEL);
-  esp_log_level_set("ZIP", LOG_LOCAL_LEVEL);
-  esp_log_level_set("JPG", LOG_LOCAL_LEVEL);
-  esp_log_level_set("TOUCH", LOG_LOCAL_LEVEL);
+  esp_log_level_set("main", LOG_LEVEL);
+  esp_log_level_set("EPUB", LOG_LEVEL);
+  esp_log_level_set("PUBLIST", LOG_LEVEL);
+  esp_log_level_set("ZIP", LOG_LEVEL);
+  esp_log_level_set("JPG", LOG_LEVEL);
+  esp_log_level_set("TOUCH", LOG_LEVEL);
   ESP_LOGI("main", "Memory before main task start %d", esp_get_free_heap_size());
   xTaskCreatePinnedToCore(main_task, "main_task", 32768, NULL, 1, NULL, 1);
-  while (true)
-  {
-    vTaskDelay(pdMS_TO_TICKS(1000));
-  }
+  // last interaction is updated also by any touch event with LAST_INTERACTION
+  last_user_interaction = esp_timer_get_time();
+  // Don't think there is a need to keep on looping with a delay over here
 }
