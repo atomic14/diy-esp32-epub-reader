@@ -1,10 +1,9 @@
-[submodule "lib/epdiy/epdiy"]
-	path = lib/epdiy/epdiy
-	url = https://github.com/vroland/epdiy.git
-	ignore = untracked
 [submodule "lib/png/PNGdec"]
 	path = lib/png/PNGdec
 	url = https://github.com/atomic14/PNGdec.git
 [submodule "lib/touch"]
 	path = lib/touch
 	url = https://github.com/martinberlin/FT6X36-IDF.git
+[submodule "lib/epdiy"]
+	path = lib/epdiy
+	url = https://github.com/martinberlin/epdiy-rotation.git
