@@ -110,6 +110,9 @@ size_t read_jpeg_data(
   return ndata;
 }
 
+static int last_y = 0;
+
+// this is not a very efficient way of doing this - could be improved considerably
 int draw_jpeg_function(
     JDEC *jdec,   /* Pointer to the decompression object */
     void *bitmap, /* Bitmap to be output */
@@ -119,6 +122,13 @@ int draw_jpeg_function(
   JPEGHelper *context = (JPEGHelper *)jdec->device;
   Renderer *renderer = (Renderer *)context->renderer;
   uint8_t *rgb = (uint8_t *)bitmap;
+  // this is a bit of dirty hack to only delay every line to feed the watchdog
+  if (rect->top != last_y)
+  {
+    last_y = rect->top;
+    vTaskDelay(1);
+  }
+
   for (int y = rect->top; y <= rect->bottom; y++)
   {
     for (int x = rect->left; x <= rect->right; x++)

@@ -63,10 +63,13 @@ bool PNGHelper::render(const uint8_t *data, size_t data_size, Renderer *renderer
 }
 void PNGHelper::draw_callback(PNGDRAW *draw)
 {
-  // add the grayscale values to the accumulation buffer
+  // work out where we should be drawing this line
   int y = y_pos + draw->y * y_scale;
+  // only bother to draw if we haven't already drawn to this destination line
   if (y != last_y)
   {
+    // feed the watchdog
+    vTaskDelay(1);
     // get the rgb 565 pixel values
     png.getLineAsRGB565(draw, tmp_rgb565_buffer, 0, 0);
     for (int x = 0; x < png.getWidth() * x_scale; x++)
