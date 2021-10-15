@@ -19,13 +19,13 @@ bool EpubReader::load()
 {
   ESP_LOGD(TAG, "Before epub load: %d", esp_get_free_heap_size());
   // do we need to load the epub?
-  if (!epub || epub->get_path() != state.epub_path)
+  if (!epub || epub->get_path() != state.path)
   {
     renderer->show_busy();
     delete epub;
     delete parser;
     parser = nullptr;
-    epub = new Epub(state.epub_path);
+    epub = new Epub(state.path);
     if (epub->load())
     {
       ESP_LOGD(TAG, "After epub load: %d", esp_get_free_heap_size());
