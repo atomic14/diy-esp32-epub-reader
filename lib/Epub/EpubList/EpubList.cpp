@@ -30,11 +30,6 @@ void EpubList::prev()
   state->selected_item = (state->selected_item - 1 + state->num_epubs) % state->num_epubs;
 }
 
-const char *EpubList::get_current_epub_path()
-{
-  return state->epub_list[state->selected_item].path;
-}
-
 bool EpubList::load(const char *path)
 {
   if (state->is_loaded)

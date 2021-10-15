@@ -46,10 +46,8 @@ typedef enum
 } UIState;
 
 // default to showing the list of epubs to the user
-RTC_DATA_ATTR UIState ui_state = SELECTING_EPUB;
-// the sate data for reading an epub
-RTC_DATA_ATTR EpubReaderState epub_reader_state;
-// the state data for the epub list
+RTC_NOINIT_ATTR UIState ui_state = SELECTING_EPUB;
+// the state data for the epub list and reader
 RTC_DATA_ATTR EpubListState epub_list_state;
 
 void handleEpub(Renderer *renderer, UIAction action);
@@ -63,7 +61,7 @@ void handleEpub(Renderer *renderer, UIAction action)
 {
   if (!reader)
   {
-    reader = new EpubReader(epub_reader_state, renderer);
+    reader = new EpubReader(epub_list_state.epub_list[epub_list_state.selected_item], renderer);
     reader->load();
   }
   switch (action)
@@ -120,13 +118,9 @@ void handleEpubList(Renderer *renderer, UIAction action)
   case SELECT:
     // switch to reading the epub
     // setup the reader state
-    ESP_LOGI("main", "Selected epub %s", epub_reader_state.epub_path);
-    strcpy(epub_reader_state.epub_path, epub_list->get_current_epub_path());
-    epub_reader_state.current_section = 0;
-    epub_reader_state.current_page = 0;
     ui_state = READING_EPUB;
     // create the reader and load the book
-    reader = new EpubReader(epub_reader_state, renderer);
+    reader = new EpubReader(epub_list_state.epub_list[epub_list_state.selected_item], renderer);
     reader->load();
     handleEpub(renderer, NONE);
     return;
