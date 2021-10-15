@@ -131,7 +131,8 @@ void TouchControls::renderPressedState(Renderer *renderer, UIAction action, bool
         .height = 6};
     renderer->fill_circle(x_circle, 15, 5, 0);
     renderer->flush_area(box);
-    renderPressedState(renderer, last_action, false);
+    // TODO - this causes a stack overflow when select is picked
+    // renderPressedState(renderer, last_action, false);
   }
   break;
   case LAST_INTERACTION:
@@ -163,7 +164,9 @@ UIAction TouchControls::get_action(Renderer *renderer)
     else if (event.eventX >= 300 && event.eventX <= 300 + ui_button_width && event.eventY < 100)
     {
       action = SELECT;
-    } else {
+    }
+    else
+    {
       // Touched anywhere but not the buttons
       action = LAST_INTERACTION;
     }
