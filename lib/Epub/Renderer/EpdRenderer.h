@@ -212,11 +212,8 @@ public:
   virtual void dehydrate()
   {
     ESP_LOGI("EPD", "Dehydrating EPD");
+    // only need to save the front buffer - it should be exactly the same as the back buffer
     if (!dehydrate_frame_buffer("/fs/front_buffer.z", m_frame_buffer, EPD_WIDTH * EPD_HEIGHT / 2))
-    {
-      ESP_LOGI("EPD", "Failed to save front buffer");
-    }
-    if (!dehydrate_frame_buffer("/fs/back_buffer.z", m_hl.back_fb, EPD_WIDTH * EPD_HEIGHT / 2))
     {
       ESP_LOGI("EPD", "Failed to save front buffer");
     }
@@ -274,9 +271,10 @@ public:
   virtual void hydrate()
   {
     ESP_LOGI("EPD", "Hydrating EPD");
-    if (hydrate_frame_buffer("/fs/front_buffer.z", m_frame_buffer, EPD_WIDTH * EPD_HEIGHT / 2) &&
-        hydrate_frame_buffer("/fs/back_buffer.z", m_hl.back_fb, EPD_WIDTH * EPD_HEIGHT / 2))
+    if (hydrate_frame_buffer("/fs/front_buffer.z", m_frame_buffer, EPD_WIDTH * EPD_HEIGHT / 2))
     {
+      // just memcopy the front buffer to the back buffer - they should be exactly the same
+      memcpy(m_hl.back_fb, m_frame_buffer, EPD_WIDTH * EPD_HEIGHT / 2);
       ESP_LOGI("EPD", "Hydrated EPD");
     }
     else

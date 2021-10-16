@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 typedef enum
 {
   NONE,
@@ -8,3 +10,5 @@ typedef enum
   SELECT,
   LAST_INTERACTION
 } UIAction;
+
+typedef std::function<void(UIAction)> ActionCallback_t;
