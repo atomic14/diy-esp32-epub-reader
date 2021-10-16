@@ -1,13 +1,7 @@
-#include "L58Touch.cpp"
+#include "L58Touch.h"
 #include "TouchControls.h"
 #include <Renderer/Renderer.h>
 #include "epd_driver.h"
-
-typedef struct
-{
-  int eventX;
-  int eventY;
-} TouchEvent;
 
 void touchTask(void *param)
 {
@@ -19,32 +13,23 @@ void touchTask(void *param)
   }
 }
 
-QueueHandle_t touchQueue = nullptr;
+// stash the instance - TODO - update the touch library to use std::function for callbacks so
+// it can take lambdas
+static TouchControls *instance = nullptr;
 
 void touchHandler(TPoint p, TEvent e)
 {
-  if (e == TEvent::Tap && touchQueue)
+  if (e == TEvent::Tap && instance)
   {
-    // for now we'll just alow one touch event - we could use this to queue up taps at some point
-    if (uxQueueMessagesWaiting(touchQueue) == 0)
-    {
-      ESP_LOGI("TOUCH", "Queuing touch event %d,%d", p.x, p.y);
-      TouchEvent event = {
-          .eventX = p.x,
-          .eventY = p.y,
-      };
-      xQueueSend(touchQueue, &event, 0);
-    }
-    else
-    {
-      ESP_LOGI("TOUCH", "Touch queue is full");
-    }
+    instance->handleTouch(p.x, p.y);
   }
 }
 
-TouchControls::TouchControls(int width, int height, int rotation)
+TouchControls::TouchControls(Renderer *renderer, int width, int height, int rotation, ActionCallback_t on_action)
+    : on_action(on_action), renderer(renderer)
 {
 #ifdef USE_TOUCH
+  instance = this;
   this->ts = new L58Touch(CONFIG_TOUCH_INT);
   /** Instantiate touch. Important inject here the display width and height size in pixels
         setRotation(3)     Portrait mode */
@@ -52,7 +37,6 @@ TouchControls::TouchControls(int width, int height, int rotation)
   ts->setRotation(rotation);
   ts->setTapThreshold(50);
   ts->registerTouchHandler(touchHandler);
-  touchQueue = xQueueCreate(1, sizeof(TouchEvent));
   xTaskCreate(touchTask, "touchTask", 4096, this, 0, NULL);
 #endif
 }
@@ -143,40 +127,35 @@ void TouchControls::renderPressedState(Renderer *renderer, UIAction action, bool
 #endif
 }
 
-UIAction TouchControls::get_action(Renderer *renderer)
+void TouchControls::handleTouch(int x, int y)
 {
   UIAction action = NONE;
 #ifdef USE_TOUCH
-  TouchEvent event;
-  if (xQueueReceive(touchQueue, &event, 0))
+  ESP_LOGI("TOUCH", "Received touch event %d,%d", x, y);
+  if (x >= 10 && x <= 10 + ui_button_width && y < 200)
   {
-    ESP_LOGI("TOUCH", "Received touch event %d,%d", event.eventX, event.eventY);
-    if (event.eventX >= 10 && event.eventX <= 10 + ui_button_width && event.eventY < 100)
-    {
-      action = DOWN;
-      renderPressedState(renderer, UP, false);
-    }
-    else if (event.eventX >= 150 && event.eventX <= 150 + ui_button_width && event.eventY < 100)
-    {
-      action = UP;
-      renderPressedState(renderer, DOWN, false);
-    }
-    else if (event.eventX >= 300 && event.eventX <= 300 + ui_button_width && event.eventY < 100)
-    {
-      action = SELECT;
-    }
-    else
-    {
-      // Touched anywhere but not the buttons
-      action = LAST_INTERACTION;
-    }
-    renderPressedState(renderer, action);
-    last_action = action;
-    if (action != NONE)
-    {
-      ESP_LOGI("TOUCH", "Action: %d", action);
-    }
+    action = DOWN;
+    renderPressedState(renderer, UP, false);
+  }
+  else if (x >= 150 && x <= 150 + ui_button_width && y < 200)
+  {
+    action = UP;
+    renderPressedState(renderer, DOWN, false);
+  }
+  else if (x >= 300 && x <= 300 + ui_button_width && y < 200)
+  {
+    action = SELECT;
+  }
+  else
+  {
+    // Touched anywhere but not the buttons
+    action = LAST_INTERACTION;
+  }
+  renderPressedState(renderer, action);
+  last_action = action;
+  if (action != NONE)
+  {
+    on_action(action);
   }
 #endif
-  return action;
 }

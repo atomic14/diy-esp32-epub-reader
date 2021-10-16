@@ -1,5 +1,6 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <freertos/queue.h>
 #include <esp_sleep.h>
 #include "config.h"
 #include "SDCard.h"
@@ -15,7 +16,7 @@
 #include <bold_italic_font.h>
 #include <hourglass.h>
 #include "Renderer/ConsoleRenderer.h"
-#include "controls/Controls.h"
+#include "controls/ButtonControls.h"
 #include "controls/TouchControls.h"
 #include "battery/Battery.h"
 #ifdef LOG_ENABLED
@@ -31,7 +32,7 @@
 #error "USE_SPIFFS must be defined if USE_TOUCH is defined"
 #endif
 #endif
-int64_t last_user_interaction;
+
 extern "C"
 {
   void app_main();
@@ -205,10 +206,29 @@ void main_task(void *param)
   SDCard *sdcard = new SDCard("/fs", SD_CARD_PIN_NUM_MISO, SD_CARD_PIN_NUM_MOSI, SD_CARD_PIN_NUM_CLK, SD_CARD_PIN_NUM_CS);
 #endif
   ESP_LOGI("main", "Memory after sdcard init: %d", esp_get_free_heap_size());
+  // create a message queue for UI events
+  xQueueHandle ui_queue = xQueueCreate(10, sizeof(UIAction));
+
   // set the controls up
   ESP_LOGI("main", "Setting up controls");
-  Controls *controls = new Controls(BUTTON_UP_GPIO_NUM, BUTTON_DOWN_GPIO_NUM, BUTTON_SELECT_GPIO_NUM, 0);
-  TouchControls *touch_controls = new TouchControls(EPD_WIDTH, EPD_HEIGHT, 3);
+  ButtonControls *controls = new ButtonControls(
+      BUTTON_UP_GPIO_NUM,
+      BUTTON_DOWN_GPIO_NUM,
+      BUTTON_SELECT_GPIO_NUM,
+      BUTONS_ACTIVE_LEVEL,
+      [ui_queue](UIAction action)
+      {
+        xQueueSend(ui_queue, &action, 0);
+      });
+  TouchControls *touch_controls = new TouchControls(
+      renderer,
+      EPD_WIDTH,
+      EPD_HEIGHT,
+      3,
+      [ui_queue](UIAction action)
+      {
+        xQueueSend(ui_queue, &action, 0);
+      });
   ESP_LOGI("main", "Controls configured");
   // work out if we were woken from deep sleep
   if (controls->did_wake_from_deep_sleep())
@@ -230,40 +250,27 @@ void main_task(void *param)
   touch_controls->render(renderer);
   renderer->flush_display();
 
-  // configure the button inputs
-  controls->setup_inputs();
-
   // keep track of when the user last interacted and go to sleep after N seconds
+  int64_t last_user_interaction = esp_timer_get_time();
   while (esp_timer_get_time() - last_user_interaction < 120 * 1000 * 1000)
   {
-    // check for user interaction
-    UIAction ui_action = controls->get_action();
-    if (ui_action == NONE)
+    UIAction ui_action = NONE;
+    // wait for something to happen for 60 seconds
+    if (xQueueReceive(ui_queue, &ui_action, pdMS_TO_TICKS(60000)) == pdTRUE)
     {
-      ui_action = touch_controls->get_action(renderer);
+      if (ui_action != NONE)
+      {
+        // something happened!
+        last_user_interaction = esp_timer_get_time();
+        handleUserInteraction(renderer, ui_action);
+        touch_controls->render(renderer);
+      }
     }
-    else
-    {
-      ESP_LOGI("main", "User action %d", ui_action);
-    }
-
-    if (ui_action != NONE)
-    {
-      //printf("action:%d\n", ui_action);
-      last_user_interaction = esp_timer_get_time();
-      handleUserInteraction(renderer, ui_action);
-      // draw the battery level before flushing the screen
-      draw_battery_level(renderer, battery->get_voltage(), battery->get_percentage());
-      touch_controls->render(renderer);
-      renderer->flush_display();
-    }
-    else
-    {
-      // wait for the user to do something
-      vTaskDelay(pdMS_TO_TICKS(50));
-    }
+    // update the battery level - do this even if there is no interaction so we
+    // show the battery level even if the user is idle
+    draw_battery_level(renderer, battery->get_voltage(), battery->get_percentage());
+    renderer->flush_display();
   }
-
   ESP_LOGI("main", "Saving state");
   // save the state of the renderer
   renderer->dehydrate();
@@ -293,7 +300,4 @@ void app_main()
   esp_log_level_set("TOUCH", LOG_LEVEL);
   ESP_LOGI("main", "Memory before main task start %d", esp_get_free_heap_size());
   xTaskCreatePinnedToCore(main_task, "main_task", 32768, NULL, 1, NULL, 1);
-  // last interaction is updated also by any touch event with LAST_INTERACTION
-  last_user_interaction = esp_timer_get_time();
-  // Don't think there is a need to keep on looping with a delay over here
 }
