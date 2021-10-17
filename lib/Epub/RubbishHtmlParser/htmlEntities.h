@@ -13,7 +13,8 @@ typedef struct
 unordered_map<string, string> convert({
     {"&quot;" , "\""},
     {"&frasl;", "/"},
-    {"&nbsp;" , " "}
+    {"&nbsp;" , " "},
+    {"&deg;"  , "°"},
 });
 
 const HtmlEntity htmlEntity[] = {
