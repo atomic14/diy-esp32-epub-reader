@@ -1,4 +1,6 @@
 #pragma once
+#include <unordered_map>
+using namespace std;
 
 typedef struct
 {
@@ -7,6 +9,13 @@ typedef struct
   const char *code;
 } HtmlEntity;
 
+// Store the mappings in a unordered hash map
+unordered_map<string, string> convert({
+    {"&quot;" , "\""},
+    {"&frasl;", "/"},
+    {"&nbsp;" , " "}
+});
+
 const HtmlEntity htmlEntity[] = {
     {" ", "", "&#32;"},
     {"!", "", "&#33;"},
@@ -14,7 +23,7 @@ const HtmlEntity htmlEntity[] = {
     {"#", "", "&#35;"},
     {"$", "", "&#36;"},
     {"%", "", "&#37;"},
-    {"&", "&amp;", "&#38;"},
+    // {"&", "&amp;", "&#38;"}, // Handled by tinixml2 https://leethomason.github.io/tinyxml2/
     {"'", "", "&#39;"},
     {"(", "", "&#40;"},
     {")", "", "&#41;"},
@@ -36,9 +45,7 @@ const HtmlEntity htmlEntity[] = {
     {"9", "", "&#57;"},
     {":", "", "&#58;"},
     {";", "", "&#59;"},
-    {"<", "&lt;", "&#60;"},
     {"=", "", "&#61;"},
-    {">", "&gt;", "&#62;"},
     {"?", "", "&#63;"},
     {"@", "", "&#64;"},
     {"A", "", "&#65;"},
@@ -165,7 +172,7 @@ const HtmlEntity htmlEntity[] = {
     {"ý", "&yacute;", "&#253;"},
     {"þ", "&thorn;", "&#254;"},
     {"ÿ", "&yuml;", "&#255;"},
-    {"", "&nbsp;", "&#160;"},
+    {" ", "&nbsp;", "&#160;"},
     {"¡", "&iexcl;", "&#161;"},
     {"¢", "&cent;", "&#162;"},
     {"£", "&pound;", "&#163;"},
