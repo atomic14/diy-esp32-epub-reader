@@ -1,7 +1,13 @@
 #include "Renderer.h"
 #include "JPEGHelper.h"
 #include "PNGHelper.h"
+#ifndef UNIT_TEST
 #include <esp_log.h>
+#else
+#define vTaskDelay(t)
+#define ESP_LOGE(args...)
+#define ESP_LOGI(args...)
+#endif
 
 Renderer::~Renderer()
 {

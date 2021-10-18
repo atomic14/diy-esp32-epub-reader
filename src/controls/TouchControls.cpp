@@ -71,11 +71,6 @@ void TouchControls::renderPressedState(Renderer *renderer, UIAction action, bool
   {
   case DOWN:
   {
-    EpdRect box = {
-        .x = 75,
-        .y = 6,
-        .width = 10,
-        .height = 15};
     if (state)
     {
       renderer->fill_triangle(80, 20, 75, 6, 85, 6, 0);
@@ -84,16 +79,11 @@ void TouchControls::renderPressedState(Renderer *renderer, UIAction action, bool
     {
       renderer->fill_triangle(81, 19, 76, 7, 86, 7, 255);
     }
-    renderer->flush_area(box);
+    renderer->flush_area(76, 6, 10, 15);
     break;
   }
   case UP:
   {
-    EpdRect box = {
-        .x = 195,
-        .y = 225,
-        .width = 10,
-        .height = 15};
     if (state)
     {
       renderer->fill_triangle(220, 6, 220 - 5, 20, 220 + 5, 20, 0);
@@ -102,19 +92,14 @@ void TouchControls::renderPressedState(Renderer *renderer, UIAction action, bool
     {
       renderer->fill_triangle(221, 7, 221 - 5, 19, 221 + 5, 19, 255);
     }
-    renderer->flush_area(box);
+    renderer->flush_area(195, 225, 10, 15);
   }
   break;
   case SELECT:
   {
     uint16_t x_circle = (ui_button_width * 2 + 60) + (ui_button_width / 2) + 9;
-    EpdRect box = {
-        .x = x_circle - 3,
-        .y = 12,
-        .width = 6,
-        .height = 6};
     renderer->fill_circle(x_circle, 15, 5, 0);
-    renderer->flush_area(box);
+    renderer->flush_area(x_circle - 3, 12, 6, 6);
     // TODO - this causes a stack overflow when select is picked
     // renderPressedState(renderer, last_action, false);
   }
