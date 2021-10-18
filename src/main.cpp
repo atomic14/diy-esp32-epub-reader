@@ -262,7 +262,10 @@ void main_task(void *param)
       {
         // something happened!
         last_user_interaction = esp_timer_get_time();
+        // show feedback on the touch controls
+        touch_controls->renderPressedState(renderer, ui_action);
         handleUserInteraction(renderer, ui_action);
+        // make sure to clear the feedback on the touch controls
         touch_controls->render(renderer);
       }
     }
