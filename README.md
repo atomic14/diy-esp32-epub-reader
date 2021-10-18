@@ -1,3 +1,5 @@
+![build status](https://github.com/atomic14/diy-esp32-epub-reader/actions/workflows/build-test-on-push.yml/badge.svg)
+
 # ESP32 Based ePub Reader
 
 You can watch a video of the build [here](https://youtu.be/VLiCgB0odOQ)
@@ -96,6 +98,7 @@ We have the pins for the SD card. I've got a video on how to hack an SD Card and
 ```
 
 Optional Touch interface (Defaults to Lilygo EPD47)
+
 ```
   ; Touch configuration
   -D CONFIG_TOUCH_SDA=15

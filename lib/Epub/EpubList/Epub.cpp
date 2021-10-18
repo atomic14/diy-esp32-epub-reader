@@ -241,11 +241,10 @@ uint8_t *Epub::get_item_contents(const std::string &item_href, size_t *size)
 {
   ZipFile zip(m_path.c_str());
   std::string path = normalise_path(item_href);
-  ESP_LOGI(TAG, "Reading item %s", path.c_str());
   auto content = zip.read_file_to_memory(path.c_str(), size);
   if (!content)
   {
-    ESP_LOGE(TAG, "Failed to read item");
+    ESP_LOGE(TAG, "Failed to read item %s", path.c_str());
     return nullptr;
   }
   return content;

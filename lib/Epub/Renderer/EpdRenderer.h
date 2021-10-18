@@ -75,17 +75,21 @@ public:
   }
   void show_busy()
   {
-    EpdRect image_area = {.x = (EPD_HEIGHT - m_busy_image_width) / 2,
-                          .y = (EPD_WIDTH - m_busy_image_height) / 2,
+    int x = (EPD_HEIGHT - m_busy_image_width) / 2;
+    int y = (EPD_WIDTH - m_busy_image_height) / 2;
+    int width = m_busy_image_width;
+    int height = m_busy_image_height;
+    EpdRect image_area = {.x = x,
+                          .y = y,
                           // don't forget we're rotated...
-                          .width = m_busy_image_width,
-                          .height = m_busy_image_height};
+                          .width = width,
+                          .height = height};
     epd_draw_rotated_transparent_image(
         image_area,
         m_busy_image, m_frame_buffer,
         0xE0);
     needs_gray_flush = true;
-    flush_area(image_area);
+    flush_area(x, y, width, height);
   }
 
   void needs_gray(uint8_t color)
@@ -151,9 +155,9 @@ public:
     epd_hl_update_screen(&m_hl, needs_gray_flush ? MODE_GC16 : MODE_DU, temperature);
     needs_gray_flush = false;
   }
-  void flush_area(EpdRect area)
+  void flush_area(int x, int y, int width, int height)
   {
-    epd_hl_update_area(&m_hl, MODE_DU, temperature, area);
+    epd_hl_update_area(&m_hl, MODE_DU, temperature, {.x = x, .y = y, .width = width, .height = height});
   }
 
   virtual void clear_screen()

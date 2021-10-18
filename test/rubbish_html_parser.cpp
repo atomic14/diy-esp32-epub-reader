@@ -20,13 +20,18 @@ public:
   virtual void draw_text(int x, int y, const char *text, bool bold = false, bool italic = false) {}
   virtual void draw_text_box(const std::string &text, int x, int y, int width, int height, bool bold = false, bool italic = false) {}
   virtual void draw_rect(int x, int y, int width, int height, uint8_t color = 0){};
+  virtual void draw_triangle(int x0, int y0, int x1, int y1, int x2, int y2, uint8_t color){};
+  virtual void draw_circle(int x, int y, int r, uint8_t color = 0){};
   virtual void fill_rect(int x, int y, int width, int height, uint8_t color = 0){};
+  virtual void fill_triangle(int x0, int y0, int x1, int y1, int x2, int y2, uint8_t color){};
+  virtual void fill_circle(int x, int y, int r, uint8_t color = 0){};
   virtual void show_busy() {}
   virtual void clear_screen() {}
   virtual int get_page_width() { return 100; }
   virtual int get_page_height() { return 100; }
   virtual int get_space_width() { return 1; }
   virtual int get_line_height() { return 1; }
+  virtual void needs_gray(uint8_t color) {}
 };
 
 void test_parser(void)
@@ -49,7 +54,7 @@ void test_parser(void)
   {
     RubbishHtmlParser parser(html, strlen(html), "");
     parser.layout(new TestRenderer(), new Epub("test"));
-    TEST_ASSERT_EQUAL(8, parser.get_blocks().size());
+    TEST_ASSERT_EQUAL(7, parser.get_blocks().size());
     auto iterator = parser.get_blocks().begin();
     std::advance(iterator, 5);
     Block *img_block = *iterator;
@@ -59,7 +64,7 @@ void test_parser(void)
   {
     RubbishHtmlParser parser(html, strlen(html), "HTML/");
     parser.layout(new TestRenderer(), new Epub("test"));
-    TEST_ASSERT_EQUAL(8, parser.get_blocks().size());
+    TEST_ASSERT_EQUAL(7, parser.get_blocks().size());
     auto iterator = parser.get_blocks().begin();
     std::advance(iterator, 5);
     Block *img_block = *iterator;

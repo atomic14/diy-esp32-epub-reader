@@ -22,7 +22,7 @@ void test_epub_relative_image_paths(void)
   {
     TEST_ASSERT_NOT_NULL_MESSAGE(epub->get_item_contents(epub->get_spine_item(i)), "No content for chapter");
   }
-  TEST_ASSERT_EQUAL_STRING("Images/cover.jpg", epub->get_cover_image_item().c_str());
+  TEST_ASSERT_EQUAL_STRING("OEBPS/Images/cover.jpg", epub->get_cover_image_item().c_str());
   TEST_ASSERT_NOT_NULL(epub->get_item_contents(epub->get_cover_image_item()));
 }
 
@@ -37,6 +37,6 @@ void test_epub_load(void)
   {
     TEST_ASSERT_NOT_NULL_MESSAGE(epub->get_item_contents(epub->get_spine_item(i)), "No content for chapter");
   }
-  TEST_ASSERT_EQUAL_STRING("@public@vhost@g@gutenberg@html@files@43@43-h@images@cover.jpg", epub->get_cover_image_item().c_str());
+  TEST_ASSERT_EQUAL_STRING("OEBPS/@public@vhost@g@gutenberg@html@files@43@43-h@images@cover.jpg", epub->get_cover_image_item().c_str());
   TEST_ASSERT_NOT_NULL(epub->get_item_contents(epub->get_cover_image_item()));
 }

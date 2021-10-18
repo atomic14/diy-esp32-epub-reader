@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 const int MAX_EPUB_LIST_SIZE = 20;
 const int MAX_PATH_SIZE = 256;
 const int MAX_TITLE_SIZE = 100;

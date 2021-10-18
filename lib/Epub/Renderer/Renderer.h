@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include "epd_driver.h"
 
 class ImageHelper;
 
@@ -32,7 +31,7 @@ public:
   virtual void draw_rect(int x, int y, int width, int height, uint8_t color = 0) = 0;
   virtual void draw_triangle(int x0, int y0, int x1, int y1, int x2, int y2, uint8_t color) = 0;
   virtual void draw_circle(int x, int y, int r, uint8_t color = 0) = 0;
-  
+
   virtual void fill_triangle(int x0, int y0, int x1, int y1, int x2, int y2, uint8_t color) = 0;
   virtual void fill_rect(int x, int y, int width, int height, uint8_t color = 0) = 0;
   virtual void fill_circle(int x, int y, int r, uint8_t color = 0) = 0;
@@ -40,7 +39,7 @@ public:
   virtual void show_busy() = 0;
   virtual void clear_screen() = 0;
   virtual void flush_display(){};
-  virtual void flush_area(EpdRect area){};
+  virtual void flush_area(int x, int y, int width, int height){};
 
   virtual int get_page_width() = 0;
   virtual int get_page_height() = 0;
@@ -57,6 +56,6 @@ public:
   virtual void hydrate(){};
   // really really clear the screen
   virtual void reset(){};
-  
+
   uint8_t temperature = 20;
 };
