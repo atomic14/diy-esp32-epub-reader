@@ -249,6 +249,7 @@ static std::unordered_map<std::string, std::string> entity_lookup(
      {"&hearts;", "♥"},
      {"&diams;", "♦"}});
 
+// converts from a unicode code point to the utf8 equivalent
 void convert_to_utf8(int code, std::string &res)
 {
   // convert to a utf8 sequence
@@ -292,6 +293,7 @@ void convert_to_utf8(int code, std::string &res)
   }
 }
 
+// handles numeric entities - e.g. &#1234; or &#x1234;
 bool process_numeric_entity(const std::string &entity, std::string &res)
 {
   int code = 0;
@@ -313,6 +315,7 @@ bool process_numeric_entity(const std::string &entity, std::string &res)
   return false;
 }
 
+// handles named entities - e.g. &amp;
 bool process_string_entity(const std::string &entity, std::string &res)
 {
   // it's a named entity - find it in the lookup table
@@ -326,7 +329,7 @@ bool process_string_entity(const std::string &entity, std::string &res)
   return false;
 }
 
-// TODO - handle numeric entities
+// replace all the entities in the string
 std::string replace_html_entities(const std::string &text)
 {
   std::string res;
