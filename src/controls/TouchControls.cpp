@@ -151,7 +151,6 @@ void TouchControls::handleTouch(int x, int y)
     // Touched anywhere but not the buttons
     action = LAST_INTERACTION;
   }
-  renderPressedState(renderer, action);
   last_action = action;
   if (action != NONE)
   {

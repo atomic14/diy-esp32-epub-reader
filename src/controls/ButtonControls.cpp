@@ -146,24 +146,14 @@ void ButtonControls::setup_deep_sleep()
   {
     rtc_gpio_init(gpio_up);
     rtc_gpio_set_direction(gpio_up, RTC_GPIO_MODE_INPUT_ONLY);
-    rtc_gpio_pulldown_dis(gpio_up);
-    rtc_gpio_pullup_dis(gpio_up);
-    rtc_gpio_hold_dis(gpio_up);
 
     rtc_gpio_init(gpio_down);
     rtc_gpio_set_direction(gpio_down, RTC_GPIO_MODE_INPUT_ONLY);
-    rtc_gpio_pulldown_dis(gpio_down);
-    rtc_gpio_pullup_dis(gpio_down);
-    rtc_gpio_hold_dis(gpio_down);
 
     rtc_gpio_init(gpio_select);
     rtc_gpio_set_direction(gpio_select, RTC_GPIO_MODE_INPUT_ONLY);
-    rtc_gpio_pulldown_dis(gpio_select);
-    rtc_gpio_pullup_dis(gpio_select);
-    rtc_gpio_hold_dis(gpio_select);
     // need to use the ULP if we have buttons that are active low
     // see ulp/main.S for more details
-
     esp_err_t err = ulp_load_binary(0, ulp_main_bin_start, (ulp_main_bin_end - ulp_main_bin_start) / sizeof(uint32_t));
     ESP_ERROR_CHECK(err);
 
