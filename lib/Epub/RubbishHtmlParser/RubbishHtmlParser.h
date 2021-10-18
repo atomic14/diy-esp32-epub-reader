@@ -6,6 +6,8 @@
 #include <tinyxml2.h>
 #include "blocks/TextBlock.h"
 
+using namespace std;
+
 class Page;
 class Renderer;
 class Epub;
@@ -40,6 +42,8 @@ public:
   void parse(const char *html, int length);
   void addText(const char *text, bool is_bold, bool is_italic);
   void layout(Renderer *renderer, Epub *epub);
+
+  string entityParser(string text);
   int get_page_count()
   {
     return pages.size();
