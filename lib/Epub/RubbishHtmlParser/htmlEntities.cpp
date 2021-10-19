@@ -309,7 +309,15 @@ bool process_numeric_entity(const std::string &entity, std::string &res)
   }
   if (code != 0)
   {
-    convert_to_utf8(code, res);
+    // special handling for nbsp
+    if (code == 0xA0)
+    {
+      res += " ";
+    }
+    else
+    {
+      convert_to_utf8(code, res);
+    }
     return true;
   }
   return false;
