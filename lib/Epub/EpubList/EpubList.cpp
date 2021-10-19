@@ -14,6 +14,7 @@
 #include "Epub.h"
 #include "Renderer/Renderer.h"
 #include "../RubbishHtmlParser/blocks/TextBlock.h"
+#include "../RubbishHtmlParser/htmlEntities.h"
 
 static const char *TAG = "PUBLIST";
 
@@ -64,7 +65,7 @@ bool EpubList::load(const char *path)
       if (epub->load())
       {
         strncpy(state->epub_list[state->num_epubs].path, epub->get_path().c_str(), MAX_PATH_SIZE);
-        strncpy(state->epub_list[state->num_epubs].title, epub->get_title().c_str(), MAX_TITLE_SIZE);
+        strncpy(state->epub_list[state->num_epubs].title, replace_html_entities(epub->get_title()).c_str(), MAX_TITLE_SIZE);
         state->num_epubs++;
         if (state->num_epubs == MAX_EPUB_LIST_SIZE)
         {

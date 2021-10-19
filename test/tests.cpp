@@ -5,6 +5,7 @@ void test_parser(void);
 void test_epub_no_oebps_load(void);
 void test_epub_load(void);
 void test_epub_relative_image_paths(void);
+void test_html_entity_replacement(void);
 
 int main(int argc, char **argv)
 {
@@ -14,6 +15,7 @@ int main(int argc, char **argv)
   RUN_TEST(test_epub_no_oebps_load);
   RUN_TEST(test_epub_load);
   RUN_TEST(test_epub_relative_image_paths);
+  RUN_TEST(test_html_entity_replacement);
   UNITY_END();
 
   return 0;

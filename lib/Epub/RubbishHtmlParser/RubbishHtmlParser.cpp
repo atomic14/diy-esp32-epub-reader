@@ -184,7 +184,7 @@ void RubbishHtmlParser::parse(const char *html, int length)
 void RubbishHtmlParser::addText(const char *text, bool is_bold, bool is_italic)
 {
   // Probably there is a more elegant way to do this
-  string parsetxt = entityParser((string) text);
+  std::string parsetxt = replace_html_entities((string)text);
   currentTextBlock->add_span(parsetxt.c_str(), is_bold, is_italic);
 }
 
@@ -245,28 +245,4 @@ void RubbishHtmlParser::render_page(int page_index, Renderer *renderer, Epub *ep
   renderer->clear_screen();
   // renderer->fill_rect(0, 0, renderer->get_page_width(), renderer->get_page_height(), 0xFF);
   pages[page_index]->render(renderer, epub);
-}
-
-string RubbishHtmlParser::entityParser(string text)
-{
-  string res = "";
-  for (int i = 0; i < text.size(); ++ i) {
-      bool flag = false;
-      for (auto it = begin(convert); it != end(convert); ++ it) {
-          string key = it->first;
-          string value = it->second;
-          if (i + key.size() - 1 < text.size()) {
-              if (text.substr(i, key.size()) == key)    {
-                  res += value;
-                  i += key.size() - 1;
-                  flag = true;
-                  break;
-              }
-          }
-      }
-      if (!flag) {
-          res += text[i];
-      }
-  }
-  return res;
 }
