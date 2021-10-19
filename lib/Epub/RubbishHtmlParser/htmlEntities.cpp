@@ -75,7 +75,7 @@ static std::unordered_map<std::string, std::string> entity_lookup(
      {"&yacute;", "ý"},
      {"&thorn;", "þ"},
      {"&yuml;", "ÿ"},
-     {"&nbsp;", ""},
+     {"&nbsp;", " "},
      {"&iexcl;", "¡"},
      {"&cent;", "¢"},
      {"&pound;", "£"},
