@@ -141,7 +141,7 @@ void TouchControls::handleTouch(int x, int y, TEvent e)
   }
   } else if (e == TEvent::SwingLeft) {
     action = DOWN;
-  } else if (e == TEvent::SwingLeft) {
+  } else if (e == TEvent::SwingRight) {
     action = UP;
   }
   last_action = action;
