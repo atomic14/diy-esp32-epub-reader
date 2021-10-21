@@ -19,9 +19,9 @@ static TouchControls *instance = nullptr;
 
 void touchHandler(TPoint p, TEvent e)
 {
-  if (e == TEvent::Tap && instance)
+  if (instance)
   {
-    instance->handleTouch(p.x, p.y);
+    instance->handleTouch(p.x, p.y, e);
   }
 }
 
@@ -35,9 +35,11 @@ TouchControls::TouchControls(Renderer *renderer, int width, int height, int rota
         setRotation(3)     Portrait mode */
   ts->begin(width, height);
   ts->setRotation(rotation);
-  ts->setTapThreshold(50);
+  // Adding this made it slower and would not run good when threshold <150 ms :(
+  ts->setTapThreshold(150);
+  ts->setEnableGestures(true);
   ts->registerTouchHandler(touchHandler);
-  xTaskCreate(touchTask, "touchTask", 4096, this, 0, NULL);
+  xTaskCreate(touchTask, "touchTask", 6096, this, 0, NULL);
 #endif
 }
 
@@ -112,11 +114,12 @@ void TouchControls::renderPressedState(Renderer *renderer, UIAction action, bool
 #endif
 }
 
-void TouchControls::handleTouch(int x, int y)
+void TouchControls::handleTouch(int x, int y, TEvent e)
 {
   UIAction action = NONE;
 #ifdef USE_TOUCH
   ESP_LOGI("TOUCH", "Received touch event %d,%d", x, y);
+  if (e == TEvent::Tap) {
   if (x >= 10 && x <= 10 + ui_button_width && y < 200)
   {
     action = DOWN;
@@ -135,6 +138,11 @@ void TouchControls::handleTouch(int x, int y)
   {
     // Touched anywhere but not the buttons
     action = LAST_INTERACTION;
+  }
+  } else if (e == TEvent::SwingLeft) {
+    action = DOWN;
+  } else if (e == TEvent::SwingLeft) {
+    action = UP;
   }
   last_action = action;
   if (action != NONE)

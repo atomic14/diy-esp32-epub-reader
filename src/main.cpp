@@ -300,7 +300,8 @@ void app_main()
   esp_log_level_set("PUBLIST", LOG_LEVEL);
   esp_log_level_set("ZIP", LOG_LEVEL);
   esp_log_level_set("JPG", LOG_LEVEL);
-  esp_log_level_set("TOUCH", LOG_LEVEL);
+  esp_log_level_set("PNG", LOG_LEVEL);
+  //esp_log_level_set("TOUCH", LOG_LEVEL);
   ESP_LOGI("main", "Memory before main task start %d", esp_get_free_heap_size());
   xTaskCreatePinnedToCore(main_task, "main_task", 32768, NULL, 1, NULL, 1);
 }

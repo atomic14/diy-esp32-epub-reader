@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Actions.h"
+#include "L58Touch.h"
 
 class L58Touch;
 class Renderer;
@@ -21,5 +22,5 @@ public:
   TouchControls(Renderer *renderer, int width, int height, int rotation, ActionCallback_t on_action);
   void render(Renderer *renderer);
   void renderPressedState(Renderer *renderer, UIAction action, bool state = true);
-  void handleTouch(int x, int y);
+  void handleTouch(int x, int y, TEvent e);
 };
