@@ -1,4 +1,4 @@
-#include "L58Touch.h"
+
 #include "TouchControls.h"
 #include <Renderer/Renderer.h>
 #include "epd_driver.h"
@@ -36,7 +36,7 @@ TouchControls::TouchControls(Renderer *renderer, int width, int height, int rota
   ts->begin(width, height);
   ts->setRotation(rotation);
   // Adding this made it slower and would not run good when threshold <150 ms :(
-  ts->setTapThreshold(150);
+  ts->setTapThreshold(150000);
   ts->setEnableGestures(true);
   ts->registerTouchHandler(touchHandler);
   xTaskCreate(touchTask, "touchTask", 6096, this, 0, NULL);
@@ -118,7 +118,7 @@ void TouchControls::handleTouch(int x, int y, TEvent e)
 {
   UIAction action = NONE;
 #ifdef USE_TOUCH
-  ESP_LOGI("TOUCH", "Received touch event %d,%d", x, y);
+  ESP_LOGI("TOUCH", "event %d,%d,e:%d", x, y, (uint8_t)e);
   if (e == TEvent::Tap) {
   if (x >= 10 && x <= 10 + ui_button_width && y < 200)
   {
@@ -134,20 +134,24 @@ void TouchControls::handleTouch(int x, int y, TEvent e)
   {
     action = SELECT;
   }
+  
+  } 
   else
   {
-    // Touched anywhere but not the buttons
-    action = LAST_INTERACTION;
+    if (e == TEvent::SwingLeft) {
+      action = DOWN;
+    } else if (e == TEvent::SwingRight) {
+      action = UP;
+    } else {
+      // Touched anywhere but not the buttons
+      action = LAST_INTERACTION;
+    }
   }
-  } else if (e == TEvent::SwingLeft) {
-    action = DOWN;
-  } else if (e == TEvent::SwingRight) {
-    action = UP;
-  }
+
   last_action = action;
   if (action != NONE)
   {
     on_action(action);
-  }
+  }  
 #endif
 }
