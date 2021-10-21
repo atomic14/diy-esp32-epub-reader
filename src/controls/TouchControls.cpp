@@ -139,9 +139,9 @@ void TouchControls::handleTouch(int x, int y, TEvent e)
   else
   {
     if (e == TEvent::SwingLeft) {
-      action = DOWN;
-    } else if (e == TEvent::SwingRight) {
       action = UP;
+    } else if (e == TEvent::SwingRight) {
+      action = DOWN;
     } else {
       // Touched anywhere but not the buttons
       action = LAST_INTERACTION;
