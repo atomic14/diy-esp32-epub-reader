@@ -176,7 +176,6 @@ void main_task(void *param)
 
   // need to power on the EDP to get power to the SD Card
   epd_poweron();
-  // TODO - work out where to put this on the screen
   battery = new Battery(BATTERY_ADC_CHANNEL);
   ESP_LOGI("main", "Battery %.0f, %.2fv", battery->get_percentage(), battery->get_voltage());
   ESP_LOGI("main", "Memory before renderer init: %d", esp_get_free_heap_size());
@@ -301,7 +300,7 @@ void app_main()
   esp_log_level_set("ZIP", LOG_LEVEL);
   esp_log_level_set("JPG", LOG_LEVEL);
   esp_log_level_set("PNG", LOG_LEVEL);
-  //esp_log_level_set("TOUCH", LOG_LEVEL);
+  esp_log_level_set("TOUCH", LOG_LEVEL);
   ESP_LOGI("main", "Memory before main task start %d", esp_get_free_heap_size());
   xTaskCreatePinnedToCore(main_task, "main_task", 32768, NULL, 1, NULL, 1);
 }
