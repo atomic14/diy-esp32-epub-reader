@@ -3,8 +3,11 @@
 #include <freertos/queue.h>
 #include <esp_sleep.h>
 #include "config.h"
-#include "SDCard.h"
-#include "SPIFFS.h"
+#ifndef USE_SPIFFS
+  #include "SDCard.h"
+#else
+  #include "SPIFFS.h"
+#endif
 #include "EpubList/Epub.h"
 #include "EpubList/EpubList.h"
 #include "EpubList/EpubReader.h"
