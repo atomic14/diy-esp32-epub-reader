@@ -17,7 +17,9 @@
 #include <hourglass.h>
 #include "Renderer/ConsoleRenderer.h"
 #include "controls/ButtonControls.h"
-#include "controls/TouchControls.h"
+#ifdef USE_TOUCH
+  #include "controls/TouchControls.h"
+#endif
 #include "battery/Battery.h"
 #ifdef LOG_ENABLED
 // Reference: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/log.html
@@ -220,6 +222,8 @@ void main_task(void *param)
       {
         xQueueSend(ui_queue, &action, 0);
       });
+
+  #ifdef USE_TOUCH
   TouchControls *touch_controls = new TouchControls(
       renderer,
       EPD_WIDTH,
@@ -229,6 +233,8 @@ void main_task(void *param)
       {
         xQueueSend(ui_queue, &action, 0);
       });
+  #endif
+
   ESP_LOGI("main", "Controls configured");
   // work out if we were woken from deep sleep
   if (controls->did_wake_from_deep_sleep())
@@ -247,7 +253,10 @@ void main_task(void *param)
   }
   // draw the battery level before flushing the screen
   draw_battery_level(renderer, battery->get_voltage(), battery->get_percentage());
-  touch_controls->render(renderer);
+  
+  #ifdef USE_TOUCH
+    touch_controls->render(renderer);
+  #endif
   renderer->flush_display();
 
   // keep track of when the user last interacted and go to sleep after N seconds
@@ -262,11 +271,17 @@ void main_task(void *param)
       {
         // something happened!
         last_user_interaction = esp_timer_get_time();
-        // show feedback on the touch controls
-        touch_controls->renderPressedState(renderer, ui_action);
+
+        #ifdef USE_TOUCH
+          // show feedback on the touch controls
+          touch_controls->renderPressedState(renderer, ui_action);
+        #endif
         handleUserInteraction(renderer, ui_action);
-        // make sure to clear the feedback on the touch controls
-        touch_controls->render(renderer);
+
+        #ifdef USE_TOUCH
+          // make sure to clear the feedback on the touch controls
+          touch_controls->render(renderer);
+        #endif
       }
     }
     // update the battery level - do this even if there is no interaction so we
