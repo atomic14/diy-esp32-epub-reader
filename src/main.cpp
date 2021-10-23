@@ -174,17 +174,32 @@ void draw_battery_level(Renderer *renderer, float voltage, float percentage)
 
 void main_task(void *param)
 {
+  #ifdef USE_SPIFFS
+    ESP_LOGI("main", "Using SPIFFS");
+    // create the file system
+    SPIFFS *spiffs = new SPIFFS("/fs");
+    
+  #else
+    ESP_LOGI("main", "Using SDCard");
+    // initialise the SDCard
+    SDCard *sdcard = new SDCard("/fs", SD_CARD_PIN_NUM_MISO, SD_CARD_PIN_NUM_MOSI, SD_CARD_PIN_NUM_CLK, SD_CARD_PIN_NUM_CS);
+  #endif
   // dump out the epub list state
   ESP_LOGI("main", "epub list state num_epubs=%d", epub_list_state.num_epubs);
   ESP_LOGI("main", "epub list state is_loaded=%d", epub_list_state.is_loaded);
   ESP_LOGI("main", "epub list state selected_item=%d", epub_list_state.selected_item);
 
-  // need to power on the EDP to get power to the SD Card
-  epd_poweron();
   // TODO - work out where to put this on the screen
-  battery = new Battery(BATTERY_ADC_CHANNEL);
-  ESP_LOGI("main", "Battery %.0f, %.2fv", battery->get_percentage(), battery->get_voltage());
-  ESP_LOGI("main", "Memory before renderer init: %d", esp_get_free_heap_size());
+  #ifdef CONFIG_EPD_DISPLAY_TYPE_ED047TC2
+    battery = new Battery(BATTERY_ADC_CHANNEL);
+    ESP_LOGI("main", "Battery %.0f, %.2fv", battery->get_percentage(), battery->get_voltage());
+    ESP_LOGI("main", "Memory before renderer init: %d", esp_get_free_heap_size());
+
+    // Need to power on the EDP to get power to the SD Card (Only in Lilygo model)
+    // Not when using EPDiy since first epd_init() has to be called to initialize stuff
+    epd_poweron();
+  #endif
+  
   // create the EPD renderer
   Renderer *renderer = new EpdRenderer(
       &regular_font,
@@ -201,16 +216,7 @@ void main_task(void *param)
   renderer->set_margin_right(10);
 
   ESP_LOGI("main", "Memory after renderer init: %d", esp_get_free_heap_size());
-#ifdef USE_SPIFFS
-  ESP_LOGI("main", "Using SPIFFS");
-  // create the file system
-  SPIFFS *spiffs = new SPIFFS("/fs");
-#else
-  ESP_LOGI("main", "Using SDCard");
-  // initialise the SDCard
-  SDCard *sdcard = new SDCard("/fs", SD_CARD_PIN_NUM_MISO, SD_CARD_PIN_NUM_MOSI, SD_CARD_PIN_NUM_CLK, SD_CARD_PIN_NUM_CS);
-#endif
-  ESP_LOGI("main", "Memory after sdcard init: %d", esp_get_free_heap_size());
+  ESP_LOGI("main", "Memory after FS init: %d", esp_get_free_heap_size());
   // create a message queue for UI events
   xQueueHandle ui_queue = xQueueCreate(10, sizeof(UIAction));
 
