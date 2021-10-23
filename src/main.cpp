@@ -189,17 +189,15 @@ void main_task(void *param)
   ESP_LOGI("main", "epub list state is_loaded=%d", epub_list_state.is_loaded);
   ESP_LOGI("main", "epub list state selected_item=%d", epub_list_state.selected_item);
 
-  // TODO - work out where to put this on the screen
-  #ifdef CONFIG_EPD_DISPLAY_TYPE_ED047TC2
-    battery = new Battery(BATTERY_ADC_CHANNEL);
-    ESP_LOGI("main", "Battery %.0f, %.2fv", battery->get_percentage(), battery->get_voltage());
-    ESP_LOGI("main", "Memory before renderer init: %d", esp_get_free_heap_size());
+  battery = new Battery(BATTERY_ADC_CHANNEL);
+  ESP_LOGI("main", "Battery %.0f, %.2fv", battery->get_percentage(), battery->get_voltage());
+  ESP_LOGI("main", "Memory before renderer init: %d", esp_get_free_heap_size());
 
+  #ifdef CONFIG_EPD_DISPLAY_TYPE_ED047TC2
     // Need to power on the EDP to get power to the SD Card (Only in Lilygo model)
     // Not when using EPDiy since first epd_init() has to be called to initialize stuff
     epd_poweron();
   #endif
-  
   // create the EPD renderer
   Renderer *renderer = new EpdRenderer(
       &regular_font,

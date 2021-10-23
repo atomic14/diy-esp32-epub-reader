@@ -59,6 +59,10 @@ public:
     // start up the EPD
     epd_init(EPD_OPTIONS_DEFAULT);
     m_hl = epd_hl_init(EPD_BUILTIN_WAVEFORM);
+
+    #ifndef CONFIG_EPD_DISPLAY_TYPE_ED047TC2
+      epd_poweron();
+    #endif
     // first set full screen to white
     epd_hl_set_all_white(&m_hl);
     epd_set_rotation(EPD_ROT_INVERTED_PORTRAIT);
