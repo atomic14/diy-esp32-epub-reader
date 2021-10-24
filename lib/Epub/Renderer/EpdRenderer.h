@@ -60,7 +60,7 @@ public:
     epd_init(EPD_OPTIONS_DEFAULT);
     m_hl = epd_hl_init(EPD_BUILTIN_WAVEFORM);
 
-    #ifndef CONFIG_EPD_DISPLAY_TYPE_ED047TC2
+    #ifndef CONFIG_EPD_BOARD_REVISION_LILYGO_T5_47
       epd_poweron();
     #endif
     // first set full screen to white

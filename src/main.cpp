@@ -193,7 +193,7 @@ void main_task(void *param)
   ESP_LOGI("main", "Battery %.0f, %.2fv", battery->get_percentage(), battery->get_voltage());
   ESP_LOGI("main", "Memory before renderer init: %d", esp_get_free_heap_size());
 
-  #ifdef CONFIG_EPD_DISPLAY_TYPE_ED047TC2
+  #ifdef CONFIG_EPD_BOARD_REVISION_LILYGO_T5_47
     // Need to power on the EDP to get power to the SD Card (Only in Lilygo model)
     // Not when using EPDiy since first epd_init() has to be called to initialize stuff
     epd_poweron();
