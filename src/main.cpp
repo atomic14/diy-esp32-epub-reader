@@ -279,7 +279,7 @@ void main_task(void *param)
 
   // keep track of when the user last interacted and go to sleep after N seconds
   int64_t last_user_interaction = esp_timer_get_time();
-  while (esp_timer_get_time() - last_user_interaction < 10 * 1000 * 1000)
+  while (esp_timer_get_time() - last_user_interaction < 120 * 1000 * 1000)
   {
     UIAction ui_action = NONE;
     // wait for something to happen for 60 seconds
