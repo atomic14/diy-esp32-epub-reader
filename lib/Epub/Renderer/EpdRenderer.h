@@ -60,9 +60,9 @@ public:
     epd_init(EPD_OPTIONS_DEFAULT);
     m_hl = epd_hl_init(EPD_BUILTIN_WAVEFORM);
 
-    #ifndef CONFIG_EPD_BOARD_REVISION_LILYGO_T5_47
-      epd_poweron();
-    #endif
+#ifndef CONFIG_EPD_BOARD_REVISION_LILYGO_T5_47
+    epd_poweron();
+#endif
     // first set full screen to white
     epd_hl_set_all_white(&m_hl);
     epd_set_rotation(EPD_ROT_INVERTED_PORTRAIT);
@@ -276,7 +276,7 @@ public:
   }
 
   // deep sleep helper - retrieve any state from disk after wake
-  virtual void hydrate()
+  virtual bool hydrate()
   {
     ESP_LOGI("EPD", "Hydrating EPD");
     if (hydrate_frame_buffer("/fs/front_buffer.z", m_frame_buffer, EPD_WIDTH * EPD_HEIGHT / 2))
@@ -284,15 +284,18 @@ public:
       // just memcopy the front buffer to the back buffer - they should be exactly the same
       memcpy(m_hl.back_fb, m_frame_buffer, EPD_WIDTH * EPD_HEIGHT / 2);
       ESP_LOGI("EPD", "Hydrated EPD");
+      return true;
     }
     else
     {
       ESP_LOGI("EPD", "Hydrate EPD failed");
       reset();
+      return false;
     }
   };
   virtual void reset()
   {
+    ESP_LOGI("EPD", "Full clear");
     epd_fullclear(&m_hl, temperature);
   };
 };

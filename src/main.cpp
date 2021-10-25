@@ -4,9 +4,9 @@
 #include <esp_sleep.h>
 #include "config.h"
 #ifndef USE_SPIFFS
-  #include "SDCard.h"
+#include "SDCard.h"
 #else
-  #include "SPIFFS.h"
+#include "SPIFFS.h"
 #endif
 #include "EpubList/Epub.h"
 #include "EpubList/EpubList.h"
@@ -21,18 +21,18 @@
 #include "Renderer/ConsoleRenderer.h"
 #include "controls/ButtonControls.h"
 #ifdef USE_TOUCH
-  #include "controls/TouchControls.h"
+#include "controls/TouchControls.h"
 #endif
 #ifdef BATTERY_ADC_CHANNEL
-  #include "battery/Battery.h"
-  static Battery *battery = nullptr;
+#include "battery/Battery.h"
+static Battery *battery = nullptr;
 #endif
 
 #ifdef LOG_ENABLED
-  // Reference: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/log.html
-  #define LOG_LEVEL ESP_LOG_INFO
+// Reference: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/log.html
+#define LOG_LEVEL ESP_LOG_INFO
 #else
-  #define LOG_LEVEL ESP_LOG_NONE
+#define LOG_LEVEL ESP_LOG_NONE
 #endif
 #include <esp_log.h>
 // The SD Card shares the same GPIO pins as the touch controller so you must use SPIFFS
@@ -61,7 +61,7 @@ RTC_NOINIT_ATTR UIState ui_state = SELECTING_EPUB;
 RTC_DATA_ATTR EpubListState epub_list_state;
 
 void handleEpub(Renderer *renderer, UIAction action);
-void handleEpubList(Renderer *renderer, UIAction action);
+void handleEpubList(Renderer *renderer, UIAction action, bool needs_redraw);
 
 static EpubList *epub_list = nullptr;
 static EpubReader *reader = nullptr;
@@ -93,8 +93,7 @@ void handleEpub(Renderer *renderer, UIAction action)
     {
       epub_list = new EpubList(renderer, &epub_list_state);
     }
-    epub_list->set_needs_redraw();
-    handleEpubList(renderer, NONE);
+    handleEpubList(renderer, NONE, true);
     return;
   case NONE:
   default:
@@ -103,7 +102,7 @@ void handleEpub(Renderer *renderer, UIAction action)
   reader->render();
 }
 
-void handleEpubList(Renderer *renderer, UIAction action)
+void handleEpubList(Renderer *renderer, UIAction action, bool needs_redraw)
 {
   // load up the epub list from the filesystem
   if (!epub_list)
@@ -114,6 +113,10 @@ void handleEpubList(Renderer *renderer, UIAction action)
     {
       ESP_LOGI("main", "Epub files loaded");
     }
+  }
+  if (needs_redraw)
+  {
+    epub_list->set_needs_redraw();
   }
   // work out what the user wants us to do
   switch (action)
@@ -141,7 +144,7 @@ void handleEpubList(Renderer *renderer, UIAction action)
   epub_list->render();
 }
 
-void handleUserInteraction(Renderer *renderer, UIAction ui_action)
+void handleUserInteraction(Renderer *renderer, UIAction ui_action, bool needs_redraw)
 {
   switch (ui_state)
   {
@@ -150,7 +153,7 @@ void handleUserInteraction(Renderer *renderer, UIAction ui_action)
     break;
   case SELECTING_EPUB:
   default:
-    handleEpubList(renderer, ui_action);
+    handleEpubList(renderer, ui_action, needs_redraw);
     break;
   }
 }
@@ -177,32 +180,32 @@ void draw_battery_level(Renderer *renderer, float voltage, float percentage)
 
 void main_task(void *param)
 {
-  #ifdef USE_SPIFFS
-    ESP_LOGI("main", "Using SPIFFS");
-    // create the file system
-    SPIFFS *spiffs = new SPIFFS("/fs");
-    
-  #else
-    ESP_LOGI("main", "Using SDCard");
-    // initialise the SDCard
-    SDCard *sdcard = new SDCard("/fs", SD_CARD_PIN_NUM_MISO, SD_CARD_PIN_NUM_MOSI, SD_CARD_PIN_NUM_CLK, SD_CARD_PIN_NUM_CS);
-  #endif
+#ifdef USE_SPIFFS
+  ESP_LOGI("main", "Using SPIFFS");
+  // create the file system
+  SPIFFS *spiffs = new SPIFFS("/fs");
+
+#else
+  ESP_LOGI("main", "Using SDCard");
+  // initialise the SDCard
+  SDCard *sdcard = new SDCard("/fs", SD_CARD_PIN_NUM_MISO, SD_CARD_PIN_NUM_MOSI, SD_CARD_PIN_NUM_CLK, SD_CARD_PIN_NUM_CS);
+#endif
   // dump out the epub list state
   ESP_LOGI("main", "epub list state num_epubs=%d", epub_list_state.num_epubs);
   ESP_LOGI("main", "epub list state is_loaded=%d", epub_list_state.is_loaded);
   ESP_LOGI("main", "epub list state selected_item=%d", epub_list_state.selected_item);
 
-  #ifdef BATTERY_ADC_CHANNEL
-    battery = new Battery(BATTERY_ADC_CHANNEL);
-    ESP_LOGI("main", "Battery %.0f, %.2fv", battery->get_percentage(), battery->get_voltage());
-    ESP_LOGI("main", "Memory before renderer init: %d", esp_get_free_heap_size());
-  #endif
+#ifdef BATTERY_ADC_CHANNEL
+  battery = new Battery(BATTERY_ADC_CHANNEL);
+  ESP_LOGI("main", "Battery %.0f, %.2fv", battery->get_percentage(), battery->get_voltage());
+  ESP_LOGI("main", "Memory before renderer init: %d", esp_get_free_heap_size());
+#endif
 
-  #ifdef CONFIG_EPD_BOARD_REVISION_LILYGO_T5_47
-    // Need to power on the EDP to get power to the SD Card (Only in Lilygo model)
-    // Not when using EPDiy since first epd_init() has to be called to initialize stuff
-    epd_poweron();
-  #endif
+#ifdef CONFIG_EPD_BOARD_REVISION_LILYGO_T5_47
+  // Need to power on the EDP to get power to the SD Card (Only in Lilygo model)
+  // Not when using EPDiy since first epd_init() has to be called to initialize stuff
+  epd_poweron();
+#endif
   // create the EPD renderer
   Renderer *renderer = new EpdRenderer(
       &regular_font,
@@ -235,7 +238,7 @@ void main_task(void *param)
         xQueueSend(ui_queue, &action, 0);
       });
 
-  #ifdef USE_TOUCH
+#ifdef USE_TOUCH
   TouchControls *touch_controls = new TouchControls(
       renderer,
       EPD_WIDTH,
@@ -245,38 +248,38 @@ void main_task(void *param)
       {
         xQueueSend(ui_queue, &action, 0);
       });
-  #endif
+#endif
 
   ESP_LOGI("main", "Controls configured");
   // work out if we were woken from deep sleep
   if (controls->did_wake_from_deep_sleep())
   {
     // restore the renderer state - it should have been saved when we went to sleep...
-    renderer->hydrate();
+    bool hydrate_success = renderer->hydrate();
     UIAction ui_action = controls->get_deep_sleep_action();
-    handleUserInteraction(renderer, ui_action);
+    handleUserInteraction(renderer, ui_action, !hydrate_success);
   }
   else
   {
     // reset the screen
     renderer->reset();
     // make sure the UI is in the right state
-    handleUserInteraction(renderer, NONE);
+    handleUserInteraction(renderer, NONE, true);
   }
 
-  #ifdef BATTERY_ADC_CHANNEL
-    // draw the battery level before flushing the screen
-    draw_battery_level(renderer, battery->get_voltage(), battery->get_percentage());
-  #endif
-  
-  #ifdef USE_TOUCH
-    touch_controls->render(renderer);
-  #endif
+#ifdef BATTERY_ADC_CHANNEL
+  // draw the battery level before flushing the screen
+  draw_battery_level(renderer, battery->get_voltage(), battery->get_percentage());
+#endif
+
+#ifdef USE_TOUCH
+  touch_controls->render(renderer);
+#endif
   renderer->flush_display();
 
   // keep track of when the user last interacted and go to sleep after N seconds
   int64_t last_user_interaction = esp_timer_get_time();
-  while (esp_timer_get_time() - last_user_interaction < 120 * 1000 * 1000)
+  while (esp_timer_get_time() - last_user_interaction < 10 * 1000 * 1000)
   {
     UIAction ui_action = NONE;
     // wait for something to happen for 60 seconds
@@ -287,23 +290,23 @@ void main_task(void *param)
         // something happened!
         last_user_interaction = esp_timer_get_time();
 
-        #ifdef USE_TOUCH
-          // show feedback on the touch controls
-          touch_controls->renderPressedState(renderer, ui_action);
-        #endif
-        handleUserInteraction(renderer, ui_action);
+#ifdef USE_TOUCH
+        // show feedback on the touch controls
+        touch_controls->renderPressedState(renderer, ui_action);
+#endif
+        handleUserInteraction(renderer, ui_action, false);
 
-        #ifdef USE_TOUCH
-          // make sure to clear the feedback on the touch controls
-          touch_controls->render(renderer);
-        #endif
+#ifdef USE_TOUCH
+        // make sure to clear the feedback on the touch controls
+        touch_controls->render(renderer);
+#endif
       }
     }
-    // update the battery level - do this even if there is no interaction so we
-    // show the battery level even if the user is idle
-    #ifdef BATTERY_ADC_CHANNEL
-      draw_battery_level(renderer, battery->get_voltage(), battery->get_percentage());
-    #endif
+// update the battery level - do this even if there is no interaction so we
+// show the battery level even if the user is idle
+#ifdef BATTERY_ADC_CHANNEL
+    draw_battery_level(renderer, battery->get_voltage(), battery->get_percentage());
+#endif
     renderer->flush_display();
   }
   ESP_LOGI("main", "Saving state");

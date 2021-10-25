@@ -53,7 +53,7 @@ public:
   // deep sleep helper - persist any state to disk that may be needed on wake
   virtual void dehydrate(){};
   // deep sleep helper - retrieve any state from disk after wake
-  virtual void hydrate(){};
+  virtual bool hydrate() { return true; };
   // really really clear the screen
   virtual void reset(){};
 
