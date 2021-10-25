@@ -23,12 +23,16 @@
 #ifdef USE_TOUCH
   #include "controls/TouchControls.h"
 #endif
-#include "battery/Battery.h"
+#ifdef BATTERY_ADC_CHANNEL
+  #include "battery/Battery.h"
+  static Battery *battery = nullptr;
+#endif
+
 #ifdef LOG_ENABLED
-// Reference: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/log.html
-#define LOG_LEVEL ESP_LOG_INFO
+  // Reference: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/log.html
+  #define LOG_LEVEL ESP_LOG_INFO
 #else
-#define LOG_LEVEL ESP_LOG_NONE
+  #define LOG_LEVEL ESP_LOG_NONE
 #endif
 #include <esp_log.h>
 // The SD Card shares the same GPIO pins as the touch controller so you must use SPIFFS
@@ -61,7 +65,6 @@ void handleEpubList(Renderer *renderer, UIAction action);
 
 static EpubList *epub_list = nullptr;
 static EpubReader *reader = nullptr;
-static Battery *battery = nullptr;
 
 void handleEpub(Renderer *renderer, UIAction action)
 {
@@ -189,9 +192,11 @@ void main_task(void *param)
   ESP_LOGI("main", "epub list state is_loaded=%d", epub_list_state.is_loaded);
   ESP_LOGI("main", "epub list state selected_item=%d", epub_list_state.selected_item);
 
-  battery = new Battery(BATTERY_ADC_CHANNEL);
-  ESP_LOGI("main", "Battery %.0f, %.2fv", battery->get_percentage(), battery->get_voltage());
-  ESP_LOGI("main", "Memory before renderer init: %d", esp_get_free_heap_size());
+  #ifdef BATTERY_ADC_CHANNEL
+    battery = new Battery(BATTERY_ADC_CHANNEL);
+    ESP_LOGI("main", "Battery %.0f, %.2fv", battery->get_percentage(), battery->get_voltage());
+    ESP_LOGI("main", "Memory before renderer init: %d", esp_get_free_heap_size());
+  #endif
 
   #ifdef CONFIG_EPD_BOARD_REVISION_LILYGO_T5_47
     // Need to power on the EDP to get power to the SD Card (Only in Lilygo model)
@@ -258,8 +263,11 @@ void main_task(void *param)
     // make sure the UI is in the right state
     handleUserInteraction(renderer, NONE);
   }
-  // draw the battery level before flushing the screen
-  draw_battery_level(renderer, battery->get_voltage(), battery->get_percentage());
+
+  #ifdef BATTERY_ADC_CHANNEL
+    // draw the battery level before flushing the screen
+    draw_battery_level(renderer, battery->get_voltage(), battery->get_percentage());
+  #endif
   
   #ifdef USE_TOUCH
     touch_controls->render(renderer);
@@ -293,7 +301,9 @@ void main_task(void *param)
     }
     // update the battery level - do this even if there is no interaction so we
     // show the battery level even if the user is idle
-    draw_battery_level(renderer, battery->get_voltage(), battery->get_percentage());
+    #ifdef BATTERY_ADC_CHANNEL
+      draw_battery_level(renderer, battery->get_voltage(), battery->get_percentage());
+    #endif
     renderer->flush_display();
   }
   ESP_LOGI("main", "Saving state");
