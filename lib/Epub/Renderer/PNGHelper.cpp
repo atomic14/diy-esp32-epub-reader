@@ -70,8 +70,8 @@ void PNGHelper::draw_callback(PNGDRAW *draw)
   {
     // feed the watchdog
     vTaskDelay(1);
-    // get the rgb 565 pixel values
-    png.getLineAsRGB565(draw, tmp_rgb565_buffer, 0, 0);
+    // get the rgb 565 pixel values                 BKG is in form of 00BBGGRR
+    png.getLineAsRGB565(draw, tmp_rgb565_buffer, 0, 0x00FFFFFF);
     for (int x = 0; x < png.getWidth() * x_scale; x++)
     {
       uint8_t r, g, b;
