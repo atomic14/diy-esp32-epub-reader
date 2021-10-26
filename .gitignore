@@ -3,3 +3,5 @@
 venv
 .DS_Store
 build
+*.old
+
