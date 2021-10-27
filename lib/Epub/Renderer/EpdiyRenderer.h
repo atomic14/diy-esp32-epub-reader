@@ -3,10 +3,10 @@
 #include <epd_driver.h>
 #include <epd_highlevel.h>
 #include <math.h>
-#include "EpdFrameBufferRenderer.h"
+#include "EpdiyFrameBufferRenderer.h"
 #include "miniz.h"
 
-class EpdiyRenderer : public EpdFrameBufferRenderer
+class EpdiyRenderer : public EpdiyFrameBufferRenderer
 {
 private:
   EpdiyHighlevelState m_hl;
@@ -20,7 +20,7 @@ public:
       const uint8_t *busy_icon,
       int busy_icon_width,
       int busy_icon_height)
-      : EpdFrameBufferRenderer(regular_font, bold_font, italic_font, bold_italic_font, busy_icon, busy_icon_width, busy_image_height)
+      : EpdiyFrameBufferRenderer(regular_font, bold_font, italic_font, bold_italic_font, busy_icon, busy_icon_width, busy_icon_height)
   {
     // start up the EPD
     epd_init(EPD_OPTIONS_DEFAULT);
