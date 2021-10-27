@@ -180,31 +180,18 @@ public:
       FILE *fp = fopen("/fs/front_buffer.z", "w");
       if (fp)
       {
-        // saving in chunks seems to work more reliably
-        size_t total_written = 0;
-        while (total_written < compressed_size)
-        {
-          size_t written = fwrite(compressed + total_written, 1, std::min(size_t(1024), compressed_size - total_written), fp);
-          if (written > 0)
-          {
-            total_written += written;
-          }
-          else
-          {
-            break;
-          }
-        }
+        size_t written = fwrite(compressed, 1, compressed_size, fp);
         fclose(fp);
-        if (total_written != compressed_size)
+        free(compressed);
+        if (written != compressed_size)
         {
           ESP_LOGI("EPD", "Failed to write to file");
           remove("/fs/front_buffer.z");
           return false;
         }
-        ESP_LOGI("EPD", "Buffer saved %d", total_written);
+        ESP_LOGI("EPD", "Buffer saved %d", written);
+        return true;
       }
-      free(compressed);
-      return true;
     }
     return false;
   }
