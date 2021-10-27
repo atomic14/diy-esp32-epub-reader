@@ -1,3 +1,4 @@
+#ifdef USE_TOUCH
 #include "L58Touch.h"
 #include "TouchControls.h"
 #include <Renderer/Renderer.h>
@@ -143,3 +144,4 @@ void TouchControls::handleTouch(int x, int y)
   }
 #endif
 }
+#endif

@@ -12,7 +12,12 @@
 #include "EpubList/EpubList.h"
 #include "EpubList/EpubReader.h"
 #include <RubbishHtmlParser/RubbishHtmlParser.h>
-#include "Renderer/EpdRenderer.h"
+#ifdef USE_EPD_DISPLAY
+#include "Renderer/EpdiyRenderer.h"
+#endif
+#ifdef USE_M5PAPER_DISPLAY
+#include "Renderer/M5PaperRenderer.h"
+#endif
 #include <regular_font.h>
 #include <bold_font.h>
 #include <italic_font.h>
@@ -180,6 +185,12 @@ void draw_battery_level(Renderer *renderer, float voltage, float percentage)
 
 void main_task(void *param)
 {
+#ifdef USE_M5PAPER_DISPLAY
+  // power up the M5Paper board
+  gpio_set_direction(M5EPD_MAIN_PWR_PIN, GPIO_MODE_OUTPUT);
+  gpio_set_level(M5EPD_MAIN_PWR_PIN, 1);
+
+#endif
 #ifdef USE_SPIFFS
   ESP_LOGI("main", "Using SPIFFS");
   // create the file system
@@ -206,8 +217,10 @@ void main_task(void *param)
   // Not when using EPDiy since first epd_init() has to be called to initialize stuff
   epd_poweron();
 #endif
+
   // create the EPD renderer
-  Renderer *renderer = new EpdRenderer(
+#ifdef USE_M5PAPER_DISPLAY
+  Renderer *renderer = new M5PaperRenderer(
       &regular_font,
       &bold_font,
       &italic_font,
@@ -215,6 +228,16 @@ void main_task(void *param)
       hourglass_data,
       hourglass_width,
       hourglass_height);
+#else
+  Renderer *renderer = new EpdiyRenderer(
+      &regular_font,
+      &bold_font,
+      &italic_font,
+      &bold_italic_font,
+      hourglass_data,
+      hourglass_width,
+      hourglass_height);
+#endif
   // make space for the battery
   renderer->set_margin_top(35);
   // page margins
@@ -320,9 +343,12 @@ void main_task(void *param)
 #endif
   ESP_ERROR_CHECK(esp_sleep_enable_ulp_wakeup());
   ESP_LOGI("main", "Entering deep sleep");
+#ifndef USE_M5PAPER_DISPLAY
   epd_poweroff();
+#endif
   // configure deep sleep options
   controls->setup_deep_sleep();
+  vTaskDelay(pdMS_TO_TICKS(500));
   // go to sleep
   esp_deep_sleep_start();
 }

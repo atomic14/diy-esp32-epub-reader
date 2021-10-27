@@ -8,9 +8,9 @@
 
 #define GAMMA_VALUE (1.0f / 0.8f)
 
-class EpdRenderer : public Renderer
+class EpdiyFrameBufferRenderer : public Renderer
 {
-private:
+protected:
   const EpdFont *m_regular_font;
   const EpdFont *m_bold_font;
   const EpdFont *m_italic_font;
@@ -42,7 +42,7 @@ private:
   }
 
 public:
-  EpdRenderer(
+  EpdiyFrameBufferRenderer(
       const EpdFont *regular_font,
       const EpdFont *bold_font,
       const EpdFont *italic_font,
@@ -56,13 +56,7 @@ public:
     m_font_props = epd_font_properties_default();
     // fallback to a question mark for character not available in the font
     m_font_props.fallback_glyph = '?';
-    // start up the EPD
-    epd_init(EPD_OPTIONS_DEFAULT);
     m_hl = epd_hl_init(EPD_BUILTIN_WAVEFORM);
-
-#ifndef CONFIG_EPD_BOARD_REVISION_LILYGO_T5_47
-    epd_poweron();
-#endif
     // first set full screen to white
     epd_hl_set_all_white(&m_hl);
     epd_set_rotation(EPD_ROT_INVERTED_PORTRAIT);
@@ -73,9 +67,8 @@ public:
       gamma_curve[gray_value] = round(255 * pow(gray_value / 255.0, GAMMA_VALUE));
     }
   }
-  ~EpdRenderer()
+  virtual ~EpdiyFrameBufferRenderer()
   {
-    epd_deinit();
   }
   void show_busy()
   {
@@ -154,15 +147,8 @@ public:
     needs_gray(color);
     epd_draw_circle(x, y, r, color, m_frame_buffer);
   }
-  void flush_display()
-  {
-    epd_hl_update_screen(&m_hl, needs_gray_flush ? MODE_GC16 : MODE_DU, temperature);
-    needs_gray_flush = false;
-  }
-  void flush_area(int x, int y, int width, int height)
-  {
-    epd_hl_update_area(&m_hl, MODE_DU, temperature, {.x = x, .y = y, .width = width, .height = height});
-  }
+  virtual void flush_display() = 0;
+  virtual void flush_area(int x, int y, int width, int height) = 0;
 
   virtual void clear_screen()
   {
@@ -293,9 +279,5 @@ public:
       return false;
     }
   };
-  virtual void reset()
-  {
-    ESP_LOGI("EPD", "Full clear");
-    epd_fullclear(&m_hl, temperature);
-  };
+  virtual void reset() = 0;
 };
