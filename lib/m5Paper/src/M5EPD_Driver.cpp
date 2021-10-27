@@ -77,7 +77,7 @@ m5epd_err_t M5EPD_Driver::begin(gpio_num_t sck, gpio_num_t mosi, gpio_num_t miso
                                             .duty_cycle_pos = 0,
                                             .cs_ena_pretrans = 0,
                                             .cs_ena_posttrans = 0,
-                                            .clock_speed_hz = 80000000,
+                                            .clock_speed_hz = SPI_MASTER_FREQ_80M,
                                             .input_delay_ns = 0,
                                             .spics_io_num = -1, //CS pin
                                             .flags = SPI_DEVICE_NO_DUMMY,

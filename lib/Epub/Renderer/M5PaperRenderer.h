@@ -54,8 +54,11 @@ public:
   }
   void flush_area(int x, int y, int width, int height)
   {
-    // TODO - work out how to do a partial update
-    flush_display();
+    // there's probably a way of only sending the data we need to send for the area
+    driver.WriteFullGram4bpp(m_frame_buffer);
+    // don't forger we're rotated
+    driver.UpdateArea(y, x, height, width, needs_gray_flush ? UPDATE_MODE_GC16 : UPDATE_MODE_DU);
+    needs_gray_flush = false;
   }
   virtual bool hydrate()
   {
