@@ -8,6 +8,9 @@
 
 class EpdiyRenderer : public EpdFrameBufferRenderer
 {
+private:
+  EpdiyHighlevelState m_hl;
+
 public:
   EpdiyRenderer(
       const EpdFont *regular_font,
@@ -21,6 +24,11 @@ public:
   {
     // start up the EPD
     epd_init(EPD_OPTIONS_DEFAULT);
+
+    m_hl = epd_hl_init(EPD_BUILTIN_WAVEFORM);
+    // first set full screen to white
+    epd_hl_set_all_white(&m_hl);
+    m_frame_buffer = epd_hl_get_framebuffer(&m_hl);
 
 #ifndef CONFIG_EPD_BOARD_REVISION_LILYGO_T5_47
     epd_poweron();
@@ -43,5 +51,23 @@ public:
   {
     ESP_LOGI("EPD", "Full clear");
     epd_fullclear(&m_hl, temperature);
+  };
+  // deep sleep helper - retrieve any state from disk after wake
+  virtual bool hydrate()
+  {
+    ESP_LOGI("EPD", "Hydrating EPD");
+    if (EpdiyFrameBufferRenderer::hydrate())
+    {
+      // just memcopy the front buffer to the back buffer - they should be exactly the same
+      memcpy(m_hl.back_fb, m_frame_buffer, EPD_WIDTH * EPD_HEIGHT / 2);
+      ESP_LOGI("EPD", "Hydrated EPD");
+      return true;
+    }
+    else
+    {
+      ESP_LOGI("EPD", "Hydrate EPD failed");
+      reset();
+      return false;
+    }
   };
 };

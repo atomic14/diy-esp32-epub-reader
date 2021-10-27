@@ -18,7 +18,6 @@ protected:
   const uint8_t *m_busy_image;
   int m_busy_image_width;
   int m_busy_image_height;
-  EpdiyHighlevelState m_hl;
   uint8_t *m_frame_buffer;
   EpdFontProperties m_font_props;
   uint8_t gamma_curve[256] = {0};
@@ -56,11 +55,7 @@ public:
     m_font_props = epd_font_properties_default();
     // fallback to a question mark for character not available in the font
     m_font_props.fallback_glyph = '?';
-    m_hl = epd_hl_init(EPD_BUILTIN_WAVEFORM);
-    // first set full screen to white
-    epd_hl_set_all_white(&m_hl);
     epd_set_rotation(EPD_ROT_INVERTED_PORTRAIT);
-    m_frame_buffer = epd_hl_get_framebuffer(&m_hl);
 
     for (int gray_value = 0; gray_value < 256; gray_value++)
     {
@@ -152,7 +147,7 @@ public:
 
   virtual void clear_screen()
   {
-    epd_hl_set_all_white(&m_hl);
+    memset(m_frame_buffer, 0xFF, EPD_WIDTH * EPD_HEIGHT / 2);
   }
   virtual int get_page_width()
   {
@@ -175,7 +170,7 @@ public:
   }
 
   // dehydate a frame buffer to file
-  bool dehydrate_frame_buffer(const char *fname, uint8_t *buffer, size_t size)
+  virtual bool dehydrate()
   {
     // compress the buffer to save space and increase performance - writing data is slow!
     size_t compressed_size = 0;
@@ -183,7 +178,7 @@ public:
     if (compressed)
     {
       ESP_LOGI("EPD", "Buffer compressed size: %d", compressed_size);
-      FILE *fp = fopen(fname, "w");
+      FILE *fp = fopen("/fs/front_buffer.z", "w");
       if (fp)
       {
         int written = fwrite(compressed, 1, compressed_size, fp);
@@ -202,22 +197,11 @@ public:
     return false;
   }
 
-  // deep sleep helper - persist any state to disk that may be needed on wake
-  virtual void dehydrate()
-  {
-    ESP_LOGI("EPD", "Dehydrating EPD");
-    // only need to save the front buffer - it should be exactly the same as the back buffer
-    if (!dehydrate_frame_buffer("/fs/front_buffer.z", m_frame_buffer, EPD_WIDTH * EPD_HEIGHT / 2))
-    {
-      ESP_LOGI("EPD", "Failed to save front buffer");
-    }
-    ESP_LOGI("EPD", "Dehydrated EPD");
-  };
   // hydrate a frame buffer
-  bool hydrate_frame_buffer(const char *fname, uint8_t *buffer, size_t size)
+  virtual bool hydrate()
   {
     // load the two buffers - the front and the back buffers
-    FILE *fp = fopen(fname, "r");
+    FILE *fp = fopen("/fs/front_buffer.z", "r");
     bool success = false;
     if (fp)
     {
@@ -231,7 +215,7 @@ public:
         if (compressed)
         {
           fread(compressed, 1, compressed_size, fp);
-          int result = tinfl_decompress_mem_to_mem(buffer, size, compressed, compressed_size, 0);
+          int result = tinfl_decompress_mem_to_mem(m_frame_buffer, EPD_WIDTH * EPD_HEIGHT / 2, compressed, compressed_size, 0);
           if (result == TINFL_DECOMPRESS_MEM_TO_MEM_FAILED)
           {
             ESP_LOGE("EPD", "Failed to decompress front buffer");
@@ -239,7 +223,7 @@ public:
           else
           {
             success = true;
-            ESP_LOGI("EPD", "Success decompressing %d bytes", size);
+            ESP_LOGI("EPD", "Success decompressing %d bytes", EPD_WIDTH * EPD_HEIGHT / 2);
           }
           free(compressed);
         }
@@ -260,24 +244,5 @@ public:
     }
     return success;
   }
-
-  // deep sleep helper - retrieve any state from disk after wake
-  virtual bool hydrate()
-  {
-    ESP_LOGI("EPD", "Hydrating EPD");
-    if (hydrate_frame_buffer("/fs/front_buffer.z", m_frame_buffer, EPD_WIDTH * EPD_HEIGHT / 2))
-    {
-      // just memcopy the front buffer to the back buffer - they should be exactly the same
-      memcpy(m_hl.back_fb, m_frame_buffer, EPD_WIDTH * EPD_HEIGHT / 2);
-      ESP_LOGI("EPD", "Hydrated EPD");
-      return true;
-    }
-    else
-    {
-      ESP_LOGI("EPD", "Hydrate EPD failed");
-      reset();
-      return false;
-    }
-  };
   virtual void reset() = 0;
 };

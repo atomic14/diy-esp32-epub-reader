@@ -38,7 +38,9 @@ public:
 
     driver.begin(M5EPD_SCK_PIN, M5EPD_MOSI_PIN, M5EPD_MISO_PIN, M5EPD_CS_PIN, M5EPD_BUSY_PIN);
     driver.SetColorReverse(true);
-    driver.Clear(true);
+
+    m_frame_buffer = (uint8_t *)malloc(EPD_WIDTH * EPD_HEIGHT / 2);
+    clear_screen();
   }
   ~M5PaperRenderer()
   {
@@ -55,9 +57,24 @@ public:
     // TODO - work out how to do a partial update
     flush_display();
   }
+  virtual bool hydrate()
+  {
+    ESP_LOGI("M5P", "Hydrating EPD");
+    if (EpdiyFrameBufferRenderer::hydrate())
+    {
+      ESP_LOGI("M5P", "Hydrated EPD");
+      return true;
+    }
+    else
+    {
+      ESP_LOGI("M5P", "Hydrate EPD failed");
+      reset();
+      return false;
+    }
+  }
   virtual void reset()
   {
-    ESP_LOGI("EPD", "Full clear");
+    ESP_LOGI("M5P", "Full clear");
     clear_screen();
     // flushing to white
     needs_gray_flush = false;

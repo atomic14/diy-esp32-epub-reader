@@ -185,17 +185,10 @@ void draw_battery_level(Renderer *renderer, float voltage, float percentage)
 
 void main_task(void *param)
 {
-#ifdef USE_M5PAPER_DISPLAY
-  // power up the M5Paper board
-  gpio_set_direction(M5EPD_MAIN_PWR_PIN, GPIO_MODE_OUTPUT);
-  gpio_set_level(M5EPD_MAIN_PWR_PIN, 1);
-
-#endif
 #ifdef USE_SPIFFS
   ESP_LOGI("main", "Using SPIFFS");
   // create the file system
   SPIFFS *spiffs = new SPIFFS("/fs");
-
 #else
   ESP_LOGI("main", "Using SDCard");
   // initialise the SDCard
@@ -343,7 +336,12 @@ void main_task(void *param)
 #endif
   ESP_ERROR_CHECK(esp_sleep_enable_ulp_wakeup());
   ESP_LOGI("main", "Entering deep sleep");
-#ifndef USE_M5PAPER_DISPLAY
+#ifdef USE_M5PAPER_DISPLAY
+  rtc_gpio_init(GPIO_NUM_2);
+  rtc_gpio_set_direction(GPIO_NUM_2, RTC_GPIO_MODE_OUTPUT_ONLY);
+  rtc_gpio_set_level(GPIO_NUM_2, 1);
+  rtc_gpio_hold_en(GPIO_NUM_2);
+#else
   epd_poweroff();
 #endif
   // configure deep sleep options
@@ -355,6 +353,11 @@ void main_task(void *param)
 
 void app_main()
 {
+#ifdef USE_M5PAPER_DISPLAY
+  // power up the M5Paper board
+  gpio_set_direction(M5EPD_MAIN_PWR_PIN, GPIO_MODE_OUTPUT);
+  gpio_set_level(M5EPD_MAIN_PWR_PIN, 1);
+#endif
   // Logging control
   esp_log_level_set("main", LOG_LEVEL);
   esp_log_level_set("EPUB", LOG_LEVEL);
