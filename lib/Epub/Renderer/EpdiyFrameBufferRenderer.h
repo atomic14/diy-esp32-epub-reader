@@ -1,7 +1,6 @@
 #pragma once
 #include <esp_log.h>
 #include <epd_driver.h>
-#include <epd_highlevel.h>
 #include <math.h>
 #include "Renderer.h"
 #include "miniz.h"

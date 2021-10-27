@@ -47,13 +47,7 @@ try_wakeup:
 entry:
 	STAGE_RST
 
-  // clear the hold bit on GPIO2
-  WRITE_RTC_REG(RTC_IO_TOUCH_PAD2_REG, RTC_IO_TOUCH_PAD2_HOLD_S, 1, 0)
-	// make sure it is on
-  WRITE_RTC_REG(RTC_GPIO_OUT_REG,RTC_GPIO_OUT_DATA_S+12,1,1)
-  // set the hold bit on GPIO2
-  WRITE_RTC_REG(RTC_IO_TOUCH_PAD2_REG, RTC_IO_TOUCH_PAD2_HOLD_S, 1, 1)
-
+  
 	// this will read the first 16 bits of the RTC GPIO pins
 	// if you need the higher 16 bits then you'll need to adjust
 	// this

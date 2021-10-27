@@ -355,8 +355,14 @@ void app_main()
 {
 #ifdef USE_M5PAPER_DISPLAY
   // power up the M5Paper board
+  gpio_reset_pin(M5EPD_MAIN_PWR_PIN);
+  gpio_reset_pin(M5EPD_EPD_PWR_EN_PIN);
+
   gpio_set_direction(M5EPD_MAIN_PWR_PIN, GPIO_MODE_OUTPUT);
+  gpio_set_direction(M5EPD_EPD_PWR_EN_PIN, GPIO_MODE_OUTPUT);
   gpio_set_level(M5EPD_MAIN_PWR_PIN, 1);
+  gpio_set_level(M5EPD_EPD_PWR_EN_PIN, 1);
+
 #endif
   // Logging control
   esp_log_level_set("main", LOG_LEVEL);
