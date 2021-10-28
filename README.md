@@ -34,7 +34,7 @@ git clone --recursive git@github.com:atomic14/esp32-ereader.git
 
 # What boards does it work on?
 
-I've tested it on the LilyGo EPD47, but it should work on any eInk display provided it has:
+The code should work with M5-Paper and other EPDiy based parallel e-Papers such as the LilyGo EPD47.
 
 - PSRAM - parsing the ePub files needs a fair amount of memory
 - 3 Buttons - these buttons can be active high or low
@@ -42,7 +42,7 @@ I've tested it on the LilyGo EPD47, but it should work on any eInk display provi
   - DOWN - moves down in the list of ePubs or to the next page when reading
   - SELECT - opens the ePub currently selected ePub file or goes back to the ePub list from reading mode
 - An SD Card - you can jury rig an SPI sd card using the instructions here:
-  - You can use SPIFFS instead of an SD Card, but you won't be able to fit many books on it. Make sure to leave around 200-300K of free space in your SPIFFS partition for temporary data.
+  - You can use SPIFFS instead of an SD Card, but you won't be able to fit many books on it.
 - [Optional] A battery if you want it to be portable
 
 # SPIFFS support
@@ -55,7 +55,7 @@ To upload the filesystem do:
 pio run -t uploadfs
 ```
 
-There some issues with SPIFFS which cause some problems - particularly with persisting the state of the display when going into deep sleep.
+There some issues with SPIFFS which cause some problems - particularly with persisting the state of the display when going into deep sleep - if you can get an SD Card attached these problems don't exist.
 
 # Porting to other boards
 
