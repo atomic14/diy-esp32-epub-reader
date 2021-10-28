@@ -100,7 +100,7 @@ public:
 public:
     M5EPD_Driver();
     ~M5EPD_Driver();
-    m5epd_err_t begin(gpio_num_t sck, gpio_num_t mosi, gpio_num_t miso, gpio_num_t cs, gpio_num_t busy, gpio_num_t rst = GPIO_NUM_NC);
+    m5epd_err_t begin();
     m5epd_err_t Clear(bool init = false);
     m5epd_err_t WriteFullGram4bpp(const uint8_t *gram);
     m5epd_err_t WritePartGram4bpp(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const uint8_t *gram);

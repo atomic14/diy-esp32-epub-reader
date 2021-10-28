@@ -185,30 +185,12 @@ void draw_battery_level(Renderer *renderer, float voltage, float percentage)
 
 void main_task(void *param)
 {
-#ifdef USE_SPIFFS
-  ESP_LOGI("main", "Using SPIFFS");
-  // create the file system
-  SPIFFS *spiffs = new SPIFFS("/fs");
-#else
-  ESP_LOGI("main", "Using SDCard");
-  // initialise the SDCard
-  SDCard *sdcard = new SDCard("/fs", SD_CARD_PIN_NUM_MISO, SD_CARD_PIN_NUM_MOSI, SD_CARD_PIN_NUM_CLK, SD_CARD_PIN_NUM_CS);
-#endif
-  // dump out the epub list state
-  ESP_LOGI("main", "epub list state num_epubs=%d", epub_list_state.num_epubs);
-  ESP_LOGI("main", "epub list state is_loaded=%d", epub_list_state.is_loaded);
-  ESP_LOGI("main", "epub list state selected_item=%d", epub_list_state.selected_item);
-
-#ifdef BATTERY_ADC_CHANNEL
-  battery = new Battery(BATTERY_ADC_CHANNEL);
-  ESP_LOGI("main", "Battery %.0f, %.2fv", battery->get_percentage(), battery->get_voltage());
-  ESP_LOGI("main", "Memory before renderer init: %d", esp_get_free_heap_size());
-#endif
-
+#ifndef USE_M5PAPER_DISPLAY
 #ifdef CONFIG_EPD_BOARD_REVISION_LILYGO_T5_47
   // Need to power on the EDP to get power to the SD Card (Only in Lilygo model)
   // Not when using EPDiy since first epd_init() has to be called to initialize stuff
   epd_poweron();
+#endif
 #endif
 
   // create the EPD renderer
@@ -231,6 +213,26 @@ void main_task(void *param)
       hourglass_width,
       hourglass_height);
 #endif
+#ifdef USE_SPIFFS
+  ESP_LOGI("main", "Using SPIFFS");
+  // create the file system
+  SPIFFS *spiffs = new SPIFFS("/fs");
+#else
+  ESP_LOGI("main", "Using SDCard");
+  // initialise the SDCard
+  SDCard *sdcard = new SDCard("/fs", SD_CARD_PIN_NUM_MISO, SD_CARD_PIN_NUM_MOSI, SD_CARD_PIN_NUM_CLK, SD_CARD_PIN_NUM_CS);
+#endif
+  // dump out the epub list state
+  ESP_LOGI("main", "epub list state num_epubs=%d", epub_list_state.num_epubs);
+  ESP_LOGI("main", "epub list state is_loaded=%d", epub_list_state.is_loaded);
+  ESP_LOGI("main", "epub list state selected_item=%d", epub_list_state.selected_item);
+
+#ifdef BATTERY_ADC_CHANNEL
+  battery = new Battery(BATTERY_ADC_CHANNEL);
+  ESP_LOGI("main", "Battery %.0f, %.2fv", battery->get_percentage(), battery->get_voltage());
+  ESP_LOGI("main", "Memory before renderer init: %d", esp_get_free_heap_size());
+#endif
+
   // make space for the battery
   renderer->set_margin_top(35);
   // page margins
@@ -332,7 +334,10 @@ void main_task(void *param)
 #ifdef USE_SPIFFS
   delete spiffs;
 #else
+// seems to cause issues with the M5 Paper
+#ifndef USE_M5PAPER_DISPLAY
   delete sdcard;
+#endif
 #endif
   ESP_ERROR_CHECK(esp_sleep_enable_ulp_wakeup());
   ESP_LOGI("main", "Entering deep sleep");
@@ -353,17 +358,6 @@ void main_task(void *param)
 
 void app_main()
 {
-#ifdef USE_M5PAPER_DISPLAY
-  // power up the M5Paper board
-  gpio_reset_pin(M5EPD_MAIN_PWR_PIN);
-  gpio_reset_pin(M5EPD_EPD_PWR_EN_PIN);
-
-  gpio_set_direction(M5EPD_MAIN_PWR_PIN, GPIO_MODE_OUTPUT);
-  gpio_set_direction(M5EPD_EPD_PWR_EN_PIN, GPIO_MODE_OUTPUT);
-  gpio_set_level(M5EPD_MAIN_PWR_PIN, 1);
-  gpio_set_level(M5EPD_EPD_PWR_EN_PIN, 1);
-
-#endif
   // Logging control
   esp_log_level_set("main", LOG_LEVEL);
   esp_log_level_set("EPUB", LOG_LEVEL);

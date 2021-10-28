@@ -4,6 +4,15 @@
 #include <freertos/task.h>
 #include "M5EPD_Driver.h"
 
+#define M5EPD_MAIN_PWR_PIN GPIO_NUM_2
+#define M5EPD_EXT_PWR_EN_PIN GPIO_NUM_5
+#define M5EPD_EPD_PWR_EN_PIN GPIO_NUM_23
+#define M5EPD_CS_PIN GPIO_NUM_15
+#define M5EPD_SCK_PIN GPIO_NUM_14
+#define M5EPD_MOSI_PIN GPIO_NUM_12
+#define M5EPD_BUSY_PIN GPIO_NUM_27
+#define M5EPD_MISO_PIN GPIO_NUM_13
+
 m5epd_err_t __epdret__;
 #define CHECK(x)                \
     __epdret__ = x;             \
@@ -59,14 +68,31 @@ M5EPD_Driver::~M5EPD_Driver()
 {
 }
 
-m5epd_err_t M5EPD_Driver::begin(gpio_num_t sck, gpio_num_t mosi, gpio_num_t miso, gpio_num_t cs, gpio_num_t busy, gpio_num_t rst)
+m5epd_err_t M5EPD_Driver::begin()
 {
+    _pin_cs = M5EPD_CS_PIN;
+    _pin_busy = M5EPD_BUSY_PIN;
+
+    gpio_reset_pin(_pin_cs);
+    gpio_reset_pin(_pin_busy);
+    gpio_set_direction(_pin_cs, GPIO_MODE_OUTPUT);
+    gpio_set_direction(_pin_busy, GPIO_MODE_INPUT);
+    gpio_set_level(M5EPD_CS_PIN, 1);
+
+    // power up the board
+    gpio_set_direction(M5EPD_EPD_PWR_EN_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_direction(M5EPD_MAIN_PWR_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_direction(M5EPD_EXT_PWR_EN_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_level(M5EPD_MAIN_PWR_PIN, 1);
+    gpio_set_level(M5EPD_EXT_PWR_EN_PIN, 1);
+    gpio_set_level(M5EPD_EPD_PWR_EN_PIN, 1);
+
     // setup SPI output
     esp_err_t ret;
     spi_bus_config_t buscfg = {
-        .mosi_io_num = mosi,
-        .miso_io_num = miso,
-        .sclk_io_num = sck,
+        .mosi_io_num = M5EPD_MOSI_PIN,
+        .miso_io_num = M5EPD_MISO_PIN,
+        .sclk_io_num = M5EPD_SCK_PIN,
         .quadwp_io_num = -1,
         .quadhd_io_num = -1,
         .max_transfer_sz = 0};
@@ -84,34 +110,23 @@ m5epd_err_t M5EPD_Driver::begin(gpio_num_t sck, gpio_num_t mosi, gpio_num_t miso
                                             .queue_size = 2,
                                             .pre_cb = NULL,
                                             .post_cb = NULL};
-    ret = spi_bus_initialize(VSPI_HOST, &buscfg, SPI_DMA_DISABLED);
+    ret = spi_bus_initialize(HSPI_HOST, &buscfg, SPI_DMA_CH1);
     if (ret != ESP_OK)
     {
-        ESP_LOGI("M5P", "spi_bus_initialize failed %d", ret);
+        if (ret == ESP_ERR_INVALID_STATE)
+        {
+            ESP_LOGI("M5P", "SPI already initialized\n");
+        }
+        else
+        {
+            ESP_LOGI("M5P", "SPI initialization failed\n");
+        }
     }
-    ret = spi_bus_add_device(VSPI_HOST, &devcfg, &spi);
+    ret = spi_bus_add_device(HSPI_HOST, &devcfg, &spi);
     if (ret != ESP_OK)
     {
         ESP_LOGI("M5P", "spi_bus_add_device Failed %d", ret);
     }
-
-    _pin_cs = cs;
-    _pin_busy = busy;
-    _pin_sck = sck;
-    _pin_mosi = mosi;
-    _pin_miso = miso;
-    _pin_rst = rst;
-    if (_pin_rst != -1)
-    {
-        gpio_set_direction(_pin_rst, GPIO_MODE_OUTPUT);
-        ResetDriver();
-    }
-    gpio_reset_pin(_pin_cs);
-    gpio_reset_pin(_pin_busy);
-    gpio_set_direction(_pin_cs, GPIO_MODE_OUTPUT);
-    gpio_set_direction(_pin_busy, GPIO_MODE_INPUT);
-    gpio_set_level(_pin_cs, 1);
-
     _tar_memaddr = 0x001236E0;
     _dev_memaddr_l = 0x36E0;
     _dev_memaddr_h = 0x0012;
