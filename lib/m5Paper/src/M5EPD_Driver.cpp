@@ -84,7 +84,7 @@ m5epd_err_t M5EPD_Driver::begin(gpio_num_t sck, gpio_num_t mosi, gpio_num_t miso
                                             .queue_size = 2,
                                             .pre_cb = NULL,
                                             .post_cb = NULL};
-    ret = spi_bus_initialize(VSPI_HOST, &buscfg, 1);
+    ret = spi_bus_initialize(VSPI_HOST, &buscfg, SPI_DMA_DISABLED);
     if (ret != ESP_OK)
     {
         ESP_LOGI("M5P", "spi_bus_initialize failed %d", ret);
