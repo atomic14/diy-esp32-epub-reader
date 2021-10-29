@@ -11,7 +11,6 @@ void touchTask(void *param)
   for (;;)
   {
     controls->ts->loop();
-    vTaskDelay(1);
   }
 }
 
