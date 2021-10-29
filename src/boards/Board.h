@@ -4,7 +4,11 @@
 #include <freertos/task.h>
 #include <freertos/queue.h>
 #include <stdint.h>
-#include "controls/ButtonControls.h"
+#ifdef BOARD_TYPE_EPDIY
+  #include "controls/ButtonControlsEpdiyV6.h"
+#else
+  #include "controls/ButtonControls.h"
+#endif
 #include "controls/TouchControls.h"
 #include "battery/Battery.h"
 
@@ -38,9 +42,11 @@ public:
   // get the battery monitoring object - the default behaviour is to use the build in
   // ADC if BATTERY_ADC_CHANNEL is defined
   virtual Battery *get_battery();
+
   // get the button controls object - the default behaviour is to use GPIO buttons
   // as defined in the platformio.ini
   virtual ButtonControls *get_button_controls(xQueueHandle ui_queue);
+
   // implement this to return a TouchControls object for your board - the default behaviour returns
   // a dummy implementation that does nothing
   virtual TouchControls *get_touch_controls(Renderer *renderer, xQueueHandle ui_queue);
