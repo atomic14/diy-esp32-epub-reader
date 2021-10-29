@@ -3,6 +3,13 @@
 #include <driver/i2c.h>
 #include "Actions.h"
 #include "Button.h"
+#include <esp_log.h>
+#include <esp_sleep.h>
+#include <driver/rtc_io.h>
+#include <driver/gpio.h>
+#include <esp32/ulp.h>
+#include <esp_timer.h>
+#include "ulp_main.h"
 
 // This CFG_INTR is defined on display_ops.h
 #define CFG_INTR GPIO_NUM_35
@@ -27,14 +34,17 @@ private:
   esp_err_t i2c_master_read_slave(i2c_port_t i2c_num, uint8_t* data_rd, size_t size, int reg);
   uint8_t pca9555_read_input(i2c_port_t port, int high_port);
 
-  // Note: pca9555 IO ports are declared as input as default
-  // Gives either 0 or 128 since it's floating and should be pulled-up to 3.3v
+  // Note: pca9555 IO ports are declared as input as default. Important: IOs should be pulled-up to 3.3v 
+  // IO returns: 0 in button pressed connecting GND and 128 in released state
   static void control_task(void *param) {
     ButtonControls *bc = (ButtonControls*) param;
     for (;;) {
       if (gpio_get_level(CFG_INTR) == 0) {
         uint8_t read = bc->pca9555_read_input(EPDIY_I2C_PORT, BUTTON_IO_DOWN);
-        printf("PCA INTR read:%d\n", read);
+        ESP_LOGI("Controls", "UP value:%d\n", read);
+        if (read == 0) {
+          bc->on_action(UIAction::UP);
+        }
       }
       vTaskDelay(pdMS_TO_TICKS(50));
     }

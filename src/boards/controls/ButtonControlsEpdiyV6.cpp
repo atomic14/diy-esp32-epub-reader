@@ -1,11 +1,4 @@
-#include <esp_sleep.h>
-#include <driver/rtc_io.h>
-#include <driver/gpio.h>
-#include <esp32/ulp.h>
-#include <esp_log.h>
-#include <esp_timer.h>
 #include "ButtonControlsEpdiyV6.h"
-#include "ulp_main.h"
 
 extern const uint8_t ulp_main_bin_start[] asm("_binary_ulp_main_bin_start");
 extern const uint8_t ulp_main_bin_end[] asm("_binary_ulp_main_bin_end");
