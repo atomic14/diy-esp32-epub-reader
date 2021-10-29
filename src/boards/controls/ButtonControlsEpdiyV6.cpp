@@ -169,3 +169,51 @@ void ButtonControls::setup_deep_sleep()
         ESP_EXT1_WAKEUP_ANY_HIGH);
   }
 }
+
+esp_err_t ButtonControls::i2c_master_read_slave(i2c_port_t i2c_num, uint8_t* data_rd, size_t size, int reg)
+{
+    if (size == 0) {
+        return ESP_OK;
+    }
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, ( EPDIY_PCA9555_ADDR << 1 ) | I2C_MASTER_WRITE, true);
+	i2c_master_write_byte(cmd, reg, true);
+	i2c_master_stop(cmd);
+
+    esp_err_t ret = i2c_master_cmd_begin(i2c_num, cmd, 1000 / portTICK_RATE_MS);
+    if (ret != ESP_OK) {
+        return ret;
+    }
+	i2c_cmd_link_delete(cmd);
+
+	cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+	i2c_master_write_byte(cmd, ( EPDIY_PCA9555_ADDR << 1 ) | I2C_MASTER_READ, true);
+	if (size > 1) {
+        i2c_master_read(cmd, data_rd, size - 1, I2C_MASTER_ACK);
+    }
+    i2c_master_read_byte(cmd, data_rd + size - 1, I2C_MASTER_NACK);
+    i2c_master_stop(cmd);
+
+	ret = i2c_master_cmd_begin(i2c_num, cmd, 1000 / portTICK_RATE_MS);
+    if (ret != ESP_OK) {
+        return ret;
+    }
+    i2c_cmd_link_delete(cmd);
+
+    return ESP_OK;
+}
+
+uint8_t ButtonControls::pca9555_read_input(i2c_port_t i2c_port, int high_port) {
+    esp_err_t err;
+	uint8_t r_data[1];
+
+    err = i2c_master_read_slave(i2c_port, r_data, 1, REG_INPUT_PORT0 + high_port);
+    if (err != ESP_OK) {
+        ESP_LOGE("PCA9555", "%s failed", __func__);
+        return 0;
+    }
+
+	return r_data[0];
+}
