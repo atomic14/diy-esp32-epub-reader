@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Actions.h"
+#include <hal/gpio_types.h>
 
 typedef std::function<void(void)> ButtonCallback_t;
 

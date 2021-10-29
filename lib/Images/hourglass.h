@@ -1,3 +1,5 @@
+#pragma once
+
 const uint32_t hourglass_width = 100;
 const uint32_t hourglass_height = 100;
 const uint8_t hourglass_data[(100*100)/2] = {

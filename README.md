@@ -59,7 +59,17 @@ There some issues with SPIFFS which cause some problems - particularly with pers
 
 # Porting to other boards
 
-All the configuration is in `platformio.ini` using pre-processor directives. If you do add a new board then please create a new section in platofmrio.ini with the appropriate pre-processor directives for your board and open a pull request to add it to the project - I'm happy to answer any questions on this.
+To add a new board to the project you need to:
+
+## Create a new board class in `src/boards` this should implement the methods from the `Board.h` class.
+
+This may or may not be necessary - if you are using an EPDIY board then everything is taken care of with preprocessor directives and you just need to define `BOARD_TYPE_EPDIY` in platformio.ini build flags.
+
+If you have a completely new board then at a minimum you need to return a `Renderer` object that will draw to your display. Have a look at `M5Paper.h` for inspiration. Add your new board type to the `factory` method of `Board`.
+
+## Add a new environment to `platformio.ini
+
+The majority of the configuration is in `platformio.ini` using pre-processor directives. If you do add a new board then please create a new section in platofmrio.ini with the appropriate pre-processor directives for your board and open a pull request to add it to the project - I'm happy to answer any questions on this.
 
 The important settings are the following:
 
@@ -97,7 +107,7 @@ We have the pins for the SD card. I've got a video on how to hack an SD Card and
 -DSD_CARD_PIN_NUM_CS=GPIO_NUM_12
 ```
 
-Optional Touch interface (Defaults to Lilygo EPD47)
+Optional L58 Touch interface (Defaults to Lilygo EPD47)
 
 ```
   ; Touch configuration
@@ -106,8 +116,8 @@ Optional Touch interface (Defaults to Lilygo EPD47)
   -D CONFIG_TOUCH_INT=13
   -D CONFIG_I2C_MASTER_FREQUENCY=50000
   -D CONFIG_FT6X36_DEBUG=0
-  ; Uncomment USE_TOUCH define to activate it
-  -DUSE_TOUCH
+  ; Uncomment USE_L58_TOUCH define to activate it
+  -USE_L58_TOUCH
 ```
 
 And finally we have the ADC channel that the battery voltage divider is connected to:

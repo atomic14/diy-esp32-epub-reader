@@ -1,22 +1,22 @@
-#ifdef USE_TOUCH
+#ifdef USE_L58_TOUCH
+
+#include "L58TouchControls.h"
 #include "L58Touch.h"
-#include "TouchControls.h"
 #include <Renderer/Renderer.h>
 #include "epd_driver.h"
 
 void touchTask(void *param)
 {
-  TouchControls *controls = (TouchControls *)param;
+  L58TouchControls *controls = (L58TouchControls *)param;
   for (;;)
   {
     controls->ts->loop();
-    vTaskDelay(1);
   }
 }
 
 // stash the instance - TODO - update the touch library to use std::function for callbacks so
 // it can take lambdas
-static TouchControls *instance = nullptr;
+static L58TouchControls *instance = nullptr;
 
 void touchHandler(TPoint p, TEvent e)
 {
@@ -26,12 +26,11 @@ void touchHandler(TPoint p, TEvent e)
   }
 }
 
-TouchControls::TouchControls(Renderer *renderer, int width, int height, int rotation, ActionCallback_t on_action)
+L58TouchControls::L58TouchControls(Renderer *renderer, int touch_int, int width, int height, int rotation, ActionCallback_t on_action)
     : on_action(on_action), renderer(renderer)
 {
-#ifdef USE_TOUCH
   instance = this;
-  this->ts = new L58Touch(CONFIG_TOUCH_INT);
+  this->ts = new L58Touch(touch_int);
   /** Instantiate touch. Important inject here the display width and height size in pixels
         setRotation(3)     Portrait mode */
   ts->begin(width, height);
@@ -39,12 +38,10 @@ TouchControls::TouchControls(Renderer *renderer, int width, int height, int rota
   ts->setTapThreshold(50);
   ts->registerTouchHandler(touchHandler);
   xTaskCreate(touchTask, "touchTask", 4096, this, 0, NULL);
-#endif
 }
 
-void TouchControls::render(Renderer *renderer)
+void L58TouchControls::render(Renderer *renderer)
 {
-#ifdef USE_TOUCH
   renderer->set_margin_top(0);
   uint16_t x_offset = 10;
   uint16_t x_triangle = x_offset + 70;
@@ -61,12 +58,10 @@ void TouchControls::render(Renderer *renderer)
   renderer->draw_rect(x_offset, 1, ui_button_width, ui_button_height, 0);
   renderer->draw_circle(x_offset + (ui_button_width / 2) + 9, 15, 5, 0);
   renderer->set_margin_top(35);
-#endif
 }
 
-void TouchControls::renderPressedState(Renderer *renderer, UIAction action, bool state)
+void L58TouchControls::renderPressedState(Renderer *renderer, UIAction action, bool state)
 {
-#ifdef USE_TOUCH
   renderer->set_margin_top(0);
   switch (action)
   {
@@ -110,13 +105,11 @@ void TouchControls::renderPressedState(Renderer *renderer, UIAction action, bool
     break;
   }
   renderer->set_margin_top(35);
-#endif
 }
 
-void TouchControls::handleTouch(int x, int y)
+void L58TouchControls::handleTouch(int x, int y)
 {
   UIAction action = NONE;
-#ifdef USE_TOUCH
   ESP_LOGI("TOUCH", "Received touch event %d,%d", x, y);
   if (x >= 10 && x <= 10 + ui_button_width && y < 200)
   {
@@ -142,6 +135,5 @@ void TouchControls::handleTouch(int x, int y)
   {
     on_action(action);
   }
-#endif
 }
 #endif

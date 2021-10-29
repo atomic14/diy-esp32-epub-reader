@@ -3,35 +3,11 @@
 #include <freertos/queue.h>
 #include <esp_sleep.h>
 #include "config.h"
-#ifndef USE_SPIFFS
-#include "SDCard.h"
-#else
-#include "SPIFFS.h"
-#endif
 #include "EpubList/Epub.h"
 #include "EpubList/EpubList.h"
 #include "EpubList/EpubReader.h"
 #include <RubbishHtmlParser/RubbishHtmlParser.h>
-#ifdef USE_EPD_DISPLAY
-#include "Renderer/EpdiyRenderer.h"
-#endif
-#ifdef USE_M5PAPER_DISPLAY
-#include "Renderer/M5PaperRenderer.h"
-#endif
-#include <regular_font.h>
-#include <bold_font.h>
-#include <italic_font.h>
-#include <bold_italic_font.h>
-#include <hourglass.h>
-#include "Renderer/ConsoleRenderer.h"
-#include "controls/ButtonControls.h"
-#ifdef USE_TOUCH
-#include "controls/TouchControls.h"
-#endif
-#ifdef BATTERY_ADC_CHANNEL
-#include "battery/Battery.h"
-static Battery *battery = nullptr;
-#endif
+#include "boards/Board.h"
 
 #ifdef LOG_ENABLED
 // Reference: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/log.html
@@ -40,12 +16,6 @@ static Battery *battery = nullptr;
 #define LOG_LEVEL ESP_LOG_NONE
 #endif
 #include <esp_log.h>
-// The SD Card shares the same GPIO pins as the touch controller so you must use SPIFFS
-#ifdef USE_TOUCH
-#ifndef USE_SPIFFS
-#error "USE_SPIFFS must be defined if USE_TOUCH is defined"
-#endif
-#endif
 
 extern "C"
 {
@@ -185,97 +155,42 @@ void draw_battery_level(Renderer *renderer, float voltage, float percentage)
 
 void main_task(void *param)
 {
-#if !defined(USE_M5PAPER_DISPLAY) && defined(CONFIG_EPD_BOARD_REVISION_LILYGO_T5_47)
-  // Need to power on the EDP to get power to the SD Card (Only in Lilygo model)
-  // Not when using EPDiy since first epd_init() has to be called to initialize stuff
-  // The M5 board defines the CONFIG_EPD_BOARD_REVISION_LILYGO_T5_47 as well to get epdiy
-  // to build, but we don't want to power the epd on for the M5 board as it has it's own
-  // display driver
-  epd_poweron();
-#endif
+  // start the board up
+  ESP_LOGI("main", "Powering up the board");
+  Board *board = Board::factory();
+  board->power_up();
+  // create the renderer for the board
+  ESP_LOGI("main", "Creating renderer");
+  Renderer *renderer = board->get_renderer();
+  // bring the file system up - SPIFFS or SDCard depending on the defines in platformio.ini
+  ESP_LOGI("main", "Starting file system");
+  board->start_filesystem();
 
-  // create the EPD renderer
-#ifdef USE_M5PAPER_DISPLAY
-  Renderer *renderer = new M5PaperRenderer(
-      &regular_font,
-      &bold_font,
-      &italic_font,
-      &bold_italic_font,
-      hourglass_data,
-      hourglass_width,
-      hourglass_height);
-#else
-  Renderer *renderer = new EpdiyRenderer(
-      &regular_font,
-      &bold_font,
-      &italic_font,
-      &bold_italic_font,
-      hourglass_data,
-      hourglass_width,
-      hourglass_height);
-#endif
-#ifdef USE_SPIFFS
-  ESP_LOGI("main", "Using SPIFFS");
-  // create the file system
-  SPIFFS *spiffs = new SPIFFS("/fs");
-#else
-  ESP_LOGI("main", "Using SDCard");
-  // initialise the SDCard
-  SDCard *sdcard = new SDCard("/fs", SD_CARD_PIN_NUM_MISO, SD_CARD_PIN_NUM_MOSI, SD_CARD_PIN_NUM_CLK, SD_CARD_PIN_NUM_CS);
-#endif
-  // dump out the epub list state
-  ESP_LOGI("main", "epub list state num_epubs=%d", epub_list_state.num_epubs);
-  ESP_LOGI("main", "epub list state is_loaded=%d", epub_list_state.is_loaded);
-  ESP_LOGI("main", "epub list state selected_item=%d", epub_list_state.selected_item);
+  // battery details
+  ESP_LOGI("main", "Starting battery monitor");
+  Battery *battery = board->get_battery();
 
-#ifdef BATTERY_ADC_CHANNEL
-  battery = new Battery(BATTERY_ADC_CHANNEL);
-  ESP_LOGI("main", "Battery %.0f, %.2fv", battery->get_percentage(), battery->get_voltage());
-  ESP_LOGI("main", "Memory before renderer init: %d", esp_get_free_heap_size());
-#endif
-
-  // make space for the battery
+  // make space for the battery display
   renderer->set_margin_top(35);
   // page margins
   renderer->set_margin_left(10);
   renderer->set_margin_right(10);
 
-  ESP_LOGI("main", "Memory after renderer init: %d", esp_get_free_heap_size());
-  ESP_LOGI("main", "Memory after FS init: %d", esp_get_free_heap_size());
   // create a message queue for UI events
   xQueueHandle ui_queue = xQueueCreate(10, sizeof(UIAction));
 
   // set the controls up
   ESP_LOGI("main", "Setting up controls");
-  ButtonControls *controls = new ButtonControls(
-      BUTTON_UP_GPIO_NUM,
-      BUTTON_DOWN_GPIO_NUM,
-      BUTTON_SELECT_GPIO_NUM,
-      BUTONS_ACTIVE_LEVEL,
-      [ui_queue](UIAction action)
-      {
-        xQueueSend(ui_queue, &action, 0);
-      });
-
-#ifdef USE_TOUCH
-  TouchControls *touch_controls = new TouchControls(
-      renderer,
-      EPD_WIDTH,
-      EPD_HEIGHT,
-      3,
-      [ui_queue](UIAction action)
-      {
-        xQueueSend(ui_queue, &action, 0);
-      });
-#endif
+  ButtonControls *button_controls = board->get_button_controls(ui_queue);
+  TouchControls *touch_controls = board->get_touch_controls(renderer, ui_queue);
 
   ESP_LOGI("main", "Controls configured");
   // work out if we were woken from deep sleep
-  if (controls->did_wake_from_deep_sleep())
+  if (button_controls->did_wake_from_deep_sleep())
   {
     // restore the renderer state - it should have been saved when we went to sleep...
     bool hydrate_success = renderer->hydrate();
-    UIAction ui_action = controls->get_deep_sleep_action();
+    UIAction ui_action = button_controls->get_deep_sleep_action();
     handleUserInteraction(renderer, ui_action, !hydrate_success);
   }
   else
@@ -286,14 +201,12 @@ void main_task(void *param)
     handleUserInteraction(renderer, NONE, true);
   }
 
-#ifdef BATTERY_ADC_CHANNEL
   // draw the battery level before flushing the screen
-  draw_battery_level(renderer, battery->get_voltage(), battery->get_percentage());
-#endif
-
-#ifdef USE_TOUCH
+  if (battery)
+  {
+    draw_battery_level(renderer, battery->get_voltage(), battery->get_percentage());
+  }
   touch_controls->render(renderer);
-#endif
   renderer->flush_display();
 
   // keep track of when the user last interacted and go to sleep after N seconds
@@ -308,52 +221,33 @@ void main_task(void *param)
       {
         // something happened!
         last_user_interaction = esp_timer_get_time();
-
-#ifdef USE_TOUCH
         // show feedback on the touch controls
         touch_controls->renderPressedState(renderer, ui_action);
-#endif
         handleUserInteraction(renderer, ui_action, false);
 
-#ifdef USE_TOUCH
         // make sure to clear the feedback on the touch controls
         touch_controls->render(renderer);
-#endif
       }
     }
-// update the battery level - do this even if there is no interaction so we
-// show the battery level even if the user is idle
-#ifdef BATTERY_ADC_CHANNEL
-    draw_battery_level(renderer, battery->get_voltage(), battery->get_percentage());
-#endif
+    // update the battery level - do this even if there is no interaction so we
+    // show the battery level even if the user is idle
+    if (battery)
+    {
+      draw_battery_level(renderer, battery->get_voltage(), battery->get_percentage());
+    }
     renderer->flush_display();
   }
   ESP_LOGI("main", "Saving state");
   // save the state of the renderer
   renderer->dehydrate();
-  // turn off the SD Card
-#ifdef USE_SPIFFS
-  delete spiffs;
-#else
-// seems to cause issues with the M5 Paper
-#ifndef USE_M5PAPER_DISPLAY
-  delete sdcard;
-#endif
-#endif
+  // turn off the filesystem
+  board->stop_filesystem();
+  // get ready to go to sleep
+  board->prepare_to_sleep();
   ESP_ERROR_CHECK(esp_sleep_enable_ulp_wakeup());
   ESP_LOGI("main", "Entering deep sleep");
-#ifdef USE_M5PAPER_DISPLAY
-  // need to keep the M5 power switched on even when in deep sleep
-  const gpio_num_t M5EPD_MAIN_PWR_PIN = GPIO_NUM_2;
-  rtc_gpio_init(M5EPD_MAIN_PWR_PIN);
-  rtc_gpio_set_direction(M5EPD_MAIN_PWR_PIN, RTC_GPIO_MODE_OUTPUT_ONLY);
-  rtc_gpio_set_level(M5EPD_MAIN_PWR_PIN, 1);
-  rtc_gpio_hold_en(M5EPD_MAIN_PWR_PIN);
-#else
-  epd_poweroff();
-#endif
   // configure deep sleep options
-  controls->setup_deep_sleep();
+  button_controls->setup_deep_sleep();
   vTaskDelay(pdMS_TO_TICKS(500));
   // go to sleep
   esp_deep_sleep_start();
@@ -368,6 +262,12 @@ void app_main()
   esp_log_level_set("ZIP", LOG_LEVEL);
   esp_log_level_set("JPG", LOG_LEVEL);
   esp_log_level_set("TOUCH", LOG_LEVEL);
+
+  // dump out the epub list state
+  ESP_LOGI("main", "epub list state num_epubs=%d", epub_list_state.num_epubs);
+  ESP_LOGI("main", "epub list state is_loaded=%d", epub_list_state.is_loaded);
+  ESP_LOGI("main", "epub list state selected_item=%d", epub_list_state.selected_item);
+
   ESP_LOGI("main", "Memory before main task start %d", esp_get_free_heap_size());
   xTaskCreatePinnedToCore(main_task, "main_task", 32768, NULL, 1, NULL, 1);
 }
