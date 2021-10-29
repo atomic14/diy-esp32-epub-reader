@@ -146,20 +146,22 @@ void EpubList::render()
       free(image_data);
       // draw the title
       int text_xpos = image_xpos + image_width + PADDING;
-      int text_ypos = ypos + PADDING;
+      int text_ypos = ypos + PADDING/2;
       int text_width = renderer->get_page_width() - (text_xpos + PADDING);
       int text_height = cell_height - PADDING * 2;
       // use the text block to layout the title
       TextBlock *title_block = new TextBlock(LEFT_ALIGN);
       title_block->add_span(state->epub_list[i].title, false, false);
       title_block->layout(renderer, epub, text_width);
-      for (int i = 0; i < title_block->line_breaks.size(); i++)
+      // work out the height of the title
+      int title_height = title_block->line_breaks.size() * renderer->get_line_height();
+      // center the title in the cell
+      int y_offset = title_height < text_height ? (text_height - title_height) / 2 : 0;
+      // draw each line of the title making sure we don't run over the cell
+      for (int i = 0; i < title_block->line_breaks.size() && y_offset + renderer->get_line_height() < text_height; i++)
       {
-        if (i * renderer->get_line_height() > text_height)
-        {
-          break;
-        }
-        title_block->render(renderer, i, text_xpos, text_ypos + i * renderer->get_line_height());
+        title_block->render(renderer, i, text_xpos, text_ypos + y_offset);
+        y_offset += renderer->get_line_height();
       }
       delete title_block;
       delete epub;
