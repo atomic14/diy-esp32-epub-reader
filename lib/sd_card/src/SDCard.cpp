@@ -17,7 +17,7 @@ static const char *TAG = "SDC";
 
 SDCard::SDCard(const char *mount_point, gpio_num_t miso, gpio_num_t mosi, gpio_num_t clk, gpio_num_t cs)
 {
-  m_host.max_freq_khz = SDMMC_FREQ_26M;
+  m_host.max_freq_khz = SDMMC_FREQ_DEFAULT;
   m_mount_point = mount_point;
   esp_err_t ret;
   // Options for mounting the filesystem.
@@ -42,10 +42,16 @@ SDCard::SDCard(const char *mount_point, gpio_num_t miso, gpio_num_t mosi, gpio_n
   ret = spi_bus_initialize(spi_host_device_t(m_host.slot), &bus_cfg, SPI_DMA_CHAN);
   if (ret != ESP_OK)
   {
-    ESP_LOGE(TAG, "Failed to initialize bus.");
-    return;
+    if (ret == ESP_ERR_INVALID_STATE)
+    {
+      ESP_LOGW(TAG, "HSPI already initialised");
+    }
+    else
+    {
+      ESP_LOGE(TAG, "Failed to initialize bus.");
+      return;
+    }
   }
-
   // This initializes the slot without card detect (CD) and write protect (WP) signals.
   // Modify slot_config.gpio_cd and slot_config.gpio_wp if your board has these signals.
   sdspi_device_config_t slot_config = SDSPI_DEVICE_CONFIG_DEFAULT();

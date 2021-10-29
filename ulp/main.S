@@ -47,6 +47,7 @@ try_wakeup:
 entry:
 	STAGE_RST
 
+  
 	// this will read the first 16 bits of the RTC GPIO pins
 	// if you need the higher 16 bits then you'll need to adjust
 	// this

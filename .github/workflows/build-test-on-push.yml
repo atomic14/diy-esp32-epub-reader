@@ -29,6 +29,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install --upgrade platformio
       - name: Run PlatformIO
-        run: pio run -e lilygo_t5_47
+        run: pio run -e lilygo_t5_47 -e epdiy -e m5_paper
       - name: Run tests
         run: pio test -e native

@@ -12,7 +12,12 @@
 #include "EpubList/EpubList.h"
 #include "EpubList/EpubReader.h"
 #include <RubbishHtmlParser/RubbishHtmlParser.h>
-#include "Renderer/EpdRenderer.h"
+#ifdef USE_EPD_DISPLAY
+#include "Renderer/EpdiyRenderer.h"
+#endif
+#ifdef USE_M5PAPER_DISPLAY
+#include "Renderer/M5PaperRenderer.h"
+#endif
 #include <regular_font.h>
 #include <bold_font.h>
 #include <italic_font.h>
@@ -180,11 +185,39 @@ void draw_battery_level(Renderer *renderer, float voltage, float percentage)
 
 void main_task(void *param)
 {
+#if !defined(USE_M5PAPER_DISPLAY) && defined(CONFIG_EPD_BOARD_REVISION_LILYGO_T5_47)
+  // Need to power on the EDP to get power to the SD Card (Only in Lilygo model)
+  // Not when using EPDiy since first epd_init() has to be called to initialize stuff
+  // The M5 board defines the CONFIG_EPD_BOARD_REVISION_LILYGO_T5_47 as well to get epdiy
+  // to build, but we don't want to power the epd on for the M5 board as it has it's own
+  // display driver
+  epd_poweron();
+#endif
+
+  // create the EPD renderer
+#ifdef USE_M5PAPER_DISPLAY
+  Renderer *renderer = new M5PaperRenderer(
+      &regular_font,
+      &bold_font,
+      &italic_font,
+      &bold_italic_font,
+      hourglass_data,
+      hourglass_width,
+      hourglass_height);
+#else
+  Renderer *renderer = new EpdiyRenderer(
+      &regular_font,
+      &bold_font,
+      &italic_font,
+      &bold_italic_font,
+      hourglass_data,
+      hourglass_width,
+      hourglass_height);
+#endif
 #ifdef USE_SPIFFS
   ESP_LOGI("main", "Using SPIFFS");
   // create the file system
   SPIFFS *spiffs = new SPIFFS("/fs");
-
 #else
   ESP_LOGI("main", "Using SDCard");
   // initialise the SDCard
@@ -201,20 +234,6 @@ void main_task(void *param)
   ESP_LOGI("main", "Memory before renderer init: %d", esp_get_free_heap_size());
 #endif
 
-#ifdef CONFIG_EPD_BOARD_REVISION_LILYGO_T5_47
-  // Need to power on the EDP to get power to the SD Card (Only in Lilygo model)
-  // Not when using EPDiy since first epd_init() has to be called to initialize stuff
-  epd_poweron();
-#endif
-  // create the EPD renderer
-  Renderer *renderer = new EpdRenderer(
-      &regular_font,
-      &bold_font,
-      &italic_font,
-      &bold_italic_font,
-      hourglass_data,
-      hourglass_width,
-      hourglass_height);
   // make space for the battery
   renderer->set_margin_top(35);
   // page margins
@@ -316,13 +335,26 @@ void main_task(void *param)
 #ifdef USE_SPIFFS
   delete spiffs;
 #else
+// seems to cause issues with the M5 Paper
+#ifndef USE_M5PAPER_DISPLAY
   delete sdcard;
+#endif
 #endif
   ESP_ERROR_CHECK(esp_sleep_enable_ulp_wakeup());
   ESP_LOGI("main", "Entering deep sleep");
+#ifdef USE_M5PAPER_DISPLAY
+  // need to keep the M5 power switched on even when in deep sleep
+  const gpio_num_t M5EPD_MAIN_PWR_PIN = GPIO_NUM_2;
+  rtc_gpio_init(M5EPD_MAIN_PWR_PIN);
+  rtc_gpio_set_direction(M5EPD_MAIN_PWR_PIN, RTC_GPIO_MODE_OUTPUT_ONLY);
+  rtc_gpio_set_level(M5EPD_MAIN_PWR_PIN, 1);
+  rtc_gpio_hold_en(M5EPD_MAIN_PWR_PIN);
+#else
   epd_poweroff();
+#endif
   // configure deep sleep options
   controls->setup_deep_sleep();
+  vTaskDelay(pdMS_TO_TICKS(500));
   // go to sleep
   esp_deep_sleep_start();
 }
