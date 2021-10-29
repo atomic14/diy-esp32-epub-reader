@@ -1,10 +1,11 @@
 #pragma once
 
-#include "Actions.h"
+#include "TouchControls.h"
 
 class L58Touch;
 class Renderer;
-class TouchControls
+
+class L58TouchControls : public TouchControls
 {
 private:
   ActionCallback_t on_action;
@@ -18,7 +19,7 @@ private:
   friend void touchTask(void *param);
 
 public:
-  TouchControls(Renderer *renderer, int width, int height, int rotation, ActionCallback_t on_action);
+  L58TouchControls(Renderer *renderer, int touch_int, int width, int height, int rotation, ActionCallback_t on_action);
   void render(Renderer *renderer);
   void renderPressedState(Renderer *renderer, UIAction action, bool state = true);
   void handleTouch(int x, int y);
