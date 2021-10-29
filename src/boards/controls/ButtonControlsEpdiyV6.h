@@ -4,6 +4,9 @@
 #include "Actions.h"
 #include "Button.h"
 
+// This CFG_INTR is defined on display_ops.h
+#define CFG_INTR GPIO_NUM_35
+#define EPDIY_I2C_PORT I2C_NUM_0
 #define REG_INPUT_PORT0      0
 #define BUTTON_IO_DOWN  (PCA_PIN_P07 >> 8)
 
@@ -23,8 +26,20 @@ private:
   
   esp_err_t i2c_master_read_slave(i2c_port_t i2c_num, uint8_t* data_rd, size_t size, int reg);
   uint8_t pca9555_read_input(i2c_port_t port, int high_port);
-  // Note: What might be missing here is to set the PCA button ports as input
-  //       If needed then also I2C write functions should be added  
+
+  // Note: pca9555 IO ports are declared as input as default
+  // Gives either 0 or 128 since it's floating and should be pulled-up to 3.3v
+  static void control_task(void *param) {
+    ButtonControls *bc = (ButtonControls*) param;
+    for (;;) {
+      if (gpio_get_level(CFG_INTR) == 0) {
+        uint8_t read = bc->pca9555_read_input(EPDIY_I2C_PORT, BUTTON_IO_DOWN);
+        printf("PCA INTR read:%d\n", read);
+      }
+      vTaskDelay(pdMS_TO_TICKS(50));
+    }
+  }
+
 public:
   ButtonControls(
       gpio_num_t gpio_down,

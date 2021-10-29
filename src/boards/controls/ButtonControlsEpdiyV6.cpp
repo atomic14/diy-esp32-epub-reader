@@ -25,6 +25,8 @@ ButtonControls::ButtonControls(
                     { this->on_action(UIAction::DOWN); });
   select = new Button(gpio_select, active_level, [this]()
                       { this->on_action(UIAction::SELECT); });
+  
+  xTaskCreatePinnedToCore(this->control_task, "control_task", 4096, this, 2, NULL, 0);
 }
 
 bool ButtonControls::did_wake_from_deep_sleep()
