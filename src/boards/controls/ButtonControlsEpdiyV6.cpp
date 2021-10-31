@@ -4,22 +4,19 @@ extern const uint8_t ulp_main_bin_start[] asm("_binary_ulp_main_bin_start");
 extern const uint8_t ulp_main_bin_end[] asm("_binary_ulp_main_bin_end");
 
 ButtonControls::ButtonControls(
-    gpio_num_t gpio_down,
     gpio_num_t gpio_select,
     int active_level,
     ActionCallback_t on_action)
-    : gpio_down(gpio_down), gpio_select(gpio_select),
+    : gpio_select(gpio_select),
       active_level(active_level),
       on_action(on_action)
 {
   gpio_install_isr_service(0);
 
-  down = new Button(gpio_down, active_level, [this]()
-                    { this->on_action(UIAction::DOWN); });
   select = new Button(gpio_select, active_level, [this]()
                       { this->on_action(UIAction::SELECT); });
   
-  xTaskCreatePinnedToCore(this->control_task, "control_task", 4096, this, 2, NULL, 0);
+  xTaskCreatePinnedToCore(this->control_task, "control_task", 4096, this, 2, NULL, 1);
 }
 
 bool ButtonControls::did_wake_from_deep_sleep()
@@ -46,12 +43,8 @@ UIAction ButtonControls::get_deep_sleep_action()
   {
     uint16_t rtc_pin = ulp_gpio_status & UINT16_MAX;
     ESP_LOGI("Controls", "***** rtc_pin: %d", rtc_pin);
-    if ((rtc_pin & (1 << rtc_io_number_get(gpio_down))))
-    {
-      ESP_LOGI("Controls", "***** DOWN %d, %d, %d", 1 << rtc_io_number_get(gpio_down), rtc_pin, (rtc_pin & (1 << rtc_io_number_get(gpio_down))));
-      return UIAction::DOWN;
-    }
-    else if ((rtc_pin & (1 << rtc_io_number_get(gpio_select))))
+    
+    if ((rtc_pin & (1 << rtc_io_number_get(gpio_select))))
     {
       ESP_LOGI("Controls", "***** SELECT %d, %d, %d", 1 << rtc_io_number_get(gpio_select), rtc_pin, (rtc_pin & (1 << rtc_io_number_get(gpio_select))));
       return UIAction::SELECT;
@@ -60,11 +53,7 @@ UIAction ButtonControls::get_deep_sleep_action()
   else
   {
     uint64_t ext1_buttons = esp_sleep_get_ext1_wakeup_status();
-    if (ext1_buttons & (1ULL << gpio_down))
-    {
-      return UIAction::DOWN;
-    }
-    else if (ext1_buttons & (1ULL << gpio_select))
+    if (ext1_buttons & (1ULL << gpio_select))
     {
       return UIAction::SELECT;
     }
@@ -76,10 +65,6 @@ void ButtonControls::setup_deep_sleep()
 {
   if (active_level == 0)
   {
-    rtc_gpio_init(gpio_down);
-    rtc_gpio_set_direction(gpio_down, RTC_GPIO_MODE_INPUT_ONLY);
-    rtc_gpio_pullup_en(gpio_down);
-
     rtc_gpio_init(gpio_select);
     rtc_gpio_set_direction(gpio_select, RTC_GPIO_MODE_INPUT_ONLY);
     rtc_gpio_pullup_en(gpio_select);
@@ -99,11 +84,6 @@ void ButtonControls::setup_deep_sleep()
   else
   {
     // can use ext1 for buttons that are active high
-
-    rtc_gpio_init(gpio_down);
-    rtc_gpio_set_direction(gpio_down, RTC_GPIO_MODE_INPUT_ONLY);
-    rtc_gpio_pulldown_en(gpio_down);
-
     rtc_gpio_init(gpio_select);
     rtc_gpio_set_direction(gpio_select, RTC_GPIO_MODE_INPUT_ONLY);
     rtc_gpio_pulldown_en(gpio_select);

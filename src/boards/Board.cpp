@@ -57,8 +57,8 @@ ButtonControls *Board::get_button_controls(xQueueHandle ui_queue)
   return new ButtonControls(
     #ifndef BOARD_TYPE_EPDIY
       BUTTON_UP_GPIO_NUM,
-    #endif
       BUTTON_DOWN_GPIO_NUM,
+    #endif
       BUTTON_SELECT_GPIO_NUM,
       BUTONS_ACTIVE_LEVEL,
       [ui_queue](UIAction action)

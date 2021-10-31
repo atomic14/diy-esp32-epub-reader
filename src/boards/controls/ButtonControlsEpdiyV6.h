@@ -15,7 +15,7 @@
 #define CFG_INTR GPIO_NUM_35
 #define EPDIY_I2C_PORT I2C_NUM_0
 #define REG_INPUT_PORT0      0
-#define BUTTON_IO_DOWN  (PCA_PIN_P07 >> 8)
+#define BUTTON_IO_PORT  (PCA_PIN_P00 >> 8)
 
 class ButtonControls
 {
@@ -35,16 +35,20 @@ private:
   uint8_t pca9555_read_input(i2c_port_t port, int high_port);
 
   // Note: pca9555 IO ports are declared as input as default. Important: IOs should be pulled-up to 3.3v 
-  // IO returns: 0 in button pressed connecting GND and 128 in released state
+  // IO returns: 1 when IO0 is released. 2 when IO1 is released (PCA input ports)
   static void control_task(void *param) {
     ButtonControls *bc = (ButtonControls*) param;
     for (;;) {
       if (gpio_get_level(CFG_INTR) == 0) {
-        uint8_t read = bc->pca9555_read_input(EPDIY_I2C_PORT, BUTTON_IO_DOWN);
-        ESP_LOGI("Controls", "UP value:%d\n", read);
-        if (read == 0) {
+        uint8_t read = bc->pca9555_read_input(EPDIY_I2C_PORT, BUTTON_IO_PORT);
+        
+        if (read == 2) {
           bc->on_action(UIAction::UP);
-        }
+        } else if (read == 1) {
+          bc->on_action(UIAction::DOWN);
+        } 
+
+        ESP_LOGI("Controls", "Read I2C:%d\n", read);
       }
       vTaskDelay(pdMS_TO_TICKS(50));
     }
@@ -52,7 +56,6 @@ private:
 
 public:
   ButtonControls(
-      gpio_num_t gpio_down,
       gpio_num_t gpio_select,
       int active_level,
       ActionCallback_t on_action);
