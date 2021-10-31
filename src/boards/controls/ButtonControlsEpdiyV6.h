@@ -20,11 +20,9 @@
 class ButtonControls
 {
 private:
-  gpio_num_t gpio_down;
   gpio_num_t gpio_select;
   int active_level;
 
-  Button *down;
   Button *select;
 
   ActionCallback_t on_action;

@@ -74,7 +74,6 @@ void ButtonControls::setup_deep_sleep()
     esp_err_t err = ulp_load_binary(0, ulp_main_bin_start, (ulp_main_bin_end - ulp_main_bin_start) / sizeof(uint32_t));
     ESP_ERROR_CHECK(err);
 
-    ulp_down_mask = 1 << rtc_io_number_get(gpio_down);
     ulp_select_mask = 1 << rtc_io_number_get(gpio_select);
 
     ulp_set_wakeup_period(0, 100 * 1000); // 100 ms
@@ -88,7 +87,7 @@ void ButtonControls::setup_deep_sleep()
     rtc_gpio_set_direction(gpio_select, RTC_GPIO_MODE_INPUT_ONLY);
     rtc_gpio_pulldown_en(gpio_select);
     esp_sleep_enable_ext1_wakeup(
-        (1ULL << gpio_down) | (1ULL << gpio_select),
+        1ULL << gpio_select,
         ESP_EXT1_WAKEUP_ANY_HIGH);
   }
 }
