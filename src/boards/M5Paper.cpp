@@ -6,8 +6,15 @@
 #include <bold_italic_font.h>
 #include <hourglass.h>
 #include <SPIFFS.h>
+#include "controls/GPIOButtonControls.h"
 
 #define M5EPD_MAIN_PWR_PIN GPIO_NUM_2
+//setup the pins to use for navigation
+#define BUTTON_UP_GPIO_NUM GPIO_NUM_37
+#define BUTTON_DOWN_GPIO_NUM GPIO_NUM_39
+#define BUTTON_SELECT_GPIO_NUM GPIO_NUM_38
+// buttons are low when pressed
+#define BUTONS_ACTIVE_LEVEL 0
 
 void M5Paper::power_up()
 {
@@ -41,4 +48,16 @@ void M5Paper::stop_filesystem()
   // seems to cause issues with the M5 Paper
   // delete sdcard;
 #endif
+}
+ButtonControls *M5Paper::get_button_controls(xQueueHandle ui_queue)
+{
+  return new GPIOButtonControls(
+      BUTTON_UP_GPIO_NUM,
+      BUTTON_DOWN_GPIO_NUM,
+      BUTTON_SELECT_GPIO_NUM,
+      BUTONS_ACTIVE_LEVEL,
+      [ui_queue](UIAction action)
+      {
+        xQueueSend(ui_queue, &action, 0);
+      });
 }

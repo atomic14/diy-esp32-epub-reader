@@ -1,4 +1,4 @@
-#include "Button.h"
+#include "GPIOButton.h"
 #include <esp_timer.h>
 #include <driver/gpio.h>
 
@@ -7,11 +7,11 @@ const int BUTTON_DEBOUNCE = 1000;
 
 IRAM_ATTR void button_interrupt_handler(void *param)
 {
-  Button *button = (Button *)param;
+  GPIOButton *button = (GPIOButton *)param;
   button->handle_interrupt();
 }
 
-Button::Button(gpio_num_t gpio_pin, int active_level, ButtonCallback_t callback)
+GPIOButton::GPIOButton(gpio_num_t gpio_pin, int active_level, ButtonCallback_t callback)
     : gpio_pin(gpio_pin),
       active_level(active_level),
       callback(callback)
@@ -28,7 +28,7 @@ Button::Button(gpio_num_t gpio_pin, int active_level, ButtonCallback_t callback)
   gpio_intr_enable(gpio_pin);
 }
 
-void Button::handle_interrupt()
+void GPIOButton::handle_interrupt()
 {
   if (button_pressed)
   {

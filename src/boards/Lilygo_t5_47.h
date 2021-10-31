@@ -9,4 +9,5 @@ public:
   virtual void prepare_to_sleep();
   virtual Renderer *get_renderer();
   virtual TouchControls *get_touch_controls(Renderer *renderer, xQueueHandle ui_queue);
+  virtual ButtonControls *get_button_controls(xQueueHandle ui_queue);
 };
