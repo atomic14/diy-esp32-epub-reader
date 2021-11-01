@@ -16,7 +16,6 @@
 #define CFG_INTR GPIO_NUM_35
 #define EPDIY_I2C_PORT I2C_NUM_0
 #define REG_INPUT_PORT0 0
-#define BUTTON_IO_PORT (PCA_PIN_P00 >> 8)
 
 class EpdiyV6ButtonControls : public ButtonControls
 {
@@ -42,7 +41,7 @@ private:
     {
       if (gpio_get_level(CFG_INTR) == 0)
       {
-        uint8_t read = bc->pca9555_read_input(EPDIY_I2C_PORT, BUTTON_IO_PORT);
+        uint8_t read = bc->pca9555_read_input(EPDIY_I2C_PORT, 0);
 
         if (read == 2)
         {
