@@ -1,9 +1,11 @@
+#pragma once
+
 #include <hal/gpio_types.h>
 #include <functional>
 
 typedef std::function<void(void)> ButtonCallback_t;
 
-class Button
+class GPIOButton
 {
 private:
   gpio_num_t gpio_pin;
@@ -19,5 +21,5 @@ private:
   void handle_interrupt();
 
 public:
-  Button(gpio_num_t gpio_pin, int active_level, ButtonCallback_t callback);
+  GPIOButton(gpio_num_t gpio_pin, int active_level, ButtonCallback_t callback);
 };

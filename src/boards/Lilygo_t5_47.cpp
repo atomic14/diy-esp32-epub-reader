@@ -8,6 +8,14 @@
 #include "controls/L58TouchControls.h"
 #endif
 #include <Renderer/EpdiyRenderer.h>
+#include "controls/GPIOButtonControls.h"
+
+// setup the pins to use for navigation
+#define BUTTON_UP_GPIO_NUM GPIO_NUM_34
+#define BUTTON_DOWN_GPIO_NUM GPIO_NUM_39
+#define BUTTON_SELECT_GPIO_NUM GPIO_NUM_35
+// buttons are low when pressed
+#define BUTONS_ACTIVE_LEVEL 0
 
 void Lilygo_t5_47::power_up()
 {
@@ -45,4 +53,16 @@ TouchControls *Lilygo_t5_47::get_touch_controls(Renderer *renderer, xQueueHandle
 #endif
   // dummy implementation
   return new TouchControls();
+}
+ButtonControls *Lilygo_t5_47::get_button_controls(xQueueHandle ui_queue)
+{
+  return new GPIOButtonControls(
+      BUTTON_UP_GPIO_NUM,
+      BUTTON_DOWN_GPIO_NUM,
+      BUTTON_SELECT_GPIO_NUM,
+      BUTONS_ACTIVE_LEVEL,
+      [ui_queue](UIAction action)
+      {
+        xQueueSend(ui_queue, &action, 0);
+      });
 }

@@ -6,6 +6,7 @@
 #include <SPIFFS.h>
 #include <SDCard.h>
 #include "battery/ADCBattery.h"
+#include "controls/GPIOButtonControls.h"
 
 Board *Board::factory()
 {
@@ -50,19 +51,6 @@ Battery *Board::get_battery()
 #else
   return nullptr;
 #endif
-}
-
-ButtonControls *Board::get_button_controls(xQueueHandle ui_queue)
-{
-  return new ButtonControls(
-      BUTTON_UP_GPIO_NUM,
-      BUTTON_DOWN_GPIO_NUM,
-      BUTTON_SELECT_GPIO_NUM,
-      BUTONS_ACTIVE_LEVEL,
-      [ui_queue](UIAction action)
-      {
-        xQueueSend(ui_queue, &action, 0);
-      });
 }
 
 TouchControls *Board::get_touch_controls(Renderer *renderer, xQueueHandle ui_queue)

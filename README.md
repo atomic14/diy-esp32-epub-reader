@@ -65,7 +65,7 @@ To add a new board to the project you need to:
 
 This may or may not be necessary - if you are using an EPDIY board then everything is taken care of with preprocessor directives and you just need to define `BOARD_TYPE_EPDIY` in platformio.ini build flags.
 
-If you have a completely new board then at a minimum you need to return a `Renderer` object that will draw to your display. Have a look at `M5Paper.h` for inspiration. Add your new board type to the `factory` method of `Board`.
+If you have a completely new board then at a minimum you need to return a `Renderer` object that will draw to your display and a `GPIOButtonControls` to control navigation. Have a look at `M5Paper.h` for inspiration. Add your new board type to the `factory` method of `Board`.
 
 ## Add a new environment to `platformio.ini
 
@@ -79,15 +79,6 @@ The first two settings come from the [vroland/epdiy](https://github.com/vroland/
 ; Setup display format and model via build flags
 -DCONFIG_EPD_DISPLAY_TYPE_ED047TC1
 -DCONFIG_EPD_BOARD_REVISION_LILYGO_T5_47
-```
-
-The second three settings are the pins that are used for the buttons. Change these to match your board.
-
-```
-; setup the pins to use for navigation
--DBUTTON_UP_GPIO_NUM=GPIO_NUM_34
--DBUTTON_DOWN_GPIO_NUM=GPIO_NUM_39
--DBUTTON_SELECT_GPIO_NUM=GPIO_NUM_35
 ```
 
 There is also a setting to tell the code if the buttons are active high or low.

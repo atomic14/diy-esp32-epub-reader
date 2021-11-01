@@ -1,16 +1,18 @@
+// Exclude this class if the board is EPDIY
+#ifndef BOARD_TYPE_EPDIY
 #include <esp_sleep.h>
 #include <driver/rtc_io.h>
 #include <driver/gpio.h>
 #include <esp32/ulp.h>
 #include <esp_log.h>
 #include <esp_timer.h>
-#include "ButtonControls.h"
+#include "GPIOButtonControls.h"
 #include "ulp_main.h"
 
 extern const uint8_t ulp_main_bin_start[] asm("_binary_ulp_main_bin_start");
 extern const uint8_t ulp_main_bin_end[] asm("_binary_ulp_main_bin_end");
 
-ButtonControls::ButtonControls(
+GPIOButtonControls::GPIOButtonControls(
     gpio_num_t gpio_up,
     gpio_num_t gpio_down,
     gpio_num_t gpio_select,
@@ -21,15 +23,15 @@ ButtonControls::ButtonControls(
       on_action(on_action)
 {
   gpio_install_isr_service(0);
-  up = new Button(gpio_up, active_level, [this]()
-                  { this->on_action(UIAction::UP); });
-  down = new Button(gpio_down, active_level, [this]()
-                    { this->on_action(UIAction::DOWN); });
-  select = new Button(gpio_select, active_level, [this]()
-                      { this->on_action(UIAction::SELECT); });
+  up = new GPIOButton(gpio_up, active_level, [this]()
+                      { this->on_action(UIAction::UP); });
+  down = new GPIOButton(gpio_down, active_level, [this]()
+                        { this->on_action(UIAction::DOWN); });
+  select = new GPIOButton(gpio_select, active_level, [this]()
+                          { this->on_action(UIAction::SELECT); });
 }
 
-bool ButtonControls::did_wake_from_deep_sleep()
+bool GPIOButtonControls::did_wake_from_deep_sleep()
 {
   auto wake_cause = esp_sleep_get_wakeup_cause();
   // if our controls are active low then we must have been woken by the ULP
@@ -47,7 +49,7 @@ bool ButtonControls::did_wake_from_deep_sleep()
   return false;
 }
 
-UIAction ButtonControls::get_deep_sleep_action()
+UIAction GPIOButtonControls::get_deep_sleep_action()
 {
   if (active_level == 0)
   {
@@ -88,7 +90,7 @@ UIAction ButtonControls::get_deep_sleep_action()
   return UIAction::NONE;
 }
 
-void ButtonControls::setup_deep_sleep()
+void GPIOButtonControls::setup_deep_sleep()
 {
   if (active_level == 0)
   {
@@ -136,3 +138,4 @@ void ButtonControls::setup_deep_sleep()
         ESP_EXT1_WAKEUP_ANY_HIGH);
   }
 }
+#endif
