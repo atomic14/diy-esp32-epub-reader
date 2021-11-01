@@ -169,6 +169,10 @@ void main_task(void *param)
   // battery details
   ESP_LOGI("main", "Starting battery monitor");
   Battery *battery = board->get_battery();
+  if (battery)
+  {
+    battery->setup();
+  }
 
   // make space for the battery display
   renderer->set_margin_top(35);
@@ -233,6 +237,7 @@ void main_task(void *param)
     // show the battery level even if the user is idle
     if (battery)
     {
+      ESP_LOGI("main", "Battery Level %f, percent %d", battery->get_voltage(), battery->get_percentage());
       draw_battery_level(renderer, battery->get_voltage(), battery->get_percentage());
     }
     renderer->flush_display();
