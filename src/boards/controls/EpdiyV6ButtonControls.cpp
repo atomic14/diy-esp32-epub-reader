@@ -14,7 +14,7 @@ EpdiyV6ButtonControls::EpdiyV6ButtonControls(
   gpio_install_isr_service(0);
 
   select = new GPIOButton(gpio_select, active_level, [this]()
-                          { this->on_action(UIAction::SELECT); });
+                          { this->on_action(UIAction::DOWN); });
 
   xTaskCreatePinnedToCore(this->control_task, "control_task", 4096, this, 2, NULL, 1);
 }

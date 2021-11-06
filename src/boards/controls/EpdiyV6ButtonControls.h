@@ -49,7 +49,7 @@ private:
         }
         else if (read == 1)
         {
-          bc->on_action(UIAction::DOWN);
+          bc->on_action(UIAction::SELECT);
         }
 
         ESP_LOGI("Controls", "Read I2C:%d\n", read);
