@@ -20,7 +20,7 @@ This project uses PlatformIO to build and flash. You will need VSCode with the P
 
 There are several environments configured in platformio.ini. If you click on the PlatformIO logo in the left hand navigation of VSCode, you will see a list of Project Tasks - you can pick the environment you want and then `Upload`.
 
-![Select Environment](https://atomic14.github.io/diy-esp32-epub-reader/doc/select-environment.png)
+![Select Environment](https://raw.githubusercontent.com/atomic14/diy-esp32-epub-reader/main/docs/select-environment.png)
 
 # Why did you build it?
 
