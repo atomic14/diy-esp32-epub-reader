@@ -14,6 +14,14 @@ It has limited support for formating - the CSS content of the ePub file is not p
 
 I've only included 4 font styles - regular, bold, italic and bold-italic. I've also only generated glyphs for Latin characters and punctuation.
 
+# Building and Flashing
+
+This project uses PlatformIO to build and flash. You will need VSCode with the PlatformIO extension installed.
+
+There are several environments configured in platformio.ini. If you click on the PlatformIO logo in the left hand navigation of VSCode, you will see a list of Project Tasks - you can pick the environment you want and then `Upload`.
+
+![Select Environment](https://atomic14.github.io/diy-esp32-epub-reader/doc/select-environment.png)
+
 # Why did you build it?
 
 It seemed like a nice challenge - ePub files are not the most friendly format to process on an embedded device. Making it work in a constrained environment is good fun.
