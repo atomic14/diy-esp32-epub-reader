@@ -56,7 +56,8 @@ bool EpubList::load(const char *path)
         continue;
       }
       int name_length = strlen(ent->d_name);
-      if (name_length < 5 || strcmp(ent->d_name + name_length - 5, ".epub") != 0)
+      ESP_LOGI(TAG, "strcmp .epub extension: %d", strcmp(ent->d_name + name_length - 5, ".epub") != 0);
+      if (name_length < 5)
       {
         continue;
       }
