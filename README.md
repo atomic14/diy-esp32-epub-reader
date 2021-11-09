@@ -217,3 +217,5 @@ Depending on the images that have been used for the book covers displaying the l
 # Improvements:
 
 There's a lot of room for improvement. This is a very basic e-reader and I'm more than happy for people to contribute to this project.
+
+Check aditional notes and research in [our esp-32 epub reader Wiki](https://github.com/atomic14/diy-esp32-epub-reader/wiki).
