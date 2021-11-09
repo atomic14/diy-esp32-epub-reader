@@ -4,7 +4,13 @@
 
 You can watch a video of the build [here](https://youtu.be/VLiCgB0odOQ)
 
-[![Demo Video](https://img.youtube.com/vi/VLiCgB0odOQ/0.jpg)](https://www.youtube.com/watch?v=VLiCgB0odOQ)
+Here it is running on a LilyGo board:
+
+[![LilyGo](https://img.youtube.com/vi/VLiCgB0odOQ/0.jpg)](https://www.youtube.com/watch?v=VLiCgB0odOQ)
+
+And here it is running on the M5Paper:
+
+[![M5Paper](https://img.youtube.com/vi/6-64GMObw4s/0.jpg)](https://www.youtube.com/watch?v=6-64GMObw4s)
 
 What is it? It's a DIY ePub reader for the ESP32.
 
