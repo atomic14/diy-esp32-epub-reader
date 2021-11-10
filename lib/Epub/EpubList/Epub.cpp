@@ -177,6 +177,55 @@ bool Epub::load()
   return true;
 }
 
+// load in the meta data for the epub file
+bool Epub::loadIndex()
+{
+  ZipFile zip(m_path.c_str());
+  // Update this so it's read from manifest v
+  // Or alternatively reads an ncx file in OEBPS directory
+  const char *tocFile = "OEBPS/toc.ncx";
+  
+  char *meta_index = (char *)zip.read_file_to_memory(tocFile);
+  if (!meta_index)
+  {
+    ESP_LOGE(TAG, "Could not find %s", tocFile);
+    return false;
+  }
+  // Parse the Toc contents
+  tinyxml2::XMLDocument doc;
+  auto result = doc.Parse(meta_index);
+  free(meta_index);
+  if (result != tinyxml2::XML_SUCCESS)
+  {
+    ESP_LOGE(TAG, "Error parsing toc %s", doc.ErrorIDToName(result));
+    return false;
+  }
+  auto ncx = doc.FirstChild();
+  if (!ncx)
+  {
+    ESP_LOGE(TAG, "Could not find first child ncx in toc");
+    return false;
+  }
+  printf("ncx in line:%d\n", ncx->GetLineNum());
+  auto navMap = ncx->FirstChildElement("navMap");
+  if (!navMap)
+  {
+    ESP_LOGE(TAG, "Could not find navMap child in ncx");
+    return false;
+  }
+  /* auto navPoint = navMap->FirstChildElement("navPoint");
+   std::map<std::string, std::string> items;
+  while (navPoint)
+  {
+    std::string item_id = navPoint->Attribute("id");
+    auto content = navPoint->FirstChildElement("content");
+    std::string href = content->Attribute("src");
+    printf("id %s src %s", item_id.c_str(), href.c_str());
+    navPoint = navPoint->NextSiblingElement("navPoint");
+  } */
+  return true;
+}
+
 const std::string &Epub::get_title()
 {
   return m_title;

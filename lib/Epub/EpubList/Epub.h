@@ -27,6 +27,7 @@ public:
   ~Epub() {}
   std::string &get_base_path() { return m_base_path; }
   bool load();
+  bool loadIndex();
   const std::string &get_path() const { return m_path; }
   const std::string &get_title();
   const std::string &get_cover_image_item();
