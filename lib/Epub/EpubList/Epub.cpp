@@ -200,29 +200,40 @@ bool Epub::loadIndex()
     ESP_LOGE(TAG, "Error parsing toc %s", doc.ErrorIDToName(result));
     return false;
   }
-  auto ncx = doc.FirstChild();
+  auto ncx = doc.FirstChildElement("ncx");
   if (!ncx)
   {
     ESP_LOGE(TAG, "Could not find first child ncx in toc");
     return false;
   }
   printf("ncx in line:%d\n", ncx->GetLineNum());
+  
+  auto docTitle = ncx->FirstChildElement("docTitle");
+  if (!docTitle)
+  {
+    ESP_LOGE(TAG, "Could not find docTitle child in ncx");
+    return false;
+  }
+  
   auto navMap = ncx->FirstChildElement("navMap");
   if (!navMap)
   {
     ESP_LOGE(TAG, "Could not find navMap child in ncx");
     return false;
   }
-  /* auto navPoint = navMap->FirstChildElement("navPoint");
+
+  auto navPoint = navMap->FirstChildElement("navPoint");
    std::map<std::string, std::string> items;
   while (navPoint)
   {
-    std::string item_id = navPoint->Attribute("id");
+    // navPoint has also an id & playOrder element: navPoint->Attribute("id");
+    auto navLabel = navPoint->FirstChildElement("navLabel")->FirstChildElement("text")->FirstChild();
+    std::string title = navLabel->Value();
     auto content = navPoint->FirstChildElement("content");
     std::string href = content->Attribute("src");
-    printf("id %s src %s", item_id.c_str(), href.c_str());
+    ESP_LOGI(TAG, "title %s src %s", title.c_str(), href.c_str());
     navPoint = navPoint->NextSiblingElement("navPoint");
-  } */
+  }
   return true;
 }
 
