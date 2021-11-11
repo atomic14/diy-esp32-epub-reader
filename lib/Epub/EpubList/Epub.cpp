@@ -177,7 +177,7 @@ bool Epub::load()
   return true;
 }
 
-// load in the meta data for the epub file
+// load in the TOC index data for the epub file (Chapters)
 bool Epub::loadIndex()
 {
   ZipFile zip(m_path.c_str());

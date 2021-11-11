@@ -17,7 +17,6 @@
 #include "Epub.h"
 #include "Renderer/Renderer.h"
 #include "../RubbishHtmlParser/blocks/TextBlock.h"
-#include "../RubbishHtmlParser/htmlEntities.h"
 #include "./State.h"
 
 class Epub;
@@ -29,7 +28,6 @@ private:
   Renderer *renderer;
   Epub *epub = nullptr;
   EpubListItem &state;
-  bool m_needs_redraw = false;
 
 public:
   EpubIndex(EpubListItem &state, Renderer *renderer) : renderer(renderer), state(state){};

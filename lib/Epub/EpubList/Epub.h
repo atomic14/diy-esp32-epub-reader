@@ -17,9 +17,6 @@ private:
   std::string m_path;
   // the spine of the EPUB file
   std::vector<std::string> m_spine;
-  // the index of chapters
-  std::unordered_map<std::string, std::string> toc_index;
-
   // the base path for items in the EPUB file
   std::string m_base_path;
 
@@ -42,4 +39,7 @@ public:
   uint8_t *get_item_contents(const std::string &item_href, size_t *size = nullptr);
   std::string &get_spine_item(int spine_index);
   int get_spine_items_count();
+
+  // the index of chapters
+  std::unordered_map<std::string, std::string> toc_index;
 };
