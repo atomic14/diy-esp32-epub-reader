@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 class ZipFile;
 
@@ -16,6 +17,9 @@ private:
   std::string m_path;
   // the spine of the EPUB file
   std::vector<std::string> m_spine;
+  // the index of chapters
+  std::unordered_map<std::string, std::string> toc_index;
+
   // the base path for items in the EPUB file
   std::string m_base_path;
 
@@ -27,7 +31,11 @@ public:
   ~Epub() {}
   std::string &get_base_path() { return m_base_path; }
   bool load();
+  // Fills toc_index map
   bool loadIndex();
+  // Finds the src value in the index
+  std::string get_index_src(std::string key);
+
   const std::string &get_path() const { return m_path; }
   const std::string &get_title();
   const std::string &get_cover_image_item();

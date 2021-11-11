@@ -223,7 +223,8 @@ bool Epub::loadIndex()
   }
 
   auto navPoint = navMap->FirstChildElement("navPoint");
-   std::map<std::string, std::string> items;
+  
+  // Fills toc_index map
   while (navPoint)
   {
     // navPoint has also an id & playOrder element: navPoint->Attribute("id");
@@ -231,10 +232,25 @@ bool Epub::loadIndex()
     std::string title = navLabel->Value();
     auto content = navPoint->FirstChildElement("content");
     std::string href = content->Attribute("src");
+
+    toc_index.insert({title, href});
     ESP_LOGI(TAG, "title %s src %s", title.c_str(), href.c_str());
     navPoint = navPoint->NextSiblingElement("navPoint");
   }
+  // Test find key
+  //get_index_src("Cubierta");
   return true;
+}
+
+std::string Epub::get_index_src(std::string key) {
+    auto search = toc_index.find(key);
+    if (search != toc_index.end()) {
+        ESP_LOGI(TAG, "Found key %s result href: %s", search->first.c_str(), search->second.c_str());
+        return search->second;
+    } else {
+        ESP_LOGI(TAG, "key:%s not found in toc", search->first.c_str());
+        return "";
+    }
 }
 
 const std::string &Epub::get_title()
