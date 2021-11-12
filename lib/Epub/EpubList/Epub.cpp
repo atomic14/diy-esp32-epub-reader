@@ -184,7 +184,7 @@ bool Epub::loadIndex()
   // Update this so it's read from manifest v
   // Or alternatively reads an ncx file in OEBPS directory
   const char *tocFile = "OEBPS/toc.ncx";
-  
+
   char *meta_index = (char *)zip.read_file_to_memory(tocFile);
   if (!meta_index)
   {
@@ -207,14 +207,14 @@ bool Epub::loadIndex()
     return false;
   }
   printf("ncx in line:%d\n", ncx->GetLineNum());
-  
+
   auto docTitle = ncx->FirstChildElement("docTitle");
   if (!docTitle)
   {
     ESP_LOGE(TAG, "Could not find docTitle child in ncx");
     return false;
   }
-  
+
   auto navMap = ncx->FirstChildElement("navMap");
   if (!navMap)
   {
@@ -223,7 +223,7 @@ bool Epub::loadIndex()
   }
 
   auto navPoint = navMap->FirstChildElement("navPoint");
-  
+
   // Fills toc_index map
   while (navPoint)
   {
@@ -233,7 +233,7 @@ bool Epub::loadIndex()
     auto content = navPoint->FirstChildElement("content");
     std::string href = content->Attribute("src");
 
-    toc_index.insert({title, href});
+    toc_index.push_back(std::make_pair(title, href));
     ESP_LOGI(TAG, "title %s src %s", title.c_str(), href.c_str());
     navPoint = navPoint->NextSiblingElement("navPoint");
   }
@@ -242,15 +242,9 @@ bool Epub::loadIndex()
   return true;
 }
 
-std::string Epub::get_index_src(std::string key) {
-    auto search = toc_index.find(key);
-    if (search != toc_index.end()) {
-        ESP_LOGI(TAG, "Found key %s result href: %s", search->first.c_str(), search->second.c_str());
-        return search->second;
-    } else {
-        ESP_LOGI(TAG, "key:%s not found in toc", search->first.c_str());
-        return "";
-    }
+std::string Epub::get_index_src(int index)
+{
+  return toc_index[index].second;
 }
 
 const std::string &Epub::get_title()

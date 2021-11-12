@@ -31,7 +31,7 @@ public:
   // Fills toc_index map
   bool loadIndex();
   // Finds the src value in the index
-  std::string get_index_src(std::string key);
+  std::string get_index_src(int index);
 
   const std::string &get_path() const { return m_path; }
   const std::string &get_title();
@@ -41,5 +41,5 @@ public:
   int get_spine_items_count();
 
   // the index of chapters
-  std::unordered_map<std::string, std::string> toc_index;
+  std::vector<std::pair<std::string, std::string>> toc_index;
 };

@@ -6,6 +6,7 @@
 #include "EpubList/Epub.h"
 #include "EpubList/EpubList.h"
 #include "EpubList/EpubReader.h"
+#include "EpubList/EpubIndex.h"
 #include <RubbishHtmlParser/RubbishHtmlParser.h>
 #include "boards/Board.h"
 
@@ -27,6 +28,7 @@ const char *TAG = "main";
 typedef enum
 {
   SELECTING_EPUB,
+  SELECTING_TABLE_CONTENTS,
   READING_EPUB
 } UIState;
 
@@ -40,6 +42,7 @@ void handleEpubList(Renderer *renderer, UIAction action, bool needs_redraw);
 
 static EpubList *epub_list = nullptr;
 static EpubReader *reader = nullptr;
+static EpubIndex *contents = nullptr;
 
 void handleEpub(Renderer *renderer, UIAction action)
 {
@@ -77,6 +80,38 @@ void handleEpub(Renderer *renderer, UIAction action)
   reader->render();
 }
 
+void handleEpubTableContents(Renderer *renderer, UIAction action, bool needs_redraw)
+{
+  if (!contents)
+  {
+    contents = new EpubIndex(epub_list_state.epub_list[epub_list_state.selected_item], renderer);
+    contents->load();
+  }
+  switch (action)
+  {
+  case UP:
+    contents->prev();
+    break;
+  case DOWN:
+    contents->next();
+    break;
+  case SELECT:
+    // switch to reading the epub
+    delete contents;
+    // setup the reader state
+    ui_state = READING_EPUB;
+    // create the reader and load the book
+    reader = new EpubReader(epub_list_state.epub_list[epub_list_state.selected_item], renderer);
+    reader->load();
+    handleEpub(renderer, NONE);
+    return;
+  case NONE:
+  default:
+    break;
+  }
+  contents->render();
+}
+
 void handleEpubList(Renderer *renderer, UIAction action, bool needs_redraw)
 {
   // load up the epub list from the filesystem
@@ -105,11 +140,11 @@ void handleEpubList(Renderer *renderer, UIAction action, bool needs_redraw)
   case SELECT:
     // switch to reading the epub
     // setup the reader state
-    ui_state = READING_EPUB;
+    ui_state = SELECTING_TABLE_CONTENTS;
     // create the reader and load the book
-    reader = new EpubReader(epub_list_state.epub_list[epub_list_state.selected_item], renderer);
-    reader->load();
-    handleEpub(renderer, NONE);
+    contents = new EpubIndex(epub_list_state.epub_list[epub_list_state.selected_item], renderer);
+    contents->load();
+    handleEpubTableContents(renderer, NONE, true);
     return;
   case NONE:
   default:
@@ -125,6 +160,9 @@ void handleUserInteraction(Renderer *renderer, UIAction ui_action, bool needs_re
   {
   case READING_EPUB:
     handleEpub(renderer, ui_action);
+    break;
+  case SELECTING_TABLE_CONTENTS:
+    handleEpubTableContents(renderer, ui_action, needs_redraw);
     break;
   case SELECTING_EPUB:
   default:

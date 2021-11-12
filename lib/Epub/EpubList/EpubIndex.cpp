@@ -19,7 +19,7 @@ bool EpubIndex::load()
   {
     renderer->show_busy();
     delete epub;
-    
+
     epub = new Epub(state.path);
     if (epub->loadIndex())
     {
@@ -37,25 +37,24 @@ void EpubIndex::render()
   renderer->clear_screen();
   int toc_size = (epub->toc_index.size()) ? epub->toc_index.size() : 1;
   int cell_height = renderer->get_page_height() / toc_size;
-  int text_ypos = 10;
-  int y_offset = 20;
-  int idx = 0;
-  
-  printf("TOC index size:%d\n", epub->toc_index.size());
-  TextBlock *index_block = new TextBlock(LEFT_ALIGN);
 
-  for(auto iter = epub->toc_index.begin(); iter != epub->toc_index.end(); ++iter){
+  printf("TOC index size:%u\n", epub->toc_index.size());
+
+  for (auto iter = epub->toc_index.begin(); iter != epub->toc_index.end(); ++iter)
+  {
+    // temporary index block for text rendering
+    TextBlock *index_block = new TextBlock(LEFT_ALIGN);
     // Correctly printing each index item
     index_block->add_span(iter->first.c_str(), false, false);
     index_block->layout(renderer, epub, renderer->get_page_width());
-    printf("%d %s\n", idx, iter->first.c_str());
-
-    index_block->render(renderer, idx, 10, text_ypos + y_offset);
+    // draw each line of the index block making sure we don't run over the cell
+    for (int i = 0; i < index_block->line_breaks.size(); i++)
+    {
+      index_block->render(renderer, i, 0, y_offset);
+      y_offset += renderer->get_line_height();
+    }
     y_offset += renderer->get_line_height();
-    idx++;
-    // Chris I don't understand why printing more than 2 it fails:
-    if (idx == 2) break;
+    // clean up the temporary index block
+    delete index_block;
   }
-  delete index_block;
-  
 }
