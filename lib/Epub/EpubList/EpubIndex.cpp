@@ -37,22 +37,25 @@ void EpubIndex::render()
   renderer->clear_screen();
   int toc_size = (epub->toc_index.size()) ? epub->toc_index.size() : 1;
   int cell_height = renderer->get_page_height() / toc_size;
-  int text_height = cell_height - 20 * 2;
-  int i = 0;
   int text_ypos = 10;
   int y_offset = 20;
+  int idx = 0;
   
   printf("TOC index size:%d\n", epub->toc_index.size());
   TextBlock *index_block = new TextBlock(LEFT_ALIGN);
 
   for(auto iter = epub->toc_index.begin(); iter != epub->toc_index.end(); ++iter){
     // Correctly printing each index item
-    printf("%s\n", iter->first.c_str());
     index_block->add_span(iter->first.c_str(), false, false);
-    // Hangs everything :(  Chris need some help!
-    //index_block->render(renderer, i, 10, text_ypos + y_offset);
-    y_offset += renderer->get_line_height();
-    i++;
-  }
+    index_block->layout(renderer, epub, renderer->get_page_width());
+    printf("%d %s\n", idx, iter->first.c_str());
 
+    index_block->render(renderer, idx, 10, text_ypos + y_offset);
+    y_offset += renderer->get_line_height();
+    idx++;
+    // Chris I don't understand why printing more than 2 it fails:
+    if (idx == 2) break;
+  }
+  delete index_block;
+  
 }
