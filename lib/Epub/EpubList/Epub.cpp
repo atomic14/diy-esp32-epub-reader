@@ -183,8 +183,8 @@ bool Epub::loadIndex()
   ZipFile zip(m_path.c_str());
   // Update this so it's read from manifest v
   // Or alternatively reads an ncx file in OEBPS directory
-  const char *tocFile = "OEBPS/toc.ncx";
-
+  ESP_LOGI(TAG, "toc path: %s\n", get_toc_filename().c_str());
+  const char *tocFile = get_toc_filename().c_str();
   char *meta_index = (char *)zip.read_file_to_memory(tocFile);
   if (!meta_index)
   {
@@ -324,3 +324,54 @@ std::string &Epub::get_spine_item(int spine_index)
 {
   return m_spine[spine_index];
 }
+
+std::string Epub::get_toc_filename() {
+    ZipFile zip(m_path.c_str());
+    std::string content_opf_file;
+    if (!find_content_opf_file(zip, content_opf_file))
+    {
+      ESP_LOGE(TAG, "Could not find opf file");
+      return "";
+    }
+    // get the base path for the content
+    m_base_path = content_opf_file.substr(0, content_opf_file.find_last_of('/') + 1);
+    // read in the content.opf file and parse it
+    char *contents = (char *)zip.read_file_to_memory(content_opf_file.c_str());
+    // parse the contents
+    tinyxml2::XMLDocument doc;
+    auto result = doc.Parse(contents);
+    free(contents);
+    if (result != tinyxml2::XML_SUCCESS)
+    {
+      ESP_LOGE(TAG, "Error parsing content.opf - %s", doc.ErrorIDToName(result));
+      return "";
+    }
+    auto package = doc.FirstChildElement("package");
+    if (!package)
+    {
+      ESP_LOGE(TAG, "Could not find package element in content.opf");
+      return "";
+    }
+    auto manifest = package->FirstChildElement("manifest");
+    if (!manifest)
+    {
+      ESP_LOGE(TAG, "Missing manifest");
+      return "";
+    }
+    // create a mapping from id to file name
+    auto item = manifest->FirstChildElement("item");
+    std::map<std::string, std::string> items;
+    std::string base_dir = "OEBPS/";
+    std::string find_ncx = "ncx";
+    while (item)
+    {
+      if (item->Attribute("id") == find_ncx) {
+        std::string href = base_dir + item->Attribute("href");
+        return href;
+      }
+      item = item->NextSiblingElement("item");
+    }
+
+    ESP_LOGE(TAG, "Could not find toc reference");
+    return "";
+  }

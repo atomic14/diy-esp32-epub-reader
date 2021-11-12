@@ -15,6 +15,8 @@ private:
   std::string m_cover_image_item;
   // where is the EPUBfile?
   std::string m_path;
+  // the path of the *.ncx index
+  std::string toc_path;
   // the spine of the EPUB file
   std::vector<std::string> m_spine;
   // the base path for items in the EPUB file
@@ -22,6 +24,7 @@ private:
 
   // find the path for the content.opf file
   bool find_content_opf_file(ZipFile &zip, std::string &content_opf_file);
+  std::string get_toc_filename();
 
 public:
   Epub(const std::string &path);

@@ -28,6 +28,9 @@ private:
   Renderer *renderer;
   Epub *epub = nullptr;
   EpubListItem &state;
+  int selected_item = 0;
+  int previous_selected_item = -1;
+  int toc_count = 0;
 
 public:
   EpubIndex(EpubListItem &state, Renderer *renderer) : renderer(renderer), state(state){};
