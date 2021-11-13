@@ -3,7 +3,7 @@
 #include <driver/gpio.h>
 
 // 100 ms debounce on the buttons
-const int BUTTON_DEBOUNCE = 1000;
+const int BUTTON_DEBOUNCE = 50000;
 
 IRAM_ATTR void button_interrupt_handler(void *param)
 {
