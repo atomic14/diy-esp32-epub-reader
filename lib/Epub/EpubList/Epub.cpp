@@ -170,7 +170,8 @@ bool Epub::load()
     auto id = itemref->Attribute("idref");
     if (items.find(id) != items.end())
     {
-      m_spine.push_back(items[id]);
+      printf("%s -> %s\n", id, items[id].c_str());
+      m_spine.push_back(std::make_pair(id, items[id]));
     }
     itemref = itemref->NextSiblingElement("itemref");
   }
@@ -181,10 +182,10 @@ bool Epub::load()
 bool Epub::loadIndex()
 {
   ZipFile zip(m_path.c_str());
-  // Update this so it's read from manifest v
-  // Or alternatively reads an ncx file in OEBPS directory
-  ESP_LOGI(TAG, "toc path: %s\n", get_toc_filename().c_str());
+  
   const char *tocFile = get_toc_filename().c_str();
+  ESP_LOGI(TAG, "toc path: %s\n", tocFile);
+
   char *meta_index = (char *)zip.read_file_to_memory(tocFile);
   if (!meta_index)
   {
@@ -234,11 +235,10 @@ bool Epub::loadIndex()
     std::string href = content->Attribute("src");
 
     toc_index.push_back(std::make_pair(title, href));
-    ESP_LOGI(TAG, "title %s src %s", title.c_str(), href.c_str());
+    ESP_LOGI(TAG, "%s -> %s", title.c_str(), href.c_str());
     navPoint = navPoint->NextSiblingElement("navPoint");
   }
-  // Test find key
-  //get_index_src("Cubierta");
+  
   return true;
 }
 
@@ -322,7 +322,7 @@ uint8_t *Epub::get_item_contents(const std::string &item_href, size_t *size)
 
 std::string &Epub::get_spine_item(int spine_index)
 {
-  return m_spine[spine_index];
+  return m_spine[spine_index].second;
 }
 
 std::string Epub::get_toc_filename() {

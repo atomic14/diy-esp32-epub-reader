@@ -1,6 +1,5 @@
 #include "EpubIndex.h"
-// Padding should be dynamic since they could have more than one line
-#define PADDING 66
+
 static const char *TAG = "PUBINDEX";
 
 void EpubIndex::next()
@@ -35,7 +34,7 @@ bool EpubIndex::load()
 
 void EpubIndex::render()
 {
-  ESP_LOGD(TAG, "Rendering EPUB index (Pending)");
+  ESP_LOGD(TAG, "Rendering EPUB index");
   renderer->clear_screen();
   int toc_size = (epub->toc_index.size()) ? epub->toc_index.size() : 1;
   int cell_height = renderer->get_page_height() / toc_size;

@@ -31,6 +31,8 @@ private:
   int selected_item = 0;
   int previous_selected_item = -1;
   int toc_count = 0;
+  uint8_t toc_page = 0;
+  uint8_t toc_page_total = 0;
 
 public:
   EpubIndex(EpubListItem &state, Renderer *renderer) : renderer(renderer), state(state){};

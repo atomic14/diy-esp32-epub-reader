@@ -18,7 +18,7 @@ private:
   // the path of the *.ncx index
   std::string toc_path;
   // the spine of the EPUB file
-  std::vector<std::string> m_spine;
+  std::vector<std::pair<std::string, std::string>> m_spine;
   // the base path for items in the EPUB file
   std::string m_base_path;
 
