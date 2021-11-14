@@ -96,3 +96,8 @@ void EpubReader::render()
   ESP_LOGD(TAG, "rendered page %d of %d", state.current_page, parser->get_page_count());
   ESP_LOGD(TAG, "after render: %d", esp_get_free_heap_size());
 }
+
+void EpubReader::set_state_section(uint16_t current_section) {
+  ESP_LOGI(TAG, "go to section:%d", current_section);
+  state.current_section = current_section;
+}

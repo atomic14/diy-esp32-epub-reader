@@ -23,4 +23,5 @@ public:
   void next();
   void prev();
   void render();
+  void set_state_section(uint16_t current_section);
 };

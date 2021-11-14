@@ -102,6 +102,7 @@ void handleEpubTableContents(Renderer *renderer, UIAction action, bool needs_red
     ui_state = READING_EPUB;
     // create the reader and load the book
     reader = new EpubReader(epub_list_state.epub_list[epub_list_state.selected_item], renderer);
+    reader->set_state_section(contents->get_selected_toc());
     reader->load();
     handleEpub(renderer, NONE);
     return;

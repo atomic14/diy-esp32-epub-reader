@@ -41,4 +41,5 @@ public:
   void next();
   void prev();
   void render();
+  uint16_t get_selected_toc();
 };

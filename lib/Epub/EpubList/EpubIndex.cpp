@@ -79,3 +79,7 @@ void EpubIndex::render()
     iter_count++;
   }
 }
+
+uint16_t EpubIndex::get_selected_toc() {
+  return selected_item;
+}
