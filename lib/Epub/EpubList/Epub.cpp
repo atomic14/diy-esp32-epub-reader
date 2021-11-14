@@ -170,7 +170,7 @@ bool Epub::load()
     auto id = itemref->Attribute("idref");
     if (items.find(id) != items.end())
     {
-      printf("%s -> %s\n", id, items[id].c_str());
+      //printf("%s -> %s\n", id, items[id].c_str());
       m_spine.push_back(std::make_pair(id, items[id]));
     }
     itemref = itemref->NextSiblingElement("itemref");
@@ -361,12 +361,11 @@ std::string Epub::get_toc_filename() {
     // create a mapping from id to file name
     auto item = manifest->FirstChildElement("item");
     std::map<std::string, std::string> items;
-    std::string base_dir = "OEBPS/";
     std::string find_ncx = "ncx";
     while (item)
     {
       if (item->Attribute("id") == find_ncx) {
-        std::string href = base_dir + item->Attribute("href");
+        std::string href = m_base_path + item->Attribute("href");
         return href;
       }
       item = item->NextSiblingElement("item");
