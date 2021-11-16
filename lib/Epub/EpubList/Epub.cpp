@@ -170,7 +170,8 @@ bool Epub::load()
     auto id = itemref->Attribute("idref");
     if (items.find(id) != items.end())
     {
-      //printf("%s -> %s\n", id, items[id].c_str());
+      std::vector<std::string> get_xhtml = split(items[id], "/");
+      printf("%s -> %s\n", get_xhtml.back().c_str() , items[id].c_str());
       m_spine.push_back(std::make_pair(id, items[id]));
     }
     itemref = itemref->NextSiblingElement("itemref");
@@ -238,6 +239,7 @@ bool Epub::loadIndex()
     ESP_LOGI(TAG, "%s -> %s", title.c_str(), href.c_str());
     navPoint = navPoint->NextSiblingElement("navPoint");
   }
+  ESP_LOGI(TAG, "toc_index size:%d", toc_index.size());
   
   return true;
 }
@@ -260,6 +262,11 @@ const std::string &Epub::get_cover_image_item()
 int Epub::get_spine_items_count()
 {
   return m_spine.size();
+}
+
+int Epub::get_index_size()
+{
+  return toc_index.size();
 }
 
 std::string normalise_path(const std::string &path)
@@ -322,7 +329,19 @@ uint8_t *Epub::get_item_contents(const std::string &item_href, size_t *size)
 
 std::string &Epub::get_spine_item(int spine_index)
 {
+  ESP_LOGI(TAG, "get_spine_item(%d) %s", spine_index, m_spine[spine_index].second.c_str());
   return m_spine[spine_index].second;
+}
+
+int Epub::get_spine_item_id(std::string spine_key) {
+  int it = 0;
+  for (it = 0; it != m_spine.size(); ++it) {
+    if (m_spine[it].first == spine_key) {
+      return it;
+    }
+  }
+  ESP_LOGI(TAG, "get_spine_item_id(%s) not found (size:%d)", spine_key.c_str(), m_spine.size());
+  return it;
 }
 
 std::string Epub::get_toc_filename() {
@@ -373,4 +392,27 @@ std::string Epub::get_toc_filename() {
 
     ESP_LOGE(TAG, "Could not find toc reference");
     return "";
+  }
+
+  std::vector<std::string> Epub::split(std::string to_split, std::string delimiter) {
+    size_t pos = 0;
+    std::vector<std::string> matches{};
+    do {
+        pos = to_split.find(delimiter);
+        int change_end;
+        if (pos == std::string::npos) {
+            pos = to_split.length() - 1;
+            change_end = 1;
+        }
+        else {
+            change_end = 0;
+        }
+        matches.push_back(to_split.substr(0, pos+change_end));
+        
+        to_split.erase(0, pos+1);
+
+    }
+    while (!to_split.empty());
+    return matches;
+
   }

@@ -22,6 +22,8 @@ bool EpubIndex::load()
     delete epub;
 
     epub = new Epub(state.path);
+    // Need to load the Spine
+    epub->load();
     if (epub->loadIndex())
     {
       ESP_LOGI(TAG, "Epub index loaded");
@@ -81,5 +83,18 @@ void EpubIndex::render()
 }
 
 uint16_t EpubIndex::get_selected_toc() {
-  return selected_item;
+  // should retrieve the tod ID and return the Spine ID
+  std::string toc_key = epub->get_index_src(selected_item);
+  std::vector<std::string> get_xhtml = epub->split(toc_key, "/");
+  std::vector<std::string> xhtml = epub->split(get_xhtml.back(), "#");
+  std::string clean_xhtml;
+  if (xhtml.size()) {
+    // We could find an anchor
+    clean_xhtml = xhtml.front();
+  } else {
+    clean_xhtml = get_xhtml.back();
+  }
+  printf("TOC key for id %d returns xhtml: %s\n\n", selected_item, clean_xhtml.c_str());
+  // Find this XHTML href in the Spine
+  return epub->get_spine_item_id(clean_xhtml);
 }

@@ -96,14 +96,14 @@ void handleEpubTableContents(Renderer *renderer, UIAction action, bool needs_red
     contents->next();
     break;
   case SELECT:
-    // switch to reading the epub
-    delete contents;
     // setup the reader state
     ui_state = READING_EPUB;
     // create the reader and load the book
     reader = new EpubReader(epub_list_state.epub_list[epub_list_state.selected_item], renderer);
     reader->set_state_section(contents->get_selected_toc());
     reader->load();
+    //switch to reading the epub
+    delete contents;
     handleEpub(renderer, NONE);
     return;
   case NONE:
