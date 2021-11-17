@@ -27,19 +27,22 @@ class EpubIndex
 private:
   Renderer *renderer;
   Epub *epub = nullptr;
-  EpubListItem &state;
+  EpubListItem &selected_epub;
+  EpubIndexState &state;
   int selected_item = 0;
   int previous_selected_item = -1;
   int toc_count = 0;
   uint8_t toc_page = 0;
   uint8_t toc_page_total = 0;
+  bool m_needs_redraw = false;
 
 public:
-  EpubIndex(EpubListItem &state, Renderer *renderer) : renderer(renderer), state(state){};
+  EpubIndex(EpubListItem &selected_epub, EpubIndexState &state, Renderer *renderer) : renderer(renderer), selected_epub(selected_epub), state(state){};
   ~EpubIndex() {}
   bool load();
   void next();
   void prev();
   void render();
+  void set_needs_redraw() { m_needs_redraw = true; }
   uint16_t get_selected_toc();
 };

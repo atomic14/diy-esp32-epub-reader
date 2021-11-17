@@ -26,3 +26,13 @@ typedef struct
   bool is_loaded;
   EpubListItem epub_list[MAX_EPUB_LIST_SIZE];
 } EpubListState;
+
+// this is held in the RTC memory
+typedef struct
+{
+  int previous_rendered_page;
+  int previous_selected_item;
+  int selected_item;
+  int num_items;
+  bool is_loaded;
+} EpubIndexState;

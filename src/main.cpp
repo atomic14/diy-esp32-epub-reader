@@ -36,6 +36,8 @@ typedef enum
 RTC_NOINIT_ATTR UIState ui_state = SELECTING_EPUB;
 // the state data for the epub list and reader
 RTC_DATA_ATTR EpubListState epub_list_state;
+// the state data for the epub index list
+RTC_DATA_ATTR EpubIndexState epub_index_state;
 
 void handleEpub(Renderer *renderer, UIAction action);
 void handleEpubList(Renderer *renderer, UIAction action, bool needs_redraw);
@@ -69,7 +71,7 @@ void handleEpub(Renderer *renderer, UIAction action)
     // force a redraw
     if (!epub_list)
     {
-      epub_list = new EpubList(renderer, &epub_list_state);
+      epub_list = new EpubList(renderer, epub_list_state);
     }
     handleEpubList(renderer, NONE, true);
     return;
@@ -84,7 +86,7 @@ void handleEpubTableContents(Renderer *renderer, UIAction action, bool needs_red
 {
   if (!contents)
   {
-    contents = new EpubIndex(epub_list_state.epub_list[epub_list_state.selected_item], renderer);
+    contents = new EpubIndex(epub_list_state.epub_list[epub_list_state.selected_item], epub_index_state, renderer);
     contents->load();
   }
   switch (action)
@@ -119,7 +121,7 @@ void handleEpubList(Renderer *renderer, UIAction action, bool needs_redraw)
   if (!epub_list)
   {
     ESP_LOGI("main", "Creating epub list");
-    epub_list = new EpubList(renderer, &epub_list_state);
+    epub_list = new EpubList(renderer, epub_list_state);
     if (epub_list->load("/fs/"))
     {
       ESP_LOGI("main", "Epub files loaded");
@@ -143,7 +145,7 @@ void handleEpubList(Renderer *renderer, UIAction action, bool needs_redraw)
     // setup the reader state
     ui_state = SELECTING_TABLE_CONTENTS;
     // create the reader and load the book
-    contents = new EpubIndex(epub_list_state.epub_list[epub_list_state.selected_item], renderer);
+    contents = new EpubIndex(epub_list_state.epub_list[epub_list_state.selected_item], epub_index_state, renderer);
     contents->load();
     handleEpubTableContents(renderer, NONE, true);
     return;
