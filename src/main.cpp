@@ -87,6 +87,7 @@ void handleEpubTableContents(Renderer *renderer, UIAction action, bool needs_red
   if (!contents)
   {
     contents = new EpubIndex(epub_list_state.epub_list[epub_list_state.selected_item], epub_index_state, renderer);
+    contents->set_needs_redraw();
     contents->load();
   }
   switch (action)
@@ -147,6 +148,7 @@ void handleEpubList(Renderer *renderer, UIAction action, bool needs_redraw)
     // create the reader and load the book
     contents = new EpubIndex(epub_list_state.epub_list[epub_list_state.selected_item], epub_index_state, renderer);
     contents->load();
+    contents->set_needs_redraw();
     handleEpubTableContents(renderer, NONE, true);
     return;
   case NONE:

@@ -29,11 +29,6 @@ private:
   Epub *epub = nullptr;
   EpubListItem &selected_epub;
   EpubIndexState &state;
-  int selected_item = 0;
-  int previous_selected_item = -1;
-  int toc_count = 0;
-  uint8_t toc_page = 0;
-  uint8_t toc_page_total = 0;
   bool m_needs_redraw = false;
 
 public:

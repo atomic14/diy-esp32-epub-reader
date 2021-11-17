@@ -6,12 +6,22 @@ static const char *TAG = "PUBINDEX";
 
 void EpubIndex::next()
 {
-  selected_item = (selected_item + 1) % toc_count;
+  // must be loaded as we need the information from the epub
+  if (!epub)
+  {
+    load();
+  }
+  state.selected_item = (state.selected_item + 1) % epub->get_toc_items_count();
 }
 
 void EpubIndex::prev()
 {
-  selected_item = (selected_item - 1 + toc_count) % toc_count;
+  // must be loaded as we need the information from the epub
+  if (!epub)
+  {
+    load();
+  }
+  state.selected_item = (state.selected_item - 1 + epub->get_toc_items_count()) % epub->get_toc_items_count();
 }
 
 bool EpubIndex::load()
@@ -30,7 +40,6 @@ bool EpubIndex::load()
       return false;
     }
   }
-  render();
   return true;
 }
 
@@ -87,6 +96,7 @@ void EpubIndex::render()
     }
     ypos += cell_height;
   }
+  state.previous_rendered_page = state.current_page;
 }
 
 uint16_t EpubIndex::get_selected_toc()
