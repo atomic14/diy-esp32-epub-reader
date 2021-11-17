@@ -200,7 +200,6 @@ bool Epub::parse_toc_ncx_file(ZipFile &zip)
     ESP_LOGE(TAG, "Could not find first child ncx in toc");
     return false;
   }
-  printf("ncx in line:%d\n", ncx->GetLineNum());
 
   auto docTitle = ncx->FirstChildElement("docTitle");
   if (!docTitle)
