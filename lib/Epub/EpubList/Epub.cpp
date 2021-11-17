@@ -342,7 +342,6 @@ int Epub::get_spine_items_count()
 
 std::string &Epub::get_spine_item(int spine_index)
 {
-  ESP_LOGI(TAG, "get_spine_item(%d) %s", spine_index, m_spine[spine_index].second.c_str());
   return m_spine[spine_index].second;
 }
 
@@ -363,7 +362,6 @@ int Epub::get_spine_index_for_toc_index(int toc_index)
   // so we can find the spine index by looking for the href
   for (int i = 0; i < m_spine.size(); i++)
   {
-    ESP_LOGI(TAG, "get_spine_index_for_toc_index(%d) %s, %s", toc_index, m_spine[i].second.c_str(), m_toc[toc_index].href.c_str());
     if (m_spine[i].second == m_toc[toc_index].href)
     {
       return i;
