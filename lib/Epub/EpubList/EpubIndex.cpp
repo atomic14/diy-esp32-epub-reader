@@ -105,6 +105,7 @@ void EpubIndex::render()
     }
     ypos += cell_height;
   }
+  state.previous_selected_item = state.selected_item;
   state.previous_rendered_page = current_page;
 }
 
