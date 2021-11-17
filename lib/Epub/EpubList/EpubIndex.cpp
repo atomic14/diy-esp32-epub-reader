@@ -72,20 +72,24 @@ void EpubIndex::render()
     // do we need to draw a new page of items?
     if (current_page != state.previous_rendered_page)
     {
-
       // format the text using a text block
-      TextBlock *index_block = new TextBlock(LEFT_ALIGN);
-      index_block->add_span(epub->get_toc_item(i).title.c_str(), false, false);
-      index_block->layout(renderer, epub, renderer->get_page_width());
+      TextBlock *title_block = new TextBlock(LEFT_ALIGN);
+      title_block->add_span(epub->get_toc_item(i).title.c_str(), false, false);
+      title_block->layout(renderer, epub, renderer->get_page_width());
+      // work out the height of the title
+      int text_height = cell_height - PADDING * 2;
+      int title_height = title_block->line_breaks.size() * renderer->get_line_height();
+      // center the title in the cell
+      int y_offset = title_height < text_height ? (text_height - title_height) / 2 : 0;
       // draw each line of the index block making sure we don't run over the cell
       int height = 0;
-      for (int i = 0; i < index_block->line_breaks.size() && height < cell_height; i++)
+      for (int i = 0; i < title_block->line_breaks.size() && height < text_height; i++)
       {
-        index_block->render(renderer, i, 0, ypos + height);
+        title_block->render(renderer, i, 0, ypos + height + y_offset);
         height += renderer->get_line_height();
       }
       // clean up the temporary index block
-      delete index_block;
+      delete title_block;
     }
     // clear the selection box around the previous selected item
     if (state.previous_selected_item == i)
