@@ -61,7 +61,6 @@ void EpubIndex::render()
   if (current_page != state.previous_rendered_page || m_needs_redraw)
   {
     m_needs_redraw = false;
-    renderer->show_busy();
     renderer->clear_screen();
     state.previous_selected_item = -1;
     // trigger a redraw of the items
