@@ -90,17 +90,17 @@ void EpubIndex::render()
     // clear the selection box around the previous selected item
     if (state.previous_selected_item == i)
     {
-      for (int i = 0; i < 3; i++)
+      for (int line = 0; line < 3; line++)
       {
-        renderer->draw_rect(i, ypos + PADDING / 2 + i, renderer->get_page_width() - 2 * i, cell_height - PADDING - 2 * i, 255);
+        renderer->draw_rect(line, ypos + PADDING / 2 + line, renderer->get_page_width() - 2 * line, cell_height - PADDING - 2 * line, 255);
       }
     }
     // draw the selection box around the current selection
     if (state.selected_item == i)
     {
-      for (int i = 0; i < 3; i++)
+      for (int line = 0; line < 3; line++)
       {
-        renderer->draw_rect(i, ypos + PADDING / 2 + i, renderer->get_page_width() - 2 * i, cell_height - PADDING - 2 * i, 0);
+        renderer->draw_rect(line, ypos + PADDING / 2 + line, renderer->get_page_width() - 2 * line, cell_height - PADDING - 2 * line, 0);
       }
     }
     ypos += cell_height;
