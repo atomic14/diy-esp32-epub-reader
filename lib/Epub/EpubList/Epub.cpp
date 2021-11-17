@@ -236,7 +236,7 @@ bool Epub::parse_toc_ncx_file(ZipFile &zip)
       href = href.substr(0, pos);
     }
     m_toc.push_back(EpubTocEntry(title, href, anchor, 0));
-    ESP_LOGI(TAG, "%s -> %s#%s", title.c_str(), href.c_str(), anchor.c_str());
+    // ESP_LOGI(TAG, "%s -> %s#%s", title.c_str(), href.c_str(), anchor.c_str());
     navPoint = navPoint->NextSiblingElement("navPoint");
   }
   return true;

@@ -2,7 +2,7 @@
 
 static const char *TAG = "PUBINDEX";
 #define PADDING 20
-#define ITEMS_PER_PAGE 10
+#define ITEMS_PER_PAGE 5
 
 void EpubIndex::next()
 {
@@ -43,6 +43,10 @@ bool EpubIndex::load()
   return true;
 }
 
+// TODO - this is currently pretty much a copy of the epub list rendering
+// we can fit a lot more on the screen by allowing variable cell heights
+// and a lot of the optimisations that are used for the list aren't really
+// required as we're not rendering thumbnails
 void EpubIndex::render()
 {
   ESP_LOGD(TAG, "Rendering EPUB index");
@@ -65,19 +69,24 @@ void EpubIndex::render()
   }
   for (int i = start_index; i < start_index + ITEMS_PER_PAGE && i < epub->get_toc_items_count(); i++)
   {
-    // format the text using a text block
-    TextBlock *index_block = new TextBlock(LEFT_ALIGN);
-    index_block->add_span(epub->get_toc_item(i).title.c_str(), false, false);
-    index_block->layout(renderer, epub, renderer->get_page_width());
-    // draw each line of the index block making sure we don't run over the cell
-    int height = 0;
-    for (int i = 0; i < index_block->line_breaks.size() && height < cell_height; i++)
+    // do we need to draw a new page of items?
+    if (current_page != state.previous_rendered_page)
     {
-      index_block->render(renderer, i, 0, ypos + height);
-      height += renderer->get_line_height();
+
+      // format the text using a text block
+      TextBlock *index_block = new TextBlock(LEFT_ALIGN);
+      index_block->add_span(epub->get_toc_item(i).title.c_str(), false, false);
+      index_block->layout(renderer, epub, renderer->get_page_width());
+      // draw each line of the index block making sure we don't run over the cell
+      int height = 0;
+      for (int i = 0; i < index_block->line_breaks.size() && height < cell_height; i++)
+      {
+        index_block->render(renderer, i, 0, ypos + height);
+        height += renderer->get_line_height();
+      }
+      // clean up the temporary index block
+      delete index_block;
     }
-    // clean up the temporary index block
-    delete index_block;
     // clear the selection box around the previous selected item
     if (state.previous_selected_item == i)
     {
