@@ -224,7 +224,7 @@ bool Epub::parse_toc_ncx_file(ZipFile &zip)
     auto navLabel = navPoint->FirstChildElement("navLabel")->FirstChildElement("text")->FirstChild();
     std::string title = navLabel->Value();
     auto content = navPoint->FirstChildElement("content");
-    std::string href = content->Attribute("src");
+    std::string href = m_base_path + content->Attribute("src");
     // split the href on the # to get the href and the anchor
     size_t pos = href.find('#');
     std::string anchor = "";
@@ -363,11 +363,13 @@ int Epub::get_spine_index_for_toc_index(int toc_index)
   // so we can find the spine index by looking for the href
   for (int i = 0; i < m_spine.size(); i++)
   {
+    ESP_LOGI(TAG, "get_spine_index_for_toc_index(%d) %s, %s", toc_index, m_spine[i].second.c_str(), m_toc[toc_index].href.c_str());
     if (m_spine[i].second == m_toc[toc_index].href)
     {
       return i;
     }
   }
+  ESP_LOGI(TAG, "Section not found");
   // not found - default to the start of the book
   return 0;
 }
