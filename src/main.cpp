@@ -6,7 +6,7 @@
 #include "EpubList/Epub.h"
 #include "EpubList/EpubList.h"
 #include "EpubList/EpubReader.h"
-#include "EpubList/EpubIndex.h"
+#include "EpubList/EpubToc.h"
 #include <RubbishHtmlParser/RubbishHtmlParser.h>
 #include "boards/Board.h"
 
@@ -37,14 +37,14 @@ RTC_NOINIT_ATTR UIState ui_state = SELECTING_EPUB;
 // the state data for the epub list and reader
 RTC_DATA_ATTR EpubListState epub_list_state;
 // the state data for the epub index list
-RTC_DATA_ATTR EpubIndexState epub_index_state;
+RTC_DATA_ATTR EpubTocState epub_index_state;
 
 void handleEpub(Renderer *renderer, UIAction action);
 void handleEpubList(Renderer *renderer, UIAction action, bool needs_redraw);
 
 static EpubList *epub_list = nullptr;
 static EpubReader *reader = nullptr;
-static EpubIndex *contents = nullptr;
+static EpubToc *contents = nullptr;
 
 void handleEpub(Renderer *renderer, UIAction action)
 {
@@ -86,7 +86,7 @@ void handleEpubTableContents(Renderer *renderer, UIAction action, bool needs_red
 {
   if (!contents)
   {
-    contents = new EpubIndex(epub_list_state.epub_list[epub_list_state.selected_item], epub_index_state, renderer);
+    contents = new EpubToc(epub_list_state.epub_list[epub_list_state.selected_item], epub_index_state, renderer);
     contents->set_needs_redraw();
     contents->load();
   }
@@ -146,7 +146,7 @@ void handleEpubList(Renderer *renderer, UIAction action, bool needs_redraw)
     // setup the reader state
     ui_state = SELECTING_TABLE_CONTENTS;
     // create the reader and load the book
-    contents = new EpubIndex(epub_list_state.epub_list[epub_list_state.selected_item], epub_index_state, renderer);
+    contents = new EpubToc(epub_list_state.epub_list[epub_list_state.selected_item], epub_index_state, renderer);
     contents->load();
     contents->set_needs_redraw();
     handleEpubTableContents(renderer, NONE, true);
