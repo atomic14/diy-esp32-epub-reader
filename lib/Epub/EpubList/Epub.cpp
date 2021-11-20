@@ -342,7 +342,14 @@ int Epub::get_spine_items_count()
 
 std::string &Epub::get_spine_item(int spine_index)
 {
-  return m_spine[spine_index].second;
+  try
+    {
+      return m_spine.at(spine_index).second;
+    } catch (const std::out_of_range &oor) {
+      ESP_LOGI(TAG, "get_spine_item %d not found", spine_index);
+    }
+    // out_of_range let's return section 0 (Ex, going to last page of the book->)
+    return m_spine.at(0).second;
 }
 
 EpubTocEntry &Epub::get_toc_item(int toc_index)

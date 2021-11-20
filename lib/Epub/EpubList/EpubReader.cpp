@@ -40,8 +40,11 @@ void EpubReader::parse_and_layout_current_section()
   if (!parser)
   {
     renderer->show_busy();
-    ESP_LOGD(TAG, "Parse and render section %d", state.current_section);
+    ESP_LOGI(TAG, "Parse and render section %d", state.current_section);
     ESP_LOGD(TAG, "Before read html: %d", esp_get_free_heap_size());
+
+    // if spine item is not found here then it will return get_spine_item(0)
+    // so it does not crashes when you want to go after last page (out of vector range)
     std::string item = epub->get_spine_item(state.current_section);
     std::string base_path = item.substr(0, item.find_last_of('/') + 1);
     char *html = reinterpret_cast<char *>(epub->get_item_contents(item));

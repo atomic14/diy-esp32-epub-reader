@@ -243,6 +243,15 @@ void RubbishHtmlParser::layout(Renderer *renderer, Epub *epub)
 void RubbishHtmlParser::render_page(int page_index, Renderer *renderer, Epub *epub)
 {
   renderer->clear_screen();
-  // renderer->fill_rect(0, 0, renderer->get_page_width(), renderer->get_page_height(), 0xFF);
-  pages[page_index]->render(renderer, epub);
+  try
+    {
+      pages.at(page_index)->render(renderer, epub);
+    } catch (const std::out_of_range &oor) {
+      ESP_LOGI(TAG, "render_page out of range");
+      // This could be nicer. Notice that last word "button" is cut          v
+      uint16_t y = renderer->get_page_height()/2-20;
+      renderer->draw_rect(1, y, renderer->get_page_width(), 105, 125);
+      renderer->draw_text_box("Reached the limit of the book\nUse the SELECT button",
+                              10, y, renderer->get_page_width(), 80, false, false);
+    }
 }
