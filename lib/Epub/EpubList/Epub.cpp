@@ -131,6 +131,7 @@ bool Epub::parse_content_opf(ZipFile &zip, std::string &content_opf_file)
   // create a mapping from id to file name
   auto item = manifest->FirstChildElement("item");
   std::map<std::string, std::string> items;
+
   while (item)
   {
     std::string item_id = item->Attribute("id");
@@ -346,10 +347,11 @@ std::string &Epub::get_spine_item(int spine_index)
     {
       return m_spine.at(spine_index).second;
     } catch (const std::out_of_range &oor) {
-      ESP_LOGI(TAG, "get_spine_item %d not found", spine_index);
+      spine_index = get_spine_items_count()-1;
+      ESP_LOGI(TAG, "get_spine_item is out_of_range, returning %d", spine_index);
     }
-    // out_of_range let's return section 0 (Ex, going to last page of the book->)
-    return m_spine.at(0).second;
+    // if exception is catched return last page
+    return m_spine.at(spine_index).second;
 }
 
 EpubTocEntry &Epub::get_toc_item(int toc_index)

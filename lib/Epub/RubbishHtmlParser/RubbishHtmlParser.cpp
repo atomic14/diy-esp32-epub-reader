@@ -243,6 +243,13 @@ void RubbishHtmlParser::layout(Renderer *renderer, Epub *epub)
 void RubbishHtmlParser::render_page(int page_index, Renderer *renderer, Epub *epub)
 {
   renderer->clear_screen();
+  // This is presumably needed only for epdiy based devices. @chris let's not do it for others like M5
+  if (renderer->has_gray()) {
+    // Get up black to clean last fonts before printing a gray page
+    //renderer->fill_rect(0, 0, renderer->get_page_width(), renderer->get_page_height(), 0);
+    renderer->flush_display();
+  }
+
   try
     {
       pages.at(page_index)->render(renderer, epub);

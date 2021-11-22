@@ -49,6 +49,9 @@ public:
   {
     size_t image_data_size = 0;
     uint8_t *image_data = epub->get_item_contents(m_src, &image_data_size);
+    // Draw a square to remove text remainings before printing image
+    renderer->fill_rect(x_pos, y_pos, width, height, 255);
+    renderer->flush_area(x_pos, y_pos, width, height);
     renderer->draw_image(m_src, image_data, image_data_size, x_pos, y_pos, width, height);
     free(image_data);
   }
