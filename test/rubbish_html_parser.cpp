@@ -32,6 +32,7 @@ public:
   virtual int get_space_width() { return 1; }
   virtual int get_line_height() { return 1; }
   virtual void needs_gray(uint8_t color) {}
+  virtual bool has_gray() { return false; };
 };
 
 void test_parser(void)
