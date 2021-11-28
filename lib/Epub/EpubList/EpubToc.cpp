@@ -1,8 +1,8 @@
 #include "EpubToc.h"
 
 static const char *TAG = "PUBINDEX";
-#define PADDING 20
-#define ITEMS_PER_PAGE 5
+#define PADDING 14
+#define ITEMS_PER_PAGE 6
 
 void EpubToc::next()
 {
@@ -76,7 +76,7 @@ void EpubToc::render()
       title_block->add_span(epub->get_toc_item(i).title.c_str(), false, false);
       title_block->layout(renderer, epub, renderer->get_page_width());
       // work out the height of the title
-      int text_height = cell_height - PADDING * 2;
+      int text_height = cell_height - PADDING;
       int title_height = title_block->line_breaks.size() * renderer->get_line_height();
       // center the title in the cell
       int y_offset = title_height < text_height ? (text_height - title_height) / 2 : 0;
