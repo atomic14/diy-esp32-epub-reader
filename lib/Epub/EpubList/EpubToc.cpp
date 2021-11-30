@@ -1,10 +1,10 @@
-#include "EpubIndex.h"
+#include "EpubToc.h"
 
 static const char *TAG = "PUBINDEX";
-#define PADDING 20
-#define ITEMS_PER_PAGE 5
+#define PADDING 14
+#define ITEMS_PER_PAGE 6
 
-void EpubIndex::next()
+void EpubToc::next()
 {
   // must be loaded as we need the information from the epub
   if (!epub)
@@ -14,7 +14,7 @@ void EpubIndex::next()
   state.selected_item = (state.selected_item + 1) % epub->get_toc_items_count();
 }
 
-void EpubIndex::prev()
+void EpubToc::prev()
 {
   // must be loaded as we need the information from the epub
   if (!epub)
@@ -24,7 +24,7 @@ void EpubIndex::prev()
   state.selected_item = (state.selected_item - 1 + epub->get_toc_items_count()) % epub->get_toc_items_count();
 }
 
-bool EpubIndex::load()
+bool EpubToc::load()
 {
   ESP_LOGI(TAG, "load");
 
@@ -47,7 +47,7 @@ bool EpubIndex::load()
 // we can fit a lot more on the screen by allowing variable cell heights
 // and a lot of the optimisations that are used for the list aren't really
 // required as we're not rendering thumbnails
-void EpubIndex::render()
+void EpubToc::render()
 {
   ESP_LOGD(TAG, "Rendering EPUB index");
   // what page are we on?
@@ -76,7 +76,7 @@ void EpubIndex::render()
       title_block->add_span(epub->get_toc_item(i).title.c_str(), false, false);
       title_block->layout(renderer, epub, renderer->get_page_width());
       // work out the height of the title
-      int text_height = cell_height - PADDING * 2;
+      int text_height = cell_height - PADDING;
       int title_height = title_block->line_breaks.size() * renderer->get_line_height();
       // center the title in the cell
       int y_offset = title_height < text_height ? (text_height - title_height) / 2 : 0;
@@ -84,7 +84,7 @@ void EpubIndex::render()
       int height = 0;
       for (int i = 0; i < title_block->line_breaks.size() && height < text_height; i++)
       {
-        title_block->render(renderer, i, 0, ypos + height + y_offset);
+        title_block->render(renderer, i, 10, ypos + height + y_offset);
         height += renderer->get_line_height();
       }
       // clean up the temporary index block
@@ -112,7 +112,7 @@ void EpubIndex::render()
   state.previous_rendered_page = current_page;
 }
 
-uint16_t EpubIndex::get_selected_toc()
+uint16_t EpubToc::get_selected_toc()
 {
   return epub->get_spine_index_for_toc_index(state.selected_item);
 }

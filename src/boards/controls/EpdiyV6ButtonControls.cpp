@@ -11,7 +11,7 @@ EpdiyV6ButtonControls::EpdiyV6ButtonControls(
       active_level(active_level),
       on_action(on_action)
 {
-  gpio_install_isr_service(0);
+  //gpio_install_isr_service(0);
 
   select = new GPIOButton(gpio_select, active_level, [this]()
                           { this->on_action(UIAction::SELECT); });

@@ -33,4 +33,4 @@ typedef struct
   int previous_rendered_page;
   int previous_selected_item;
   int selected_item;
-} EpubIndexState;
+} EpubTocState;

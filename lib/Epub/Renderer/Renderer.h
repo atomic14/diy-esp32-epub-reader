@@ -36,6 +36,7 @@ public:
   virtual void fill_rect(int x, int y, int width, int height, uint8_t color = 0) = 0;
   virtual void fill_circle(int x, int y, int r, uint8_t color = 0) = 0;
   virtual void needs_gray(uint8_t color) = 0;
+  virtual bool has_gray() = 0;
   virtual void show_busy() = 0;
   virtual void clear_screen() = 0;
   virtual void flush_display(){};

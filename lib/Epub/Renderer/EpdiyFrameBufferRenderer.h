@@ -91,6 +91,10 @@ public:
     }
   }
 
+  bool has_gray() {
+    return needs_gray_flush;
+  }
+
   int get_text_width(const char *text, bool bold = false, bool italic = false)
   {
     int x = 0, y = 0, x1 = 0, y1 = 0, x2 = 0, y2 = 0;

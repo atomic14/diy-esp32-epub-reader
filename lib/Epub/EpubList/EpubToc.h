@@ -22,18 +22,18 @@
 class Epub;
 class Renderer;
 
-class EpubIndex
+class EpubToc
 {
 private:
   Renderer *renderer;
   Epub *epub = nullptr;
   EpubListItem &selected_epub;
-  EpubIndexState &state;
+  EpubTocState &state;
   bool m_needs_redraw = false;
 
 public:
-  EpubIndex(EpubListItem &selected_epub, EpubIndexState &state, Renderer *renderer) : renderer(renderer), selected_epub(selected_epub), state(state){};
-  ~EpubIndex() {}
+  EpubToc(EpubListItem &selected_epub, EpubTocState &state, Renderer *renderer) : renderer(renderer), selected_epub(selected_epub), state(state){};
+  ~EpubToc() {}
   bool load();
   void next();
   void prev();
