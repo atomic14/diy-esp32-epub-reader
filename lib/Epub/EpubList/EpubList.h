@@ -1,7 +1,16 @@
 #pragma once
 
 #include <vector>
-
+#include <sys/types.h>
+extern "C" {
+  #include <dirent.h>
+}
+#include <string.h>
+#include <algorithm>
+#include "Epub.h"
+#include "Renderer/Renderer.h"
+#include "../RubbishHtmlParser/blocks/TextBlock.h"
+#include "../RubbishHtmlParser/htmlEntities.h"
 #include "./State.h"
 
 class Epub;
