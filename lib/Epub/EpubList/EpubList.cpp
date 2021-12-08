@@ -1,20 +1,13 @@
-#ifndef UNIT_TEST
-#include <esp_log.h>
-#else
-#define vTaskDelay(t)
-#define ESP_LOGE(args...)
-#define ESP_LOGI(args...)
-#define ESP_LOGD(args...)
-#endif
-#include <sys/types.h>
-#include <dirent.h>
-#include <string.h>
-#include <algorithm>
 #include "EpubList.h"
-#include "Epub.h"
-#include "Renderer/Renderer.h"
-#include "../RubbishHtmlParser/blocks/TextBlock.h"
-#include "../RubbishHtmlParser/htmlEntities.h"
+
+#ifndef UNIT_TEST
+  #include <esp_log.h>
+#else
+  #define vTaskDelay(t)
+  #define ESP_LOGE(args...)
+  #define ESP_LOGI(args...)
+  #define ESP_LOGD(args...)
+#endif
 
 static const char *TAG = "PUBLIST";
 

@@ -10,7 +10,9 @@
 #define ESP_LOGD(args...)
 #endif
 #include <sys/types.h>
-#include <dirent.h>
+extern "C" {
+  #include <dirent.h>
+}
 #include <string.h>
 #include <algorithm>
 
