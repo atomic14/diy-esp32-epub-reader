@@ -88,7 +88,8 @@ intervals = [
     (0x2A1, 0x2A2),
     (0x2A4, 0x2A4),
     (0x2A7, 0x2A7),
-    (0x400, 0x4FF),  # https://en.wikipedia.org/wiki/List_of_Unicode_characters#Cyrillic
+    (0x400, 0x486),  # https://en.wikipedia.org/wiki/List_of_Unicode_characters#Cyrillic
+    (0x489, 0x4FF),  # https://en.wikipedia.org/wiki/List_of_Unicode_characters#Cyrillic
     (0x1E02, 0x1E03),
     (0x1E06, 0x1E07),
     (0x1E0A, 0x1E0F),
