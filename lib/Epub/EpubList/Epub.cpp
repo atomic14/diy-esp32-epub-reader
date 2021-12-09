@@ -347,8 +347,9 @@ std::string &Epub::get_spine_item(int spine_index)
     {
       return m_spine.at(spine_index).second;
     } catch (const std::out_of_range &oor) {
-      spine_index = get_spine_items_count()-1;
-      ESP_LOGI(TAG, "get_spine_item is out_of_range, returning %d", spine_index);
+      
+      ESP_LOGI(TAG, "get_spine_item index:%d is out_of_range", spine_index);
+      spine_index = 0;
     }
     // if exception is catched return last page
     return m_spine.at(spine_index).second;
