@@ -12,6 +12,9 @@ extern "C" {
 #include "../RubbishHtmlParser/blocks/TextBlock.h"
 #include "../RubbishHtmlParser/htmlEntities.h"
 #include "./State.h"
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <warning.h>
 
 class Epub;
 class Renderer;

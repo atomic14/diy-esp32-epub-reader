@@ -83,6 +83,18 @@ public:
     flush_area(x, y, width, height);
   }
 
+  void show_img(int x, int y, int width, int height, const uint8_t *img_buffer)
+  {
+    EpdRect image_area = {.x = x,
+                          .y = y,
+                          .width = width,
+                          .height = height};
+    epd_draw_rotated_transparent_image(
+        image_area,
+        img_buffer, m_frame_buffer,
+        0xE0);
+  }
+
   void needs_gray(uint8_t color)
   {
     if (color != 0 && color != 255)
