@@ -2,7 +2,8 @@
 
 # ESP32 Based ePub Reader
 
-You can watch a video of the build [here](https://youtu.be/VLiCgB0odOQ)
+![3 supported environments](docs/diy-main-image.jpg)
+Above the 3 supported environments. You can watch a video of the build [here](https://youtu.be/VLiCgB0odOQ)
 
 Here it is running on a LilyGo board:
 
@@ -219,3 +220,4 @@ Depending on the images that have been used for the book covers displaying the l
 There's a lot of room for improvement. This is a very basic e-reader and I'm more than happy for people to contribute to this project.
 
 Check aditional notes and research in [our esp-32 epub reader Wiki](https://github.com/atomic14/diy-esp32-epub-reader/wiki).
+Here you can find the [DIY-ePUB reader project in Hackaday](https://hackaday.io/project/181938-diy-epub-reader) and the [public chat-room](https://hackaday.io/messages/room/299747).
