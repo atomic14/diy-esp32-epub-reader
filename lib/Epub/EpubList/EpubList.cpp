@@ -93,7 +93,9 @@ bool EpubList::load(const char *path)
     perror("");
     renderer->flush_display();
     ESP_LOGE(TAG, "Is SD-Card inserted and properly connected?\nCould not open directory %s", path);
-    vTaskDelay(pdMS_TO_TICKS(1000*10));
+    #ifndef UNIT_TEST
+      vTaskDelay(pdMS_TO_TICKS(1000*10));
+    #endif
     esp_restart();
     return false;
   }
