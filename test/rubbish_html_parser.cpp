@@ -33,6 +33,7 @@ public:
   virtual int get_line_height() { return 1; }
   virtual void needs_gray(uint8_t color) {}
   virtual bool has_gray() { return false; };
+  virtual void show_img(int x, int y, int width, int height, const uint8_t *img_buffer){};
 };
 
 void test_parser(void)
