@@ -3,6 +3,10 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#ifndef UNIT_TEST
+  #include <freertos/FreeRTOS.h>
+  #include <freertos/task.h>
+#endif
 
 class ZipFile;
 
