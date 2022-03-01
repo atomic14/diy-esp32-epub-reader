@@ -253,6 +253,14 @@ bool Epub::load()
   std::string content_opf_file;
   if (!find_content_opf_file(zip, content_opf_file))
   {
+    #ifndef UNIT_TEST
+      #ifdef USE_SPIFFS
+        ESP_LOGI(TAG, "Is SPIFFs data uploaded?\npio run -t uploadfs");
+      #endif
+      ESP_LOGE(TAG, "Could not open ePub. Restarting in 10 secs.");
+      vTaskDelay(pdMS_TO_TICKS(1000*10));
+      esp_restart();
+    #endif
     return false;
   }
   // get the base path for the content
@@ -347,8 +355,9 @@ std::string &Epub::get_spine_item(int spine_index)
     {
       return m_spine.at(spine_index).second;
     } catch (const std::out_of_range &oor) {
-      spine_index = get_spine_items_count()-1;
-      ESP_LOGI(TAG, "get_spine_item is out_of_range, returning %d", spine_index);
+      
+      ESP_LOGI(TAG, "get_spine_item index:%d is out_of_range", spine_index);
+      spine_index = 0;
     }
     // if exception is catched return last page
     return m_spine.at(spine_index).second;

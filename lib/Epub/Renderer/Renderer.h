@@ -38,6 +38,7 @@ public:
   virtual void needs_gray(uint8_t color) = 0;
   virtual bool has_gray() = 0;
   virtual void show_busy() = 0;
+  virtual void show_img(int x, int y, int width, int height, const uint8_t *img_buffer) = 0;
   virtual void clear_screen() = 0;
   virtual void flush_display(){};
   virtual void flush_area(int x, int y, int width, int height){};
