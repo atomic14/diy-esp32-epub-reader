@@ -202,13 +202,6 @@ bool Epub::parse_toc_ncx_file(ZipFile &zip)
     return false;
   }
 
-  auto docTitle = ncx->FirstChildElement("docTitle");
-  if (!docTitle)
-  {
-    ESP_LOGE(TAG, "Could not find docTitle child in ncx");
-    return false;
-  }
-
   auto navMap = ncx->FirstChildElement("navMap");
   if (!navMap)
   {
