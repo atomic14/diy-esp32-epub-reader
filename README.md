@@ -17,7 +17,7 @@ What is it? It's a DIY ePub reader for the ESP32.
 
 It will parse ePub files that can be downloaded from places such as [Project Gutenberg](https://www.gutenberg.org/).
 
-It has limited support for formating - the CSS content of the ePub file is not parsed, so we just use the standard HTML tags such as `<h1>`,`<h2>` etc.. and `<b>` and `<i>`.
+It has limited support for formating - the CSS content of the ePub file is not parsed, so we just use the standard [HTML tags](https://www.scaler.com/topics/html/html-tags/) such as `<h1>`,`<h2>` etc.. and `<b>` and `<i>`.
 
 I've only included 4 font styles - regular, bold, italic and bold-italic. I've also only generated glyphs for Latin characters and punctuation.
 
